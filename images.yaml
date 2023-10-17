@@ -1,0 +1,10 @@
+N_pixels_per_axis: [64, 64]
+image_lower_bounds: [-150, -150]
+image_upper_bounds: [150, 150]
+renderer:
+  period: 300/128
+  defocus: 5000
+  spherical_aberration: 21
+  accelerating_voltage: 300
+  amplitude_contrast_ratio: 0.06
+  use_ctf: True

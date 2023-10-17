@@ -1,0 +1,47 @@
+folder_path: "data/debug_run/"
+dataset_images_path: "data/debug_run/ImageDataSet"
+dataset_poses_path: "data/debug_run/poses"
+base_structure_path: "data/debug_run/base_structure.pdb"
+image_yaml: "data/debug_run/images.yaml"
+N_residues: 1510
+N_domains: 4
+latent_dimension: 40
+tau_mask: 0.05
+device: "GPU"
+N_epochs: 5000
+batch_size: 100
+epsilon_kl: 1e-10
+encoder:
+  hidden_dimensions: [2048, 1024, 512, 512]
+decoder:
+  hidden_dimensions: [350, 350]
+mask_start:
+  clusters_mean:
+    mean: [160, 550, 800, 1300]
+    std: [10, 10, 10, 10]
+  clusters_std:
+    mean: [100, 100, 100, 100]
+    std: [10, 10, 10, 10]
+  clusters_proportions:
+    mean: [0, 0, 0, 0]
+    std: [1, 1, 1, 1]
+mask_prior:
+  means:
+    mean: [160, 550, 800, 1300]
+    std: [100, 100, 100, 100]
+  stds:
+    mean: [100, 100, 100, 100]
+    std: [10, 10, 10, 10]
+  proportions:
+    mean: [0, 0, 0, 0]
+    std: [1, 1, 1, 1]
+optimizer:
+  name: "adam"
+  learning_rate: 0.0003
+loss_weights:
+  KL_prior_latent: 0.001
+  KL_prior_mask_mean: 0.0001
+  KL_prior_mask_std: 0.0001
+  KL_prior_mask_proportions: 0.0001
+  l2_pen: 0.001
+
