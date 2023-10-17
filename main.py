@@ -91,6 +91,6 @@ def train(yaml_setting_path):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    train("/Users/gabdu45/PycharmProjects/VAECryoEM/data/debug_run/parameters.yaml")
+    train("data/debug_run/parameters.yaml")
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
