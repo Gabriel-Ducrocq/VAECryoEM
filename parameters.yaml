@@ -6,7 +6,7 @@ base_structure_path: "data/debug_run/base_structure.pdb"
 image_yaml: "data/debug_run/images.yaml"
 N_residues: 1510
 N_domains: 4
-latent_dimension: 40
+latent_dimension: 1
 tau_mask: 0.05
 device: "GPU"
 N_epochs: 5000
@@ -45,4 +45,3 @@ loss_weights:
   KL_prior_mask_std: 0.0001
   KL_prior_mask_proportions: 0.0001
   l2_pen: 0.001
-

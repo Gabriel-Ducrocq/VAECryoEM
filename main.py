@@ -101,6 +101,10 @@ def train(yaml_setting_path):
             optimizer.zero_grad()
 
         wandb.log({key:np.mean(val) for key, val in tracking_metrics.items()})
+        hard_mask = np.argmax(mask, axis=1)
+        for l in range(experiment_settings["N_domains"]):
+            wandb.log({f"mask_{l}": np.sum(hard_mask == l)})
+
         mask_python = mask.to("cpu").detach()
         np.save(experiment_settings["folder_path"] +"masks/mask"+str(epoch)+".npy", mask_python)
         torch.save(vae, experiment_settings["folder_path"] + "models/full_model" + str(epoch))
@@ -115,5 +119,5 @@ def train(yaml_setting_path):
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     wandb.login()
-    train("data/debug_run/parameters.yaml")
+    train("data/debug_run2/parameters.yaml")
 
