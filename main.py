@@ -65,6 +65,8 @@ def train(yaml_setting_path):
     for epoch in range(N_epochs):
         data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True))
         for batch_images, batch_poses in data_loader:
+            batch_images.to(device)
+            batch_poses.to(device)
             latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
             mask = vae.sample_mask()
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
