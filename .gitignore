@@ -3,3 +3,5 @@ data/*
 *ipynb
 */__pycache__/*
 .idea/*
+slurm*
+*sh
