@@ -1,0 +1,1 @@
+{"rmsd": 476.9718017578125, "kl_prior_latent": 0.39629101753234863, "kl_prior_mask_mean": 7.2302374839782715, "kl_prior_mask_std": 8.940696716308594e-08, "kl_prior_mask_proportions": 1.8974145632455475e-06, "l2_pen": 1629.706298828125, "_timestamp": 1697554815.012059, "_runtime": 101.54073405265808, "_step": 8}

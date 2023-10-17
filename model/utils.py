@@ -116,8 +116,6 @@ def deform_structure(atom_positions, translation_per_residue, rotations_per_resi
     ## residue.
     ##We compute the rotated residues, where this axis of rotation is at the origin.
     rotation_per_atom = torch.repeat_interleave(rotations_per_residue, 3, dim=1)
-    print(rotation_per_atom.shape)
-    print(atom_positions[None, :, :, None].shape)
     transformed_atom_positions = torch.matmul(rotation_per_atom, atom_positions[None, :, :, None])
     new_atom_positions = transformed_atom_positions[:, :, :, 0] + torch.repeat_interleave(translation_per_residue,
                                                                                               3, 1)

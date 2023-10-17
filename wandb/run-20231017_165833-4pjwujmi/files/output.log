@@ -1,0 +1,13 @@
+/Users/gabdu45/PycharmProjects/VAECryoEM/model/renderer.py:68: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  ctf = torch.sqrt(torch.tensor(1 - w ** 2, device=self.device)) * torch.sin(torch.tensor(gamma, device=self.device))\
+/Users/gabdu45/PycharmProjects/VAECryoEM/model/renderer.py:69: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  - w * torch.cos(torch.tensor(gamma, device=self.device))
+torch.Size([100, 4, 3])
+torch.Size([100, 4, 3])
+torch.Size([100, 4, 3])
+torch.Size([100, 4, 3])
+torch.Size([100, 4, 3])
+torch.Size([100, 4, 3])
+torch.Size([100, 4, 3])
+torch.Size([100, 4, 3])
+torch.Size([100, 4, 3])

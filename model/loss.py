@@ -50,7 +50,7 @@ def compute_l2_pen(network):
 
 
 def compute_loss(predicted_images, images, latent_mean, latent_std, vae, loss_weights,
-                 experiment_settings):
+                 experiment_settings, tracking_dict):
     """
     Compute the entire loss
     :param predicted_images: torch.tensor(batch_size, N_pix), predicted images
@@ -73,10 +73,18 @@ def compute_loss(predicted_images, images, latent_mean, latent_std, vae, loss_we
     KL_prior_mask_proportions = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
                                                "proportions", epsilon_kl=experiment_settings["epsilon_kl"])
     l2_pen = compute_l2_pen(vae)
+
+    tracking_dict["rmsd"].append(rmsd.detach().cpu().numpy())
+    tracking_dict["kl_prior_latent"].append(KL_prior_latent.detach().cpu().numpy())
+    tracking_dict["kl_prior_mask_mean"].append(KL_prior_mask_means.detach().cpu().numpy())
+    tracking_dict["kl_prior_mask_std"].append(KL_prior_mask_stds.detach().cpu().numpy())
+    tracking_dict["kl_prior_mask_proportions"].append(KL_prior_mask_proportions.detach().cpu().numpy())
+    tracking_dict["l2_pen"].append(l2_pen.detach().cpu().numpy())
+
     loss = rmsd + loss_weights["KL_prior_latent"]*KL_prior_latent \
            + loss_weights["KL_prior_mask_mean"]*KL_prior_mask_means \
            + loss_weights["KL_prior_mask_std"] * KL_prior_mask_stds \
            + loss_weights["KL_prior_mask_proportions"] * KL_prior_mask_proportions \
            + loss_weights["l2_pen"] * l2_pen
 
-    return loss, rmsd
+    return loss

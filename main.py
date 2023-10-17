@@ -1,4 +1,5 @@
 import torch
+import wandb
 import numpy as np
 import model.utils
 from model.vae import VAE
@@ -20,6 +21,19 @@ def train(yaml_setting_path):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     else:
         device = "cpu"
+
+    wandb.init(
+        # Set the project where this run will be logged
+        project="VAECryoEM",
+        # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
+        name=f"experiment_{experiment_settings['name']}",
+        # Track hyperparameters and run metadata
+        config={
+            "learning_rate": experiment_settings["optimizer"]["learning_rate"],
+            "architecture": "VAE",
+            "dataset": experiment_settings["dataset_images_path"],
+            "epochs": experiment_settings["N_epochs"],
+        })
 
     for mask_prior_key in experiment_settings["mask_prior"].keys():
         experiment_settings["mask_prior"][mask_prior_key]["mean"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["mean"],
@@ -63,6 +77,9 @@ def train(yaml_setting_path):
     batch_size = experiment_settings["batch_size"]
     vae.to(device)
     for epoch in range(N_epochs):
+        print("Epoch number:", epoch)
+        tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
+                            "kl_prior_mask_proportions":[], "l2_pen":[]}
         data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True))
         for batch_images, batch_poses in data_loader:
             batch_images = batch_images.to(device)
@@ -77,12 +94,16 @@ def train(yaml_setting_path):
 
             batch_predicted_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_poses)
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
-            loss, rmsd = compute_loss(batch_predicted_images, batch_images, latent_mean, latent_std, vae,
-                                    experiment_settings["loss_weights"], experiment_settings)
+            loss = compute_loss(batch_predicted_images, batch_images, latent_mean, latent_std, vae,
+                                    experiment_settings["loss_weights"], experiment_settings, tracking_metrics)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
-            print(loss, rmsd)
+
+        wandb.log({key:np.mean(val) for key, val in tracking_metrics.items()})
+        mask_python = mask.to("cpu").detach()
+        np.save(experiment_settings["folder_path"] +"masks/mask"+str(epoch)+".npy", mask_python)
+        torch.save(experiment_settings["folder_path"], "models/full_model" + str(epoch))
 
 
 
@@ -93,6 +114,6 @@ def train(yaml_setting_path):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
+    wandb.login()
     train("data/debug_run/parameters.yaml")
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/

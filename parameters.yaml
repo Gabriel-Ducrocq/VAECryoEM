@@ -1,3 +1,4 @@
+name: "debug_run"
 folder_path: "data/debug_run/"
 dataset_images_path: "data/debug_run/ImageDataSet"
 dataset_poses_path: "data/debug_run/poses"
