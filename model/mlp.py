@@ -23,6 +23,7 @@ class MLP(nn.Module):
             self.linear_relu_stack = nn.Sequential(*[layer for layer in list_intermediate])
 
     def forward(self, x):
+        print(x.device)
         x = self.input_layer(x)
         hidden = self.linear_relu_stack(x)
         output = self.output_layer(hidden)

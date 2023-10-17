@@ -21,7 +21,6 @@ def train(yaml_setting_path):
     else:
         device = "cpu"
 
-    print("DEVICE", device)
     for mask_prior_key in experiment_settings["mask_prior"].keys():
         experiment_settings["mask_prior"][mask_prior_key]["mean"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["mean"],
                                                                                  dtype=torch.float32, device=device)
