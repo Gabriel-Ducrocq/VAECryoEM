@@ -1,4 +1,5 @@
 data/*
 *npy
 *ipynb
-
+*/__pycache__/*
+.idea/*
