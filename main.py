@@ -103,7 +103,7 @@ def train(yaml_setting_path):
         wandb.log({key:np.mean(val) for key, val in tracking_metrics.items()})
         mask_python = mask.to("cpu").detach()
         np.save(experiment_settings["folder_path"] +"masks/mask"+str(epoch)+".npy", mask_python)
-        torch.save(experiment_settings["folder_path"], "models/full_model" + str(epoch))
+        torch.save(vae, experiment_settings["folder_path"] + "models/full_model" + str(epoch))
 
 
 
