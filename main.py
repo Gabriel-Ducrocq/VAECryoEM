@@ -34,7 +34,7 @@ def train(yaml_setting_path):
                   experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
 
     vae = VAE(encoder, decoder, device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
-        tau_mask=experiment_settings["tau_mask"], mask_start_values=experiment_settings["mask_start"])
+              tau_mask=experiment_settings["tau_mask"], mask_start_values=experiment_settings["mask_start"])
 
     pixels_x = np.linspace(image_settings["image_lower_bounds"][0], image_settings["image_upper_bounds"][0],
                            num=image_settings["N_pixels_per_axis"][0]).reshape(1, -1)
@@ -62,6 +62,7 @@ def train(yaml_setting_path):
     dataset = ImageDataSet(experiment_settings["dataset_images_path"], experiment_settings["dataset_poses_path"])
     N_epochs = experiment_settings["N_epochs"]
     batch_size = experiment_settings["batch_size"]
+    vae.to(device)
     for epoch in range(N_epochs):
         data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True))
         for batch_images, batch_poses in data_loader:
