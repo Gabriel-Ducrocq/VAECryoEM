@@ -21,7 +21,7 @@ def train(yaml_setting_path):
     else:
         device = "cpu"
 
-
+    print("DEVICE", device)
     for mask_prior_key in experiment_settings["mask_prior"].keys():
         experiment_settings["mask_prior"][mask_prior_key]["mean"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["mean"],
                                                                                  dtype=torch.float32, device=device)
@@ -52,7 +52,7 @@ def train(yaml_setting_path):
     base_structure = model.utils.read_pdb(experiment_settings["base_structure_path"])
     atom_positions_non_centered = model.utils.get_backbone(base_structure)
     atom_positions = atom_positions_non_centered - np.mean(atom_positions_non_centered, axis=0)
-    atom_positions = torch.tensor(atom_positions, dtype=torch.float32)
+    atom_positions = torch.tensor(atom_positions, dtype=torch.float32, device=device)
 
     if experiment_settings["optimizer"]["name"] == "adam":
         optimizer = torch.optim.Adam(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
