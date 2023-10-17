@@ -106,7 +106,7 @@ def train(yaml_setting_path):
             optimizer.zero_grad()
 
         wandb.log({key:np.mean(val) for key, val in tracking_metrics.items()})
-        hard_mask = np.argmax(mask, axis=1)
+        hard_mask = np.argmax(mask.detach().cpu().numpy(), axis=1)
         for l in range(experiment_settings["N_domains"]):
             wandb.log({f"mask_{l}": np.sum(hard_mask == l)})
 
