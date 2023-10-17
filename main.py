@@ -62,10 +62,14 @@ def train(yaml_setting_path):
                         amplitude_contrast_ratio = image_settings["renderer"]["amplitude_contrast_ratio"],
                         device = device, use_ctf = image_settings["renderer"]["use_ctf"])
 
-    base_structure = model.utils.read_pdb(experiment_settings["base_structure_path"])
-    atom_positions_non_centered = model.utils.get_backbone(base_structure)
-    atom_positions = atom_positions_non_centered - np.mean(atom_positions_non_centered, axis=0)
-    atom_positions = torch.tensor(atom_positions, dtype=torch.float32, device=device)
+    #base_structure = model.utils.read_pdb(experiment_settings["base_structure_path"])
+    #atom_positions_non_centered = model.utils.get_backbone(base_structure)
+    #atom_positions = atom_positions_non_centered - np.mean(atom_positions_non_centered, axis=0)
+    #atom_positions = torch.tensor(atom_positions, dtype=torch.float32, device=device)
+    features = np.load("data/debug_run2/features.npy", allow_pickle=True)
+    features = features.item()
+    absolute_positions = torch.tensor(features["absolute_positions"] - np.mean(features["absolute_positions"], axis=0))
+    atom_positions = absolute_positions.to(device)
 
     if experiment_settings["optimizer"]["name"] == "adam":
         optimizer = torch.optim.Adam(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
