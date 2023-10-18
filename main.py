@@ -87,6 +87,7 @@ def train(yaml_setting_path):
                             "kl_prior_mask_proportions":[], "l2_pen":[]}
         data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True))
         for batch_images, batch_poses in data_loader:
+            print(batch_images.shape)
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
             latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
@@ -105,6 +106,9 @@ def train(yaml_setting_path):
             optimizer.step()
             optimizer.zero_grad()
 
+        for key, val in tracking_metrics.items():
+            print(np.mean(val))
+            
         wandb.log({key:np.mean(val) for key, val in tracking_metrics.items()})
         hard_mask = np.argmax(mask.detach().cpu().numpy(), axis=1)
         for l in range(experiment_settings["N_domains"]):
