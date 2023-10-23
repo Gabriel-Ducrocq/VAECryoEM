@@ -1,5 +1,5 @@
 wandb/*
-data/*
+data/dataset/*
 *npy
 *ipynb
 */__pycache__/*
