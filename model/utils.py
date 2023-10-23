@@ -123,7 +123,7 @@ def get_backbone(structure):
 
                     N_residue += 1
 
-    return np.array(absolute_positions)
+    return np.concatenate(absolute_positions, axis=0)
 
 
 def read_pdb(path):

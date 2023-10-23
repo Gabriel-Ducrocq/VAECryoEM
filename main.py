@@ -30,7 +30,7 @@ def train(yaml_setting_path):
             "epochs": experiment_settings["N_epochs"],
         })
 
-    #features = np.load("data/debug_run2/features.npy", allow_pickle=True)
+    #features = np.load("data/dataset/debug_run2/features.npy", allow_pickle=True)
     #features = features.item()
     #absolute_positions = torch.tensor(features["absolute_positions"] - np.mean(features["absolute_positions"], axis=0))
     #absolute_positions = torch.tensor(absolute_positions, dtype=torch.float32, device=device)

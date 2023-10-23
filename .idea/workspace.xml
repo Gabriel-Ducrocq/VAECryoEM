@@ -3,7 +3,11 @@
   <component name="ChangeListManager">
     <list default="true" id="ed3ffd04-8630-4eac-aa97-0d3b27691d55" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/data/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wandb/debug-internal.log" beforeDir="false" afterPath="$PROJECT_DIR$/wandb/debug-internal.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wandb/debug.log" beforeDir="false" afterPath="$PROJECT_DIR$/wandb/debug.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wandb/latest-run" beforeDir="false" afterPath="$PROJECT_DIR$/wandb/latest-run" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,7 +41,7 @@
     &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
 }</component>
-  <component name="RunManager" selected="Python.generate_posed_structures">
+  <component name="RunManager" selected="Python.main">
     <configuration name="analysis" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="VAECryoEM" />
       <option name="INTERPRETER_OPTIONS" value="" />
