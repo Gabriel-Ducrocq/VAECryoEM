@@ -3,9 +3,9 @@ import wandb
 import torch
 import data.utils
 import numpy as np
-from vae import VAE
-from mlp import MLP
-from renderer import Renderer
+from model.vae import VAE
+from model.mlp import MLP
+from model.renderer import Renderer
 from model.dataset import ImageDataSet
 from Bio.PDB.PDBParser import PDBParser
 from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
