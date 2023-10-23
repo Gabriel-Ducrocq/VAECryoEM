@@ -25,6 +25,7 @@ def center_protein(structure, center_vector):
     for index, atom in enumerate(structure.get_atoms()):
         atom.set_coord(all_coords[:, index] - center_vector)
 
+    return structure
 
 def rotate_pdb_structure_matrix(pdb_structure, rotation_matrix):
     """
