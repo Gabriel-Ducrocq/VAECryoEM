@@ -1,6 +1,12 @@
-import torch
 import yaml
+import wandb
+import torch
+import data.utils
 import numpy as np
+from vae import VAE
+from mlp import MLP
+from renderer import Renderer
+from model.dataset import ImageDataSet
 from Bio.PDB.PDBParser import PDBParser
 from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
 
@@ -10,14 +16,84 @@ def parse_yaml(path):
     """
     Parse the yaml file to get the setting for the run
     :param path: str, path to the yaml file
-    :return: dict, settings for the run
+    :return: settings for the run
     """
     with open(path, "r") as file:
         experiment_settings = yaml.safe_load(file)
 
-    return experiment_settings
+    with open(experiment_settings["image_yaml"], "r") as file:
+        image_settings = yaml.safe_load(file)
+
+    if experiment_settings["device"] == "GPU":
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    else:
+        device = "cpu"
+
+    for mask_prior_key in experiment_settings["mask_prior"].keys():
+        experiment_settings["mask_prior"][mask_prior_key]["mean"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["mean"],
+                                                                                 dtype=torch.float32, device=device)
+        experiment_settings["mask_prior"][mask_prior_key]["std"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["std"],
+                                                                                 dtype=torch.float32, device=device)
+
+    encoder = MLP(image_settings["N_pixels_per_axis"][0]*image_settings["N_pixels_per_axis"][1], experiment_settings["latent_dimension"]*2,
+                  experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device)
+    decoder = MLP(experiment_settings["latent_dimension"], experiment_settings["N_domains"]*6,
+                  experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
+
+    vae = VAE(encoder, decoder, device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
+              tau_mask=experiment_settings["tau_mask"], mask_start_values=experiment_settings["mask_start"])
+    vae.to(device)
+
+    pixels_x = np.linspace(image_settings["image_lower_bounds"][0], image_settings["image_upper_bounds"][0],
+                           num=image_settings["N_pixels_per_axis"][0]).reshape(1, -1)
+
+    pixels_y = np.linspace(image_settings["image_lower_bounds"][1], image_settings["image_upper_bounds"][1],
+                           num=image_settings["N_pixels_per_axis"][1]).reshape(1, -1)
+
+    renderer = Renderer(pixels_x, pixels_y, N_atoms = experiment_settings["N_residues"]*3,
+                        period = image_settings["renderer"]["period"], std = 1, defocus = image_settings["renderer"]["defocus"],
+                        spherical_aberration = image_settings["renderer"]["spherical_aberration"],
+                        accelerating_voltage = image_settings["renderer"]["accelerating_voltage"],
+                        amplitude_contrast_ratio = image_settings["renderer"]["amplitude_contrast_ratio"],
+                        device = device, use_ctf = image_settings["renderer"]["use_ctf"])
 
 
+    base_structure = read_pdb(experiment_settings["base_structure_path"])
+    center_of_mass = data.utils.compute_center_of_mass(base_structure)
+    centered_based_structure = data.utils.center_protein(base_structure, center_of_mass)
+    atom_positions = torch.tensor(get_backbone(centered_based_structure), dtype=torch.float32, device=device)
+
+    if experiment_settings["optimizer"]["name"] == "adam":
+        optimizer = torch.optim.Adam(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
+    else:
+        raise Exception("Optimizer must be Adam")
+
+    dataset = ImageDataSet(experiment_settings["dataset_images_path"], experiment_settings["dataset_poses_path"])
+    N_epochs = experiment_settings["N_epochs"]
+    batch_size = experiment_settings["batch_size"]
+
+    return vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, device
+
+
+def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae):
+    """
+    Monitors the training process through wandb and saving masks and models
+    :param mask:
+    :param tracking_metrics:
+    :param epoch:
+    :param experiment_settings:
+    :param vae:
+    :return:
+    """
+    wandb.log({key: np.mean(val) for key, val in tracking_metrics.items()})
+    wandb.log({"epoch": epoch})
+    hard_mask = np.argmax(mask.detach().cpu().numpy(), axis=1)
+    for l in range(experiment_settings["N_domains"]):
+        wandb.log({f"mask_{l}": np.sum(hard_mask == l)})
+
+    mask_python = mask.to("cpu").detach()
+    np.save(experiment_settings["folder_path"] + "masks/mask" + str(epoch) + ".npy", mask_python)
+    torch.save(vae, experiment_settings["folder_path"] + "models/full_model" + str(epoch))
 
 def get_atom_positions(residue, name):
     x = residue["CA"].get_coord()

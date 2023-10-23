@@ -1,9 +1,9 @@
-name: "debug_run"
-folder_path: "data/debug_run/"
-dataset_images_path: "data/debug_run/ImageDataSet"
-dataset_poses_path: "data/debug_run/poses"
-base_structure_path: "data/debug_run/base_structure.pdb"
-image_yaml: "data/debug_run/images.yaml"
+name: "debug_run3"
+folder_path: "data/debug_run3/"
+dataset_images_path: "data/debug_run3/ImageDataSet"
+dataset_poses_path: "data/debug_run3/poses"
+base_structure_path: "data/debug_run3/base_structure.pdb"
+image_yaml: "data/debug_run3/images.yaml"
 N_residues: 1510
 N_domains: 4
 latent_dimension: 1

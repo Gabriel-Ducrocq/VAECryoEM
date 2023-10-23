@@ -8,3 +8,4 @@ renderer:
   accelerating_voltage: 300
   amplitude_contrast_ratio: 0.06
   use_ctf: True
+
