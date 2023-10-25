@@ -16,7 +16,7 @@ def train(yaml_setting_path):
     :param yaml_setting_path: str, path the yaml containing all the details of the experiment
     :return:
     """
-    vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, device = model.utils.parse_yaml(yaml_setting_path)
+    vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device = model.utils.parse_yaml(yaml_setting_path)
     wandb.init(
         # Set the project where this run will be logged
         project="VAECryoEM",
@@ -30,13 +30,6 @@ def train(yaml_setting_path):
             "epochs": experiment_settings["N_epochs"],
         })
 
-    #features = np.load("data/dataset/debug_run2/features.npy", allow_pickle=True)
-    #features = features.item()
-    #absolute_positions = torch.tensor(features["absolute_positions"] - np.mean(features["absolute_positions"], axis=0))
-    #absolute_positions = torch.tensor(absolute_positions, dtype=torch.float32, device=device)
-    #atom_positions = absolute_positions.to(device)
-    #print("features", atom_positions.shape)
-
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
         tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
@@ -44,10 +37,16 @@ def train(yaml_setting_path):
         data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True))
         for batch_images, batch_poses in data_loader:
             start = time()
-            print(batch_images.shape)
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
-            latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
+            if latent_type == "continuous":
+                latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
+                log_latent_distrib = None
+            else:
+                latent_variables, log_latent_distrib, _ = vae.sample_latent(batch_images)
+                latent_mean = None
+                latent_std = None
+
             mask = vae.sample_mask()
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
             rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
@@ -55,10 +54,16 @@ def train(yaml_setting_path):
             deformed_structures = model.utils.deform_structure(atom_positions, translation_per_residue,
                                                                rotation_per_residue)
 
-            batch_predicted_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_poses)
+            if latent_type == "categorical":
+                deformed_structures = torch.broadcast_to(deformed_structures, (batch_size, experiment_settings["latent_dimension"],
+                                                                           experiment_settings["N_residues"]*3, 3))
+
+            batch_predicted_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_poses,
+                                                                           latent_type=latent_type)
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
             loss = compute_loss(batch_predicted_images, batch_images, latent_mean, latent_std, vae,
-                                    experiment_settings["loss_weights"], experiment_settings, tracking_metrics)
+                                experiment_settings["loss_weights"], experiment_settings, tracking_metrics,
+                                type=latent_type, log_latent_distribution=log_latent_distrib)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
@@ -72,5 +77,5 @@ def train(yaml_setting_path):
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     wandb.login()
-    train("data/dataset/debug_run3/parameters.yaml")
+    train("data/dataset/debug_categorical/parameters.yaml")
 

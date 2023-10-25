@@ -4,7 +4,8 @@ import numpy as np
 
 class Renderer():
     def __init__(self, pixels_x, pixels_y, N_atoms=4530, period= 300/128, std = 1, defocus= 5000, spherical_aberration=21,
-                 accelerating_voltage=300 , amplitude_contrast_ratio = 0.06, device="cpu", use_ctf=True):
+                 accelerating_voltage=300 , amplitude_contrast_ratio = 0.06, device="cpu", use_ctf=True,
+                 latent_type="continuous", latent_dim = 10):
         self.std_blob = std
         self.len_x = pixels_x.shape[1]
         self.len_y = pixels_y.shape[1]
@@ -30,6 +31,9 @@ class Renderer():
         freqs = self.frequencies[:, None]**2 + self.frequencies[None, -int(self.len_y/2 + 1):]**2
         self.ctf_grid = self.compute_ctf_np(freqs, accelerating_voltage, spherical_aberration, amplitude_contrast_ratio,
                                             defocus)
+
+        self.latent_type = latent_type
+        self.latent_dim = latent_dim
 
     def compute_ctf_np(self,
             freqs: np.ndarray,
@@ -79,8 +83,13 @@ class Renderer():
         :return: (N_batch, N_atoms, N_pix)
         """
         batch_size = x.shape[0]
-        scaled_distances = -(1/2)*(torch.broadcast_to(pixels_pos, (batch_size, self.N_atoms, -1)) -
+        if self.latent_type == "continuous":
+            scaled_distances = -(1/2)*(torch.broadcast_to(pixels_pos, (batch_size, self.N_atoms, -1)) -
                                    x[:, :, None])**2/self.std_blob**2
+        else:
+            scaled_distances = -(1/2)*(torch.broadcast_to(pixels_pos, (batch_size, self.latent_dim, self.N_atoms, -1)) -
+                                   x[:, :, :, None])**2/self.std_blob**2
+
         axis_val = torch.exp(scaled_distances)/self.torch_sqrt_2pi
         return axis_val
 
@@ -91,25 +100,36 @@ class Renderer():
         :return:  torch tensor (N_batch, N_pixels_s, N_pixels_y), corrupted image
         """
         fourier_images = torch.fft.rfft2(image)
+        print(fourier_images.shape)
+        print(self.ctf_grid.shape)
         corrupted_fourier = fourier_images*self.ctf_grid
         corrupted_images = torch.fft.irfft2(corrupted_fourier)
         return corrupted_images
 
-    def compute_x_y_values_all_atoms(self, atom_positions, rotation_matrices):
+    def compute_x_y_values_all_atoms(self, atom_positions, rotation_matrices, latent_type="continuous"):
         """
 
         :param atom_position: (N_batch, N_atoms, 3)
         :rotation_matrices: (N_batch, 3, 3)
         :return:
         """
-        transposed_atom_positions = torch.transpose(atom_positions, dim0=1, dim1=2)
-        rotated_transposed_atom_positions = torch.matmul(rotation_matrices, transposed_atom_positions)
-        rotated_atom_positions = torch.transpose(rotated_transposed_atom_positions, 1, 2)
-        #projected_densities = self.compute_gaussian_kernel(rotated_atom_positions[:, :, :2])
-        all_x = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 0], self.pixels_x)
-        all_y = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 1], self.pixels_y)
-        prod = torch.einsum("bki,bkj->bkij", (all_x, all_y))
-        projected_densities = torch.sum(prod, dim=1)
+        transposed_atom_positions = torch.transpose(atom_positions, dim0=-2, dim1=-1)
+        if latent_type=="continuous":
+            rotated_transposed_atom_positions = torch.matmul(rotation_matrices, transposed_atom_positions)
+            rotated_atom_positions = torch.transpose(rotated_transposed_atom_positions, -2, -1)
+            all_x = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 0], self.pixels_x)
+            all_y = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 1], self.pixels_y)
+            prod = torch.einsum("bki,bkj->bkij", (all_x, all_y))
+            projected_densities = torch.sum(prod, dim=1)
+        else:
+            rotated_transposed_atom_positions = torch.matmul(rotation_matrices[:, None, :, :], transposed_atom_positions)
+            rotated_atom_positions = torch.transpose(rotated_transposed_atom_positions, -2, -1)
+            all_x = self.compute_gaussian_kernel(rotated_atom_positions[:, :, :, 0], self.pixels_x)
+            all_y = self.compute_gaussian_kernel(rotated_atom_positions[:, :, :, 1], self.pixels_y)
+            #prod = torch.einsum("blki,blkj->blkij", (all_x, all_y))
+            #projected_densities = torch.sum(prod, dim=-3)
+            projected_densities = torch.einsum("blki,blkj->blij", (all_x, all_y))
+
         if self.use_ctf:
             projected_densities = self.ctf_corrupting(projected_densities)
 

@@ -38,41 +38,27 @@ def rotate_pdb_structure_matrix(pdb_structure, rotation_matrix):
     for index, atom in enumerate(pdb_structure.get_atoms()):
         atom.set_coord(rotated_coordinates[:, index])
 
-def compute_poses(structure_paths, poses, center_vector):
+def compute_poses(structure_path, pose, center_vector):
     """
-    Rotate the pdb structures so that we have different poses
-    :param dataset_path: list of str, path to the structures
-    :param poses: np.array(N_structures, 3, 3) of rotation matrices
-    :return: list of PDB structures
+    Rotate the pdb structure so that we have it with a pose
+    :param dataset_path: str, path to the structure
+    :param pose: np.array(3, 3) of rotation matrix
+    :return: PDB structure
     """
     parser = PDBParser(PERMISSIVE=0)
-    print("Reading pdb files:")
-    list_structures = [parser.get_structure("A", file)
-                       for i, file in tqdm.tqdm(enumerate(structure_paths))]
-    print("Centering structures:")
-    _ = [center_protein(struct, center_vector)
-                       for i, struct in tqdm.tqdm(enumerate(list_structures))]
-
-    print("Rotating structures")
-    _ = [rotate_pdb_structure_matrix(struct, poses[i])
-                       for i, struct in tqdm.tqdm(enumerate(list_structures))]
-
-    return list_structures
+    struct = parser.get_structure("A", structure_path)
+    center_protein(struct, center_vector)
+    rotate_pdb_structure_matrix(struct, pose)
+    return struct
 
 
-def save_structures(list_structures, folder_path):
+def save_structure(structure, path):
     """
     Save the structures into PDB files
-    :param list_structures: list of BioPDB structures
-    :param folder_path: str, path to the folder where we want to save the structures
+    :param structure: BioPDB structures
+    :param folder_path: str, path to the folder where we want to save the structure
     :return: None
     """
     io = PDBIO()
-    for i, struct in enumerate(list_structures):
-        io.set_structure(struct)
-        io.save(folder_path + f"posed_structure_{i}.pdb")
-
-
-
-
-
+    io.set_structure(structure)
+    io.save(path)

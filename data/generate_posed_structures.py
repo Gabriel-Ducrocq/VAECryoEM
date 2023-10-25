@@ -2,6 +2,7 @@ import os
 import torch
 import utils
 import numpy as np
+from tqdm import tqdm
 from Bio.PDB import PDBParser
 
 parser = PDBParser(PERMISSIVE=0)
@@ -14,6 +15,10 @@ indexes = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in str
 sorted_structures = [struct for _, struct in sorted(zip(indexes, structures))]
 
 center_vector = utils.compute_center_of_mass(parser.get_structure("A", sorted_structures[0]))
-posed_structures = utils.compute_poses(sorted_structures, poses, center_vector)
-utils.save_structures(posed_structures, "MD_simulation/posed_structures/")
-np.save("MD_simulation/poses.npy", poses)
+for i, structure in tqdm(enumerate(sorted_structures)):
+    if i%100 == 0:
+        print(i)
+
+    posed_structure = utils.compute_poses(structure, poses[i], center_vector)
+    utils.save_structure(posed_structure, f"dataset/MD_simulation/posed_structures/structure_{i+1}.pdb")
+    np.save("dataset/MD_simulation/poses.npy", poses)

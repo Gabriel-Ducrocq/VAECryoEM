@@ -35,13 +35,24 @@ def parse_yaml(path):
         experiment_settings["mask_prior"][mask_prior_key]["std"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["std"],
                                                                                  dtype=torch.float32, device=device)
 
-    encoder = MLP(image_settings["N_pixels_per_axis"][0]*image_settings["N_pixels_per_axis"][1], experiment_settings["latent_dimension"]*2,
-                  experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device)
-    decoder = MLP(experiment_settings["latent_dimension"], experiment_settings["N_domains"]*6,
-                  experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
+    if experiment_settings["latent_type"] == "continuous":
+        encoder = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
+                      experiment_settings["latent_dimension"] * 2,
+                      experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
+                      latent_type="continuous")
+        decoder = MLP(experiment_settings["latent_dimension"], experiment_settings["N_domains"]*6,
+                      experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
+    else:
+        encoder = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
+                      experiment_settings["latent_dimension"],
+                      experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
+                      latent_type="categorical")
+        decoder = MLP(1, experiment_settings["N_domains"]*6,
+                      experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
 
     vae = VAE(encoder, decoder, device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
-              tau_mask=experiment_settings["tau_mask"], mask_start_values=experiment_settings["mask_start"])
+              tau_mask=experiment_settings["tau_mask"], mask_start_values=experiment_settings["mask_start"],
+              latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"])
     vae.to(device)
 
     pixels_x = np.linspace(image_settings["image_lower_bounds"][0], image_settings["image_upper_bounds"][0],
@@ -51,11 +62,12 @@ def parse_yaml(path):
                            num=image_settings["N_pixels_per_axis"][1]).reshape(1, -1)
 
     renderer = Renderer(pixels_x, pixels_y, N_atoms = experiment_settings["N_residues"]*3,
-                        period = image_settings["renderer"]["period"], std = 1, defocus = image_settings["renderer"]["defocus"],
-                        spherical_aberration = image_settings["renderer"]["spherical_aberration"],
-                        accelerating_voltage = image_settings["renderer"]["accelerating_voltage"],
-                        amplitude_contrast_ratio = image_settings["renderer"]["amplitude_contrast_ratio"],
-                        device = device, use_ctf = image_settings["renderer"]["use_ctf"])
+                        period=image_settings["renderer"]["period"], std=1, defocus=image_settings["renderer"]["defocus"],
+                        spherical_aberration=image_settings["renderer"]["spherical_aberration"],
+                        accelerating_voltage=image_settings["renderer"]["accelerating_voltage"],
+                        amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
+                        device=device, use_ctf=image_settings["renderer"]["use_ctf"],
+                        latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"])
 
 
     base_structure = read_pdb(experiment_settings["base_structure_path"])
@@ -71,8 +83,10 @@ def parse_yaml(path):
     dataset = ImageDataSet(experiment_settings["dataset_images_path"], experiment_settings["dataset_poses_path"])
     N_epochs = experiment_settings["N_epochs"]
     batch_size = experiment_settings["batch_size"]
+    latent_type = experiment_settings["latent_type"]
+    assert latent_type in ["continuous", "categorical"]
 
-    return vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, device
+    return vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device
 
 
 def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae):
@@ -123,7 +137,7 @@ def get_backbone(structure):
 
                     N_residue += 1
 
-    return np.concatenate(absolute_positions, axis=0)
+    return np.vstack(absolute_positions)
 
 
 def read_pdb(path):
