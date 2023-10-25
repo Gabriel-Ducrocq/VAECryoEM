@@ -100,8 +100,8 @@ class Renderer():
         :return:  torch tensor (N_batch, N_pixels_s, N_pixels_y), corrupted image
         """
         fourier_images = torch.fft.rfft2(image)
-        print(fourier_images.shape)
-        print(self.ctf_grid.shape)
+        print("fourier", fourier_images.shape)
+        print("fourier 2", self.ctf_grid.shape)
         corrupted_fourier = fourier_images*self.ctf_grid
         corrupted_images = torch.fft.irfft2(corrupted_fourier)
         return corrupted_images
@@ -119,8 +119,9 @@ class Renderer():
             rotated_atom_positions = torch.transpose(rotated_transposed_atom_positions, -2, -1)
             all_x = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 0], self.pixels_x)
             all_y = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 1], self.pixels_y)
-            prod = torch.einsum("bki,bkj->bkij", (all_x, all_y))
-            projected_densities = torch.sum(prod, dim=1)
+            #prod = torch.einsum("bki,bkj->bkij", (all_x, all_y))
+            #projected_densities = torch.sum(prod, dim=1)
+            projected_densities = torch.einsum("bki,bkj->bij", (all_x, all_y))
         else:
             rotated_transposed_atom_positions = torch.matmul(rotation_matrices[:, None, :, :], transposed_atom_positions)
             rotated_atom_positions = torch.transpose(rotated_transposed_atom_positions, -2, -1)
