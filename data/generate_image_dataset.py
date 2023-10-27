@@ -1,15 +1,25 @@
+import sys
 import os
+path = os.path.abspath("VAECryoEM")
+sys.path.append(path)
 import torch
 import yaml
+import argparse
 import numpy as np
-from tqdm import tqdm
 from Bio.PDB import PDBParser
-
 import model.utils
 from model.renderer import Renderer
 
+parser_arg = argparse.ArgumentParser()
+parser_arg.add_argument('--folder_experiment', type=str, required=True)
+args = parser_arg.parse_args()
+folder_experiment = args.folder_experiment
 
-with open("dataset/MD_simulation/images.yaml", "r") as file:
+
+with open(f"{folder_experiment}/parameters.yaml", "r") as file:
+    experiment_settings = yaml.safe_load(file)
+
+with open(f"{folder_experiment}/images.yaml", "r") as file:
     image_settings = yaml.safe_load(file)
 
 pixels_x = np.linspace(image_settings["image_lower_bounds"][0], image_settings["image_upper_bounds"][0],
@@ -20,35 +30,57 @@ pixels_y = np.linspace(image_settings["image_lower_bounds"][1], image_settings["
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-renderer = Renderer(pixels_x, pixels_y, N_atoms=1006 * 3,
+renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"] * 3,
                     period=image_settings["renderer"]["period"], std=1, defocus=image_settings["renderer"]["defocus"],
                     spherical_aberration=image_settings["renderer"]["spherical_aberration"],
                     accelerating_voltage=image_settings["renderer"]["accelerating_voltage"],
                     amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
                     device=device, use_ctf=image_settings["renderer"]["use_ctf"])
 
+renderer_no_ctf = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"],
+                    period=image_settings["renderer"]["period"], std=1, defocus=image_settings["renderer"]["defocus"],
+                    spherical_aberration=image_settings["renderer"]["spherical_aberration"],
+                    accelerating_voltage=image_settings["renderer"]["accelerating_voltage"],
+                    amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
+                    device=device, use_ctf=False)
+
 parser = PDBParser(PERMISSIVE=0)
-
-poses = np.load("dataset/MD_simulation/poses.npy")
+batch_size = experiment_settings["batch_size"]
+## We don't use any pose since we are using structure that are already posed
+poses = torch.broadcast_to(torch.eye(3, 3, dtype=torch.float32, device=device)[None, :, :], (batch_size, 3, 3))
 poses = torch.tensor(poses, dtype=torch.float32, device=device)
-structures = ["dataset/MD_simulation/posed_structures/" + path for path in os.listdir("dataset/MD_simulation/posed_structures/") if ".pdb" in path]
-
+#Get the structures to convert them into 2d images
+structures = [f"{folder_experiment}/posed_structures/" + path for path in os.listdir(f"{folder_experiment}/posed_structures/") if ".pdb" in path]
 indexes = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures]
+#Keep the backbone only. Note that there is NO NEED to recenter, since we centered the structures when generating the
+#posed structures, where the center of mass was computed using ALL the atoms.
 sorted_structures = [model.utils.get_backbone(parser.get_structure("A", struct))[None, :, :] for _, struct in sorted(zip(indexes, structures))]
 sorted_structures = torch.tensor(np.concatenate(sorted_structures, axis=0), dtype=torch.float32, device=device)
-rotations_poses = torch.eye(3,3)[None, :, :]
-rotations_poses = rotations_poses.repeat((100, 1, 1))
+
+N = np.ceil(experiment_settings["N_images"]/batch_size)
 all_images_no_noise = []
 all_images_noise = []
-std_noise = 0.87
-for i in range(100):
+all_images_no_noise_no_ctf = []
+var_noise = image_settings["noise_var"]
+for i in range(1):
     print(i)
-    batch_images = renderer.compute_x_y_values_all_atoms(sorted_structures[i*100:i*100+100], rotations_poses)
+    batch_structures = sorted_structures[i*batch_size:(i+1)*batch_size]
+    batch_images = renderer.compute_x_y_values_all_atoms(batch_structures, poses)
+    batch_images_no_ctf = renderer_no_ctf.compute_x_y_values_all_atoms(batch_structures, poses)
     all_images_no_noise.append(batch_images)
-    batch_images_noisy = batch_images + torch.randn_like(batch_images)*std_noise
+    all_images_no_noise_no_ctf.append(batch_images_no_ctf)
+    batch_images_noisy = batch_images + torch.randn_like(batch_images)*np.sqrt(var_noise)
     all_images_noise.append(batch_images_noisy)
 
 all_images_noise = torch.concat(all_images_noise, dim=0)
 all_images_no_noise = torch.concat(all_images_no_noise, dim=0)
-torch.save(all_images_noise, "dataset/MD_simulation/ImageDataSet")
-torch.save(all_images_no_noise, "dataset/MD_simulation/ImageDataSetNoNoise")
+all_images_no_noise_no_ctf = torch.concat(all_images_no_noise_no_ctf, dim=0)
+power_no_noise = torch.var(all_images_no_noise, dim=(-2, -1))
+
+snr = power_no_noise/var_noise
+print("Signal-to_noise ratio:", snr)
+
+torch.save(all_images_noise, f"{folder_experiment}ImageDataSet")
+torch.save(all_images_no_noise, f"{folder_experiment}ImageDataSetNoNoise")
+torch.save(all_images_no_noise_no_ctf, f"{folder_experiment}ImageDataSetNoNoiseNoCTF")
+

@@ -1,7 +1,7 @@
 import yaml
 import wandb
 import torch
-import data.utils
+import data.utils_data
 import numpy as np
 from model.vae import VAE
 from model.mlp import MLP
@@ -71,8 +71,8 @@ def parse_yaml(path):
 
 
     base_structure = read_pdb(experiment_settings["base_structure_path"])
-    center_of_mass = data.utils.compute_center_of_mass(base_structure)
-    centered_based_structure = data.utils.center_protein(base_structure, center_of_mass)
+    center_of_mass = data.utils_data.compute_center_of_mass(base_structure)
+    centered_based_structure = data.utils_data.center_protein(base_structure, center_of_mass)
     atom_positions = torch.tensor(get_backbone(centered_based_structure), dtype=torch.float32, device=device)
 
     if experiment_settings["optimizer"]["name"] == "adam":

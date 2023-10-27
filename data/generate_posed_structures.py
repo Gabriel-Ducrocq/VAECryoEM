@@ -1,24 +1,59 @@
 import os
+import yaml
 import torch
 import utils
+import argparse
 import numpy as np
 from tqdm import tqdm
 from Bio.PDB import PDBParser
+import matplotlib.pyplot as plt
+from pytorch3d.transforms import axis_angle_to_matrix
 
-parser = PDBParser(PERMISSIVE=0)
+parser_arg = argparse.ArgumentParser()
+parser_arg.add_argument('--folder_experiment', type=str, required=True)
+parser_arg.add_argument('--folder_structures', type=str, required=True)
+args = parser_arg.parse_args()
+folder_experiment = args.folder_experiment
+folder_structures = args.folder_structures
 
-poses = torch.load("../../VAEProtein/data/vaeContinuousMD/training_rotations_matrices")
-poses = poses.numpy()
-structures = ["../../VAEProtein/data/MD_dataset/" + path for path in os.listdir("../../VAEProtein/data/MD_dataset/") if ".pdb" in path]
 
+#Get all the structure and sort their names to have them in the right order.
+structures = [folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path]
 indexes = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures]
 sorted_structures = [struct for _, struct in sorted(zip(indexes, structures))]
 
-center_vector = utils.compute_center_of_mass(parser.get_structure("A", sorted_structures[0]))
-for i, structure in tqdm(enumerate(sorted_structures)):
-    if i%100 == 0:
-        print(i)
 
+#Finds the pdb file that will serve as a base structure
+with open(folder_experiment + "parameters.yaml", "r") as file:
+    experiments_settings = yaml.safe_load(file)
+
+base_structure_path = experiments_settings["base_structure_path"]
+parser = PDBParser(PERMISSIVE=0)
+base_structure = parser.get_structure("A", base_structure_path)
+
+#Create poses:
+N_images = experiments_settings["N_images"]
+axis_rotation = torch.randn((N_images, 3))
+norm_axis = torch.sqrt(torch.sum(axis_rotation**2, dim=-1))
+normalized_axis = axis_rotation/norm_axis[:, None]
+print("Min norm of rotation axis", torch.min(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
+print("Max norm of rotation axis", torch.max(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
+
+angle_rotation = torch.rand((N_images,1))*torch.pi
+plt.hist(angle_rotation[:, 0].detach().numpy())
+plt.show()
+
+axis_angle = normalized_axis*angle_rotation
+poses = axis_angle_to_matrix(axis_angle)
+
+#Finding the center of mass to center the protein
+center_vector = utils.compute_center_of_mass(base_structure)
+
+for i, structure in tqdm(enumerate(sorted_structures)):
     posed_structure = utils.compute_poses(structure, poses[i], center_vector)
-    utils.save_structure(posed_structure, f"dataset/MD_simulation/posed_structures/structure_{i+1}.pdb")
-    np.save("dataset/MD_simulation/poses.npy", poses)
+    utils.save_structure(posed_structure, f"{folder_experiment}/posed_structures/structure_{i+1}.pdb")
+    np.save(f"{folder_experiment}/posed_structures/poses.npy", poses)
+    torch.save(torch.tensor(poses, dtype=torch.float32), f"{folder_experiment}/poses")
+
+
+
