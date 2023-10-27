@@ -1,14 +1,15 @@
 import sys
 import os
-path = os.path.abspath("VAECryoEM")
+path = os.path.abspath("model")
 sys.path.append(path)
 import torch
 import yaml
+import utils
 import argparse
 import numpy as np
+from tqdm import tqdm
 from Bio.PDB import PDBParser
-import model.utils
-from model.renderer import Renderer
+from renderer import Renderer
 
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--folder_experiment', type=str, required=True)
@@ -37,7 +38,7 @@ renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"
                     amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
                     device=device, use_ctf=image_settings["renderer"]["use_ctf"])
 
-renderer_no_ctf = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"],
+renderer_no_ctf = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"]*3,
                     period=image_settings["renderer"]["period"], std=1, defocus=image_settings["renderer"]["defocus"],
                     spherical_aberration=image_settings["renderer"]["spherical_aberration"],
                     accelerating_voltage=image_settings["renderer"]["accelerating_voltage"],
@@ -54,15 +55,15 @@ structures = [f"{folder_experiment}/posed_structures/" + path for path in os.lis
 indexes = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures]
 #Keep the backbone only. Note that there is NO NEED to recenter, since we centered the structures when generating the
 #posed structures, where the center of mass was computed using ALL the atoms.
-sorted_structures = [model.utils.get_backbone(parser.get_structure("A", struct))[None, :, :] for _, struct in sorted(zip(indexes, structures))]
+sorted_structures = [utils.get_backbone(parser.get_structure("A", struct))[None, :, :] for _, struct in tqdm(sorted(zip(indexes, structures)))]
 sorted_structures = torch.tensor(np.concatenate(sorted_structures, axis=0), dtype=torch.float32, device=device)
 
-N = np.ceil(experiment_settings["N_images"]/batch_size)
+N = int(np.ceil(experiment_settings["N_images"]/batch_size))
 all_images_no_noise = []
 all_images_noise = []
 all_images_no_noise_no_ctf = []
 var_noise = image_settings["noise_var"]
-for i in range(1):
+for i in range(0,N):
     print(i)
     batch_structures = sorted_structures[i*batch_size:(i+1)*batch_size]
     batch_images = renderer.compute_x_y_values_all_atoms(batch_structures, poses)
@@ -77,7 +78,7 @@ all_images_no_noise = torch.concat(all_images_no_noise, dim=0)
 all_images_no_noise_no_ctf = torch.concat(all_images_no_noise_no_ctf, dim=0)
 power_no_noise = torch.var(all_images_no_noise, dim=(-2, -1))
 
-snr = power_no_noise/var_noise
+snr = torch.mean(power_no_noise/var_noise)
 print("Signal-to_noise ratio:", snr)
 
 torch.save(all_images_noise, f"{folder_experiment}ImageDataSet")

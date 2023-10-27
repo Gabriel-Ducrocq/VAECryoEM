@@ -1,15 +1,42 @@
+import sys
+import os
+path = os.path.abspath("model")
+sys.path.append(path)
 import yaml
 import wandb
 import torch
-import data.utils_data
 import numpy as np
-from model.vae import VAE
-from model.mlp import MLP
-from model.renderer import Renderer
-from model.dataset import ImageDataSet
+from vae import VAE
+from mlp import MLP
+from renderer import Renderer
+from dataset import ImageDataSet
 from Bio.PDB.PDBParser import PDBParser
 from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
 
+
+
+def compute_center_of_mass(structure):
+    """
+    Computes the center of mass of a protein
+    :param structure: PDB structure
+    :return: np.array(1,3)
+    """
+    all_coords = np.concatenate([atom.coord[:, None] for atom in structure.get_atoms()], axis=1)
+    center_mass = np.mean(all_coords, axis=1)
+    return center_mass[None, :]
+
+def center_protein(structure, center_vector):
+    """
+    Center the protein given ALL its atoms
+    :param structure: pdb structure in BioPDB format
+    :param center_vector: vector used for the centering of all structures
+    :return: PDB structure in BioPDB format, centered structure
+    """
+    all_coords = np.concatenate([atom.coord[:, None] for atom in structure.get_atoms()], axis=1)
+    for index, atom in enumerate(structure.get_atoms()):
+        atom.set_coord(all_coords[:, index] - center_vector)
+
+    return structure
 
 
 def parse_yaml(path):
@@ -71,8 +98,8 @@ def parse_yaml(path):
 
 
     base_structure = read_pdb(experiment_settings["base_structure_path"])
-    center_of_mass = data.utils_data.compute_center_of_mass(base_structure)
-    centered_based_structure = data.utils_data.center_protein(base_structure, center_of_mass)
+    center_of_mass = compute_center_of_mass(base_structure)
+    centered_based_structure = center_protein(base_structure, center_of_mass)
     atom_positions = torch.tensor(get_backbone(centered_based_structure), dtype=torch.float32, device=device)
 
     if experiment_settings["optimizer"]["name"] == "adam":
@@ -206,7 +233,8 @@ def deform_structure(atom_positions, translation_per_residue, rotations_per_resi
     ## residue.
     ##We compute the rotated residues, where this axis of rotation is at the origin.
     rotation_per_atom = torch.repeat_interleave(rotations_per_residue, 3, dim=1)
-    transformed_atom_positions = torch.matmul(rotation_per_atom, atom_positions[None, :, :, None])
-    new_atom_positions = transformed_atom_positions[:, :, :, 0] + torch.repeat_interleave(translation_per_residue,
+    transformed_atom_positions = torch.einsum("lbjk, bk->lbj", rotation_per_atom, atom_positions)
+    #transformed_atom_positions = torch.matmul(rotation_per_atom, atom_positions[None, :, :, None])
+    new_atom_positions = transformed_atom_positions + torch.repeat_interleave(translation_per_residue,
                                                                                               3, 1)
     return new_atom_positions

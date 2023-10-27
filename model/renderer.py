@@ -100,8 +100,6 @@ class Renderer():
         :return:  torch tensor (N_batch, N_pixels_s, N_pixels_y), corrupted image
         """
         fourier_images = torch.fft.rfft2(image)
-        print("fourier", fourier_images.shape)
-        print("fourier 2", self.ctf_grid.shape)
         corrupted_fourier = fourier_images*self.ctf_grid
         corrupted_images = torch.fft.irfft2(corrupted_fourier)
         return corrupted_images

@@ -1,14 +1,13 @@
 import torch
 import wandb
-import numpy as np
+import argparse
 import model.utils
 from time import time
-from model.vae import VAE
-from model.mlp import MLP
 from model.loss import compute_loss
-from model.renderer import Renderer
 from torch.utils.data import DataLoader
 
+parser_arg = argparse.ArgumentParser()
+parser_arg.add_argument('--experiment_yaml', type=str, required=True)
 
 def train(yaml_setting_path):
     """
@@ -73,9 +72,9 @@ def train(yaml_setting_path):
         model.utils.monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae)
 
 
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     wandb.login()
-    train("data/dataset/debug_categorical/parameters.yaml")
+    args = parser_arg.parse_args()
+    path = args.experiment_yaml
+    train(path)
 
