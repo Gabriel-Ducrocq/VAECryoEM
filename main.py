@@ -5,6 +5,7 @@ import model.utils
 from time import time
 from model.loss import compute_loss
 from torch.utils.data import DataLoader
+from pytorch3d.transforms import quaternion_to_matrix
 
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--experiment_yaml', type=str, required=True)
@@ -46,8 +47,11 @@ def train(yaml_setting_path):
                 latent_mean = None
                 latent_std = None
 
+            pose_latent_variables, pose_latent_mean, pose_latent_std = vae.sample_latent_pose(batch_images)
+
             mask = vae.sample_mask()
-            quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
+            quaternions_per_domain, translations_per_domain, predicted_quaternions_poses = vae.decode(latent_variables, pose_latent_variables)
+            predicted_poses = quaternion_to_matrix(predicted_quaternions_poses)
             rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
             deformed_structures = model.utils.deform_structure(atom_positions, translation_per_residue,
@@ -57,7 +61,7 @@ def train(yaml_setting_path):
                 deformed_structures = torch.broadcast_to(deformed_structures, (batch_size, experiment_settings["latent_dimension"],
                                                                            experiment_settings["N_residues"]*3, 3))
 
-            batch_predicted_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_poses,
+            batch_predicted_images = renderer.compute_x_y_values_all_atoms(deformed_structures, predicted_poses,
                                                                            latent_type=latent_type)
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
             loss = compute_loss(batch_predicted_images, batch_images, latent_mean, latent_std, vae,

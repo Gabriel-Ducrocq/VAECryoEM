@@ -2,12 +2,14 @@ import torch as torch
 
 
 class VAE(torch.nn.Module):
-    def __init__(self, encoder, decoder, device, mask_start_values, N_domains=6, N_residues=1006, tau_mask=0.05,
+    def __init__(self, encoder, decoder, encoder_pose, decoder_pose, device, mask_start_values, N_domains=6, N_residues=1006, tau_mask=0.05,
                  latent_dim = None, latent_type="continuous"):
         super(VAE, self).__init__()
         assert latent_type in ["continuous", "categorical"]
         self.encoder = encoder
         self.decoder = decoder
+        self.encoder_pose = encoder_pose
+        self.decoder_pose = decoder_pose
         self.device = device
         self.N_domains = N_domains
         self.N_residues = N_residues
@@ -77,12 +79,29 @@ class VAE(torch.nn.Module):
             latent_variable = torch.multinomial(distribution_latent, 1)
             return latent_variable, log_distribution_latent, None
 
-    def decode(self, latent_variables):
+    def sample_latent_pose(self, images):
+        """
+        Samples latent variables given an image
+        :param images: torch.tensor(N_batch, N_pix_x, N_pix_y)
+        :return: torch.tensor(N_batch, latent_dim) latent variables,
+                torch.tensor(N_batch, latent_dim) latent_mean,
+                torch.tensor(N_batch, latent_dim) latent std
+                torch.tensor(N_batch, 1) sampled latent variable per batch
+        """
+        latent_mean, latent_std = self.encoder_pose(images)
+        latent_variables = latent_mean + torch.randn_like(latent_mean, dtype=torch.float32, device=self.device) \
+                           * latent_std
+
+        return latent_variables, latent_mean, latent_std
+
+
+    def decode(self, latent_variables, latent_variables_pose):
         """
         Decode the latent variables
         :param latent_variables: torch.tensor(N_batch, latent_dim)
+        :param latent_variables_pose: torch.tensor(N_batch, 3)
         :return: torch.tensor(N_batch, N_domains, 4) quaternions, torch.tensor(N_batch, N_domains, 3) translations
-                OR torch.tensor(N_latent_dim, N_domains, 4)
+                OR torch.tensor(N_latent_dim, N_domains, 4), torch.tensor(N_latent_dim, 4) of pose quaternions
         """
         N_batch = latent_variables.shape[0]
         if self.latent_type == "continuous":
@@ -100,7 +119,10 @@ class VAE(torch.nn.Module):
             quaternions_per_domain = torch.concat([ones, transformations_per_domain[:, :, 3:]], dim=-1)
             translations_per_domain = transformations_per_domain[:, :, :3]
 
-        return quaternions_per_domain, translations_per_domain
+        poses = self.decoder_pose(latent_variables_pose)
+        ones_poses = torch.ones(size=(N_batch, 1), device=self.device)
+        pose_quaternions_per_domain = torch.concat([ones_poses, poses], dim=-1)
+        return quaternions_per_domain, translations_per_domain, pose_quaternions_per_domain
 
 
 

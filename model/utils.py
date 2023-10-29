@@ -77,7 +77,14 @@ def parse_yaml(path):
         decoder = MLP(1, experiment_settings["N_domains"]*6,
                       experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
 
-    vae = VAE(encoder, decoder, device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
+    encoder_poses = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
+                        3*2, experiment_settings["encoder_pose"]["hidden_dimensions"], network_type="encoder", device=device,
+                        latent_type="continuous")
+
+    decoder_poses = MLP(3, 3, experiment_settings["decoder_pose"]["hidden_dimensions"], network_type="decoder",
+                                  device=device)
+
+    vae = VAE(encoder, decoder, encoder_poses, decoder_poses, device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
               tau_mask=experiment_settings["tau_mask"], mask_start_values=experiment_settings["mask_start"],
               latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"])
     vae.to(device)
