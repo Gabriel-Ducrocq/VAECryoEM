@@ -75,6 +75,7 @@ all_rotations_per_residue = []
 all_translation_per_residue = []
 all_translation_per_domain = []
 all_axis_angle_per_domain = []
+
 for i, (batch_images, batch_poses) in enumerate(data_loader):
     print("Batch number:", i)
     latent_variables, latent_mean, latent_std = model.sample_latent(batch_images)
