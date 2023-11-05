@@ -95,6 +95,12 @@ def parse_yaml(path):
             if ("weight" in name or "bias" in name) and ("encoder" in name or "decoder" in name) and ("encoder_pose" not in name
             and "decoder_pose" not in name):
                 print(f"Disabling gradient for {name}")
+                p.requires_grad_(False)
+
+        for name in ["means", "stds", "proportions"]:
+            print(f"Disabling gradient for {name} mask.")
+            vae.mask_parameters[name]["mean"].requires_grad_(False)
+            vae.mask_parameters[name]["std"].requires_grad_(False)
 
     pixels_x = np.linspace(image_settings["image_lower_bounds"][0], image_settings["image_upper_bounds"][0],
                            num=image_settings["N_pixels_per_axis"][0]).reshape(1, -1)

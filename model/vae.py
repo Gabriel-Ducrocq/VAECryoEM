@@ -121,8 +121,8 @@ class VAE(torch.nn.Module):
 
         poses = self.decoder_pose(latent_variables_pose)
         ones_poses = torch.ones(size=(N_batch, 1), device=self.device)
-        pose_quaternions_per_domain = torch.concat([ones_poses, poses], dim=-1)
-        return quaternions_per_domain, translations_per_domain, pose_quaternions_per_domain
+        pose_quaternions = torch.concat([ones_poses, poses], dim=-1)
+        return quaternions_per_domain, translations_per_domain, pose_quaternions
 
 
 

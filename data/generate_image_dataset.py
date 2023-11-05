@@ -83,5 +83,6 @@ print("Signal-to_noise ratio:", snr)
 
 torch.save(all_images_noise, f"{folder_experiment}ImageDataSet")
 torch.save(all_images_no_noise, f"{folder_experiment}ImageDataSetNoNoise")
+
 torch.save(all_images_no_noise_no_ctf, f"{folder_experiment}ImageDataSetNoNoiseNoCTF")
 

@@ -12,7 +12,7 @@ from Bio.PDB import PDBParser
 from renderer import Renderer
 from dataset import ImageDataSet
 from torch.utils.data import DataLoader
-from pytorch3d.transforms import quaternion_to_axis_angle
+from pytorch3d.transforms import quaternion_to_axis_angle, quaternion_to_matrix
 
 
 def concat_and_save(tens, path):
@@ -75,18 +75,23 @@ all_rotations_per_residue = []
 all_translation_per_residue = []
 all_translation_per_domain = []
 all_axis_angle_per_domain = []
+all_rotation_poses = []
 for i, (batch_images, batch_poses) in enumerate(data_loader):
     print("Batch number:", i)
     latent_variables, latent_mean, latent_std = model.sample_latent(batch_images)
+    pose_latent_variables, pose_latent_mean, pose_latent_std = model.sample_latent_pose(batch_images)
+
+    quaternions_per_domain, translations_per_domain, predicted_quaternions_poses = model.decode(latent_variables,
+                                                                                              pose_latent_variables)
+    predicted_poses = quaternion_to_matrix(predicted_quaternions_poses)
     mask = model.sample_mask()
-    quaternions_per_domain, translations_per_domain = model.decode(latent_mean)
     axis_angle_per_domain = quaternion_to_axis_angle(quaternions_per_domain)
     rotation_per_residue = utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
     translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
     deformed_structures = utils.deform_structure(atom_positions, translation_per_residue,
                                                        rotation_per_residue)
 
-    batch_predicted_images = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, batch_poses,
+    batch_predicted_images = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, predicted_poses,
                                                                    latent_type=experiment_settings["latent_type"])
     batch_predicted_images_no_pose = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose,
                                                                    latent_type=experiment_settings["latent_type"])
@@ -99,6 +104,7 @@ for i, (batch_images, batch_poses) in enumerate(data_loader):
     all_translation_per_residue.append(translation_per_residue)
     all_axis_angle_per_domain.append(axis_angle_per_domain)
     all_translation_per_domain.append(translations_per_domain)
+    all_rotation_poses.append(predicted_poses)
 
 
 
@@ -106,6 +112,7 @@ all_rotations_per_residue = concat_and_save(all_rotations_per_residue, f"{folder
 all_translation_per_residue = concat_and_save(all_translation_per_residue, f"{folder_experiment}all_translation_per_residue.npy")
 all_latent_mean = concat_and_save(all_latent_mean, f"{folder_experiment}all_latent_mean.npy")
 all_latent_std = concat_and_save(all_latent_std, f"{folder_experiment}all_latent_std.npy")
+all_rotation_poses = concat_and_save(all_rotation_poses, f"{folder_experiment}all_rotation_poses_matrix.npy")
 
 all_rotations_per_domain = concat_and_save(all_axis_angle_per_domain, f"{folder_experiment}all_rotations_per_domain.npy")
 all_translation_per_domain = concat_and_save(all_translation_per_domain, f"{folder_experiment}all_translation_per_domain.npy")
