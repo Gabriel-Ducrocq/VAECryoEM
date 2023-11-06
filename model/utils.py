@@ -57,6 +57,11 @@ def parse_yaml(path):
         device = "cpu"
 
     for mask_prior_key in experiment_settings["mask_prior"].keys():
+        if mask_prior_key =="stds":
+            experiment_settings["mask_prior"][mask_prior_key]["scale"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["scale"],
+                dtype=torch.float32, device=device)
+            continue
+
         experiment_settings["mask_prior"][mask_prior_key]["mean"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["mean"],
                                                                                  dtype=torch.float32, device=device)
         experiment_settings["mask_prior"][mask_prior_key]["std"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["std"],
