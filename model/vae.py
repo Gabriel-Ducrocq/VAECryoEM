@@ -23,13 +23,10 @@ class VAE(torch.nn.Module):
         self.mask_means_std = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_mean"]["std"], dtype=torch.float32, device=device)[None, :],
                                               requires_grad=True)
 
-        #self.mask_std_mean = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_std"]["mean"], dtype=torch.float32, device=device)[None, :],
-        #                                      requires_grad=True)
+        self.mask_std_mean = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_std"]["mean"], dtype=torch.float32, device=device)[None, :],
+                                              requires_grad=True)
 
-        #self.mask_std_std = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_std"]["std"], dtype=torch.float32, device=device)[None, :],
-        #                                      requires_grad=True)
-
-        self.mask_std_scale = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_std"]["scale"], dtype=torch.float32, device=device)[None, :],
+        self.mask_std_std = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_std"]["std"], dtype=torch.float32, device=device)[None, :],
                                               requires_grad=True)
 
         self.mask_proportions_mean = torch.nn.Parameter(torch.tensor(mask_start_values["clusters_proportions"]["mean"], dtype=torch.float32, device=device)[None, :],
@@ -40,14 +37,11 @@ class VAE(torch.nn.Module):
 
         self.exponential_distrib = torch.distributions.exponential.Exponential(rate=1)
 
-        #self.mask_parameters = {"means":{"mean":self.mask_means_mean, "std":self.mask_means_std},
-        #                           "stds":{"mean":self.mask_std_mean, "std":self.mask_std_std},
-        #                           "proportions":{"mean":self.mask_proportions_mean, "std":self.mask_proportions_std}}
-
         self.mask_parameters = {"means":{"mean":self.mask_means_mean, "std":self.mask_means_std},
-                                   "stds":{"scale":self.mask_std_scale},
+                                   "stds":{"mean":self.mask_std_mean, "std":self.mask_std_std},
                                    "proportions":{"mean":self.mask_proportions_mean, "std":self.mask_proportions_std}}
 
+        self.elu = torch.nn.ELU()
     def sample_mask(self):
         """
         Samples a mask
@@ -55,8 +49,7 @@ class VAE(torch.nn.Module):
         """
         cluster_proportions = torch.randn(self.N_domains, device=self.device)*self.mask_proportions_std + self.mask_proportions_mean
         cluster_means = torch.randn(self.N_domains, device=self.device)*self.mask_means_std + self.mask_means_mean
-        #cluster_std = torch.randn(self.N_domains, device=self.device)*self.mask_std_std + self.mask_std_mean
-        cluster_std = self.exponential_distrib.sample((self.N_domains,)).to(self.device)*1/self.mask_std_scale
+        cluster_std = self.elu(torch.randn(self.N_domains, device=self.device)*self.mask_std_std + self.mask_std_mean) + 1
         proportions = torch.softmax(cluster_proportions, dim=1)
         log_num = -0.5*(self.residues - cluster_means)**2/cluster_std**2 + \
               torch.log(proportions)

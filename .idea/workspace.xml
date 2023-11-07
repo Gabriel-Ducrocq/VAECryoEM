@@ -6,9 +6,6 @@
       <change beforePath="$PROJECT_DIR$/model/loss.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/loss.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/model/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/utils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/model/vae.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/vae.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wandb/debug-internal.log" beforeDir="false" afterPath="$PROJECT_DIR$/wandb/debug-internal.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wandb/debug.log" beforeDir="false" afterPath="$PROJECT_DIR$/wandb/debug.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wandb/latest-run" beforeDir="false" afterPath="$PROJECT_DIR$/wandb/latest-run" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

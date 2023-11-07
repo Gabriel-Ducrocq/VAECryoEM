@@ -54,13 +54,10 @@ def compute_KL_prior_mask(mask_parameters, mask_prior, variable, epsilon_kl):
     :return: torch.float32,  Dkl loss
     """
     assert variable in ["means", "stds", "proportions"]
-    if variable != "stds":
-        return torch.sum(-1/2 + torch.log(mask_prior[variable]["std"]/mask_parameters[variable]["std"] + eval(epsilon_kl)) \
-        + (1/2)*(mask_parameters[variable]["std"]**2 +
-        (mask_prior[variable]["mean"] - mask_parameters[variable]["mean"])**2)/mask_prior[variable]["std"]**2)
+    return torch.sum(-1/2 + torch.log(mask_prior[variable]["std"]/mask_parameters[variable]["std"] + eval(epsilon_kl)) \
+    + (1/2)*(mask_parameters[variable]["std"]**2 +
+    (mask_prior[variable]["mean"] - mask_parameters[variable]["mean"])**2)/mask_prior[variable]["std"]**2)
 
-    return torch.sum(torch.log(mask_parameters[variable]["scale"]) - torch.log(mask_prior[variable]["scale"]) \
-           + mask_prior[variable]["scale"]/mask_parameters[variable]["scale"] - 1)
 
 
 def compute_l2_pen(network):
