@@ -39,11 +39,12 @@ def train(yaml_setting_path):
             start = time()
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
+            batch_flattened_images = torch.flatten(batch_images, start_dim=-2, end_dim=-1)
             if latent_type == "continuous":
-                latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
+                latent_variables, latent_mean, latent_std = vae.sample_latent(batch_flattened_images)
                 log_latent_distrib = None
             else:
-                latent_variables, log_latent_distrib, _ = vae.sample_latent(batch_images)
+                latent_variables, log_latent_distrib, _ = vae.sample_latent(batch_flattened_images)
                 latent_mean = None
                 latent_std = None
 
@@ -64,7 +65,7 @@ def train(yaml_setting_path):
             batch_predicted_images = renderer.compute_x_y_values_all_atoms(deformed_structures, predicted_poses,
                                                                            latent_type=latent_type)
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
-            loss = compute_loss(batch_predicted_images, batch_images, latent_mean, latent_std, vae,
+            loss = compute_loss(batch_predicted_images, batch_flattened_images, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics,
                                 type=latent_type, log_latent_distribution=log_latent_distrib)
             loss.backward()

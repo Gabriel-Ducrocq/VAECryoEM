@@ -8,6 +8,7 @@ import torch
 import numpy as np
 from vae import VAE
 from mlp import MLP
+from cnn_encoder import CNNEncoder
 from renderer import Renderer
 from dataset import ImageDataSet
 from Bio.PDB.PDBParser import PDBParser
@@ -77,9 +78,11 @@ def parse_yaml(path):
         decoder = MLP(1, experiment_settings["N_domains"]*6,
                       experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
 
-    encoder_poses = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
-                        3*2, experiment_settings["encoder_pose"]["hidden_dimensions"], network_type="encoder", device=device,
-                        latent_type="continuous")
+    #encoder_poses = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
+    #                    3*2, experiment_settings["encoder_pose"]["hidden_dimensions"], network_type="encoder", device=device,
+    #                    latent_type="continuous")
+
+    encoder_poses = CNNEncoder(11, 0.01, num_octaves= 4,octave_scaling=10)
 
     decoder_poses = MLP(3, 3, experiment_settings["decoder_pose"]["hidden_dimensions"], network_type="decoder",
                                   device=device)

@@ -11,7 +11,7 @@ class ImageDataSet(Dataset):
         images = torch.load(images_path)
         poses = torch.load(poses_path)
         assert images.shape[0] == poses.shape[0]
-        self.images = torch.flatten(images, start_dim=-2, end_dim=-1)
+        self.images = images
         self.poses = poses
 
     def __len__(self):
