@@ -38,11 +38,23 @@ def rotate_pdb_structure_matrix(pdb_structure, rotation_matrix):
     for index, atom in enumerate(pdb_structure.get_atoms()):
         atom.set_coord(rotated_coordinates[:, index])
 
-def compute_poses(structure_path, pose, center_vector):
+def translate_pdb_structure(pdb_structure, translation_vector):
+    """
+    Translate the entire structure according to a translation vector
+    :param pdb_structure: PDB structure to translate
+    :param translation_vector: numpy.array (3, ) vector of translation
+    """
+    all_coords = np.concatenate([atom.coord[0, :, None] for atom in pdb_structure.get_atoms()], axis=1)
+    translated_coordinates = all_coords - translation_vector
+    for index, atom in enumerate(pdb_structure.get_atoms()):
+        atom.set_coord(translated_coordinates[:, index])
+
+def compute_poses(structure_path, pose, translation, center_vector):
     """
     Rotate the pdb structure so that we have it with a pose
     :param dataset_path: str, path to the structure
     :param pose: np.array(3, 3) of rotation matrix
+    :param translation: np.array(3,) of translation vector
     :return: PDB structure
     """
     parser = PDBParser(PERMISSIVE=0)

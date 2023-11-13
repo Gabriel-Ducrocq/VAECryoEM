@@ -1,8 +1,10 @@
 import os
 import yaml
 import torch
+import warnings
 import utils_data as utils
 import argparse
+from Bio import BiopythonWarning
 import numpy as np
 from tqdm import tqdm
 from Bio.PDB import PDBParser
@@ -27,9 +29,9 @@ sorted_structures = [struct for _, struct in sorted(zip(indexes, structures))]
 with open(folder_experiment + "parameters.yaml", "r") as file:
     experiments_settings = yaml.safe_load(file)
 
-base_structure_path = experiments_settings["base_structure_path"]
+centering_structure_path = experiments_settings["centering_structure_path"]
 parser = PDBParser(PERMISSIVE=0)
-base_structure = parser.get_structure("A", base_structure_path)
+centering_structure = parser.get_structure("A", centering_structure_path)
 
 #Create poses:
 N_images = experiments_settings["N_images"]
@@ -45,15 +47,28 @@ plt.show()
 
 axis_angle = normalized_axis*angle_rotation
 poses = axis_angle_to_matrix(axis_angle)
+poses_translation = torch.zeros((N_images, 3))
+poses_translation[:, :2] = 20*torch.rand((N_images, 2)) - 10
+
+poses_py = poses.detach().numpy()
+poses_translation_py = poses_translation.detach().numpy()
+
+
+print("Min translation", torch.min(poses_translation))
+print("Max translation", torch.max(poses_translation))
 
 #Finding the center of mass to center the protein
-center_vector = utils.compute_center_of_mass(base_structure)
+center_vector = utils.compute_center_of_mass(centering_structure)
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore', BiopythonWarning)
+    for i, structure in tqdm(enumerate(sorted_structures)):
+        posed_structure = utils.compute_poses(structure, poses_py[i], poses_translation_py[i], center_vector)
+        utils.save_structure(posed_structure, f"{folder_experiment}posed_structures/structure_{i+1}.pdb")
+        np.save(f"{folder_experiment}posed_structures/poses.npy", poses_py)
+        np.save(f"{folder_experiment}posed_structures/poses_translation.npy", poses_translation_py)
+        torch.save(poses, f"{folder_experiment}poses")
+        torch.save(poses_translation, f"{folder_experiment}poses_translation")
 
-for i, structure in tqdm(enumerate(sorted_structures)):
-    posed_structure = utils.compute_poses(structure, poses[i], center_vector)
-    utils.save_structure(posed_structure, f"{folder_experiment}/posed_structures/structure_{i+1}.pdb")
-    np.save(f"{folder_experiment}/posed_structures/poses.npy", poses)
-    torch.save(torch.tensor(poses, dtype=torch.float32), f"{folder_experiment}/poses")
 
 
 

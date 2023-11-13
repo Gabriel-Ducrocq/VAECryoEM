@@ -8,11 +8,11 @@ import torch
 import numpy as np
 from vae import VAE
 from mlp import MLP
+import Bio.PDB as bpdb
 from renderer import Renderer
 from dataset import ImageDataSet
 from Bio.PDB.PDBParser import PDBParser
 from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
-
 
 
 def compute_center_of_mass(structure):

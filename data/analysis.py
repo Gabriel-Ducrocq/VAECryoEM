@@ -5,15 +5,25 @@ sys.path.append(path)
 import torch
 import yaml
 import utils
+
 import argparse
 import numpy as np
 from tqdm import tqdm
+import Bio.PDB as bpdb
+from Bio.PDB import PDBIO
+from protein.main import rotate_residues, translate_residues
 from Bio.PDB import PDBParser
 from renderer import Renderer
 from dataset import ImageDataSet
 from torch.utils.data import DataLoader
 from pytorch3d.transforms import quaternion_to_axis_angle
 
+class ResSelect(bpdb.Select):
+    def accept_residue(self, res):
+        if res.get_resname() == "LBV":
+            return False
+        else:
+            return True
 
 def concat_and_save(tens, path):
     """
@@ -110,6 +120,27 @@ all_latent_std = concat_and_save(all_latent_std, f"{folder_experiment}all_latent
 
 all_rotations_per_domain = concat_and_save(all_axis_angle_per_domain, f"{folder_experiment}all_rotations_per_domain.npy")
 all_translation_per_domain = concat_and_save(all_translation_per_domain, f"{folder_experiment}all_translation_per_domain.npy")
+
+
+all_rotations_per_residue = np.load(f"{folder_experiment}all_rotations_per_residue.npy")
+all_translation_per_residue = np.load(f"{folder_experiment}all_translation_per_residue.npy")
+
+
+for i in range(all_translation_per_residue.shape[0]):
+    print("Deform structure:", i)
+    parser = PDBParser(PERMISSIVE=0)
+    structure = utils.read_pdb(experiment_settings["base_structure_path"])
+    io = PDBIO()
+    io.set_structure(structure)
+    io.save(f"{folder_experiment}predicted_structures/predicted_structure_{i+1}.pdb", ResSelect())
+    structure = utils.read_pdb(f"{folder_experiment}predicted_structures/predicted_structure_{i+1}.pdb")
+    structure = utils.center_protein(structure, center_of_mass[0])
+    rotate_residues(structure, all_rotations_per_residue[i], np.eye(3,3))
+    translate_residues(structure, all_translation_per_residue[i])
+    structure = utils.center_protein(structure, -center_of_mass[0])
+    io = PDBIO()
+    io.set_structure(structure)
+    io.save(f"{folder_experiment}predicted_structures/predicted_structure_{i+1}.pdb")
 
 
 

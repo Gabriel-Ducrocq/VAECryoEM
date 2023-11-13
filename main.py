@@ -74,6 +74,7 @@ def train(yaml_setting_path):
 
 if __name__ == '__main__':
     wandb.login()
+
     args = parser_arg.parse_args()
     path = args.experiment_yaml
     train(path)
