@@ -129,9 +129,9 @@ def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae):
     """
     wandb.log({key: np.mean(val) for key, val in tracking_metrics.items()})
     wandb.log({"epoch": epoch})
-    hard_mask = np.argmax(mask.detach().cpu().numpy(), axis=1)
+    hard_mask = np.argmax(mask.detach().cpu().numpy(), axis=-1)
     for l in range(experiment_settings["N_domains"]):
-        wandb.log({f"mask_{l}": np.sum(hard_mask == l)})
+        wandb.log({f"mask_{l}": np.sum(hard_mask[0] == l)})
 
     mask_python = mask.to("cpu").detach()
     np.save(experiment_settings["folder_path"] + "masks/mask" + str(epoch) + ".npy", mask_python)
