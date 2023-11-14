@@ -55,7 +55,7 @@ structures = [f"{folder_experiment}/posed_structures/" + path for path in os.lis
 indexes = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures]
 #Keep the backbone only. Note that there is NO NEED to recenter, since we centered the structures when generating the
 #posed structures, where the center of mass was computed using ALL the atoms.
-sorted_structures = [utils.get_backbone(parser.get_structure("A", struct))[None, :, :] for _, struct in tqdm(sorted(zip(indexes, structures)))]
+sorted_structures = [utils.get_backbone(parser.get_structure("A", struct))[None, :, :] for _, struct in tqdm(sorted(zip(indexes[:1000], structures[:1000])))]
 sorted_structures = torch.tensor(np.concatenate(sorted_structures, axis=0), dtype=torch.float32, device=device)
 
 N = int(np.ceil(experiment_settings["N_images"]/batch_size))
@@ -63,19 +63,19 @@ all_images_no_noise = []
 all_images_noise = []
 all_images_no_noise_no_ctf = []
 var_noise = image_settings["noise_var"]
-for i in range(0,N):
+for i in range(0,10):
     print(i)
     batch_structures = sorted_structures[i*batch_size:(i+1)*batch_size]
-    batch_images = renderer.compute_x_y_values_all_atoms(batch_structures, poses)
+    batch_images = renderer.compute_x_y_values_all_atoms(batch_structures, poses, poses_translation)
     batch_images_no_ctf = renderer_no_ctf.compute_x_y_values_all_atoms(batch_structures, poses)
     all_images_no_noise.append(batch_images)
     all_images_no_noise_no_ctf.append(batch_images_no_ctf)
     batch_images_noisy = batch_images + torch.randn_like(batch_images)*np.sqrt(var_noise)
     all_images_noise.append(batch_images_noisy)
 
-    torch.save(batch_images_noisy, f"{folder_experiment}ImageDataSet_{i}")
-    torch.save(batch_images, f"{folder_experiment}ImageDataSetNoNoise_{i}")
-    torch.save(batch_images_no_ctf, f"{folder_experiment}ImageDataSetNoNoiseNoCTF_{i}")
+    #torch.save(batch_images_noisy, f"{folder_experiment}ImageDataSet_{i}")
+    #torch.save(batch_images, f"{folder_experiment}ImageDataSetNoNoise_{i}")
+    #torch.save(batch_images_no_ctf, f"{folder_experiment}ImageDataSetNoNoiseNoCTF_{i}")
 
 all_images_noise = torch.concat(all_images_noise, dim=0)
 all_images_no_noise = torch.concat(all_images_no_noise, dim=0)
@@ -85,7 +85,7 @@ power_no_noise = torch.var(all_images_no_noise, dim=(-2, -1))
 snr = torch.mean(power_no_noise/var_noise)
 print("Signal-to_noise ratio:", snr)
 
-#torch.save(all_images_noise, f"{folder_experiment}ImageDataSet")
-#torch.save(all_images_no_noise, f"{folder_experiment}ImageDataSetNoNoise")
-#torch.save(all_images_no_noise_no_ctf, f"{folder_experiment}ImageDataSetNoNoiseNoCTF")
+torch.save(all_images_noise, f"{folder_experiment}ImageDataSet")
+torch.save(all_images_no_noise, f"{folder_experiment}ImageDataSetNoNoise")
+torch.save(all_images_no_noise_no_ctf, f"{folder_experiment}ImageDataSetNoNoiseNoCTF")
 

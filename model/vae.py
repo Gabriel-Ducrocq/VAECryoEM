@@ -42,19 +42,28 @@ class VAE(torch.nn.Module):
                                    "proportions":{"mean":self.mask_proportions_mean, "std":self.mask_proportions_std}}
 
         self.elu = torch.nn.ELU()
-    def sample_mask(self):
+    def sample_mask(self, N_batch):
         """
         Samples a mask
-        :return: torch.tensor(N_residues, N_domains) values of the mask
+        :return: torch.tensor(N_batch, N_residues, N_domains) values of the mask
         """
-        cluster_proportions = torch.randn(self.N_domains, device=self.device)*self.mask_proportions_std + self.mask_proportions_mean
-        cluster_means = torch.randn(self.N_domains, device=self.device)*self.mask_means_std + self.mask_means_mean
-        cluster_std = self.elu(torch.randn(self.N_domains, device=self.device)*self.mask_std_std + self.mask_std_mean) + 1
-        proportions = torch.softmax(cluster_proportions, dim=1)
-        log_num = -0.5*(self.residues - cluster_means)**2/cluster_std**2 + \
-              torch.log(proportions)
+        #cluster_proportions = torch.randn(self.N_domains, device=self.device)*self.mask_proportions_std + self.mask_proportions_mean
+        #cluster_means = torch.randn(self.N_domains, device=self.device)*self.mask_means_std + self.mask_means_mean
+        #cluster_std = self.elu(torch.randn(self.N_domains, device=self.device)*self.mask_std_std + self.mask_std_mean) + 1
+        #proportions = torch.softmax(cluster_proportions, dim=1)
+        #log_num = -0.5*(self.residues - cluster_means)**2/cluster_std**2 + \
+        #      torch.log(proportions)
 
-        mask = torch.softmax(log_num/self.tau_mask, dim=1)
+        #mask = torch.softmax(log_num/self.tau_mask, dim=1)
+        cluster_proportions = torch.randn((N_batch, self.N_domains),
+                                          device=self.device) * self.mask_proportions_std+ self.mask_proportions_mean
+        cluster_means = torch.randn((N_batch, self.N_domains), device=self.device) * self.mask_means_std+ self.mask_means_mean
+        cluster_std = self.elu(torch.randn((N_batch, self.N_domains), device=self.device)*self.mask_std_std + self.mask_std_mean) + 1
+        proportions = torch.softmax(cluster_proportions, dim=-1)
+        log_num = -0.5*(self.residues[None, :, :] - cluster_means[:, None, :])**2/cluster_std[:, None, :]**2 + \
+              torch.log(proportions[:, None, :])
+
+        mask = torch.softmax(log_num / self.tau_mask, dim=-1)
         return mask
 
     def sample_latent(self, images):
