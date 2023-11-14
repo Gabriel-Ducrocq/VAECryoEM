@@ -104,16 +104,21 @@ class Renderer():
         corrupted_images = torch.fft.irfft2(corrupted_fourier)
         return corrupted_images
 
-    def compute_x_y_values_all_atoms(self, atom_positions, rotation_matrices, latent_type="continuous"):
+    def compute_x_y_values_all_atoms(self, atom_positions, rotation_matrices, translation_vectors,
+                                     latent_type="continuous"):
         """
 
         :param atom_position: (N_batch, N_atoms, 3)
-        :rotation_matrices: (N_batch, 3, 3)
+        :param rotation_matrices: (N_batch, 3, 3)
+        :param translation_vectors: (N_batch, 3)
         :return:
         """
         transposed_atom_positions = torch.transpose(atom_positions, dim0=-2, dim1=-1)
         if latent_type=="continuous":
+            #Rotation pose
             rotated_transposed_atom_positions = torch.matmul(rotation_matrices, transposed_atom_positions)
+            #Translation pose
+            rotated_transposed_atom_positions += translation_vectors[:, :, None]
             rotated_atom_positions = torch.transpose(rotated_transposed_atom_positions, -2, -1)
             all_x = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 0], self.pixels_x)
             all_y = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 1], self.pixels_y)

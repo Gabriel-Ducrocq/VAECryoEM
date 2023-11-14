@@ -73,6 +73,10 @@ for i in range(0,N):
     batch_images_noisy = batch_images + torch.randn_like(batch_images)*np.sqrt(var_noise)
     all_images_noise.append(batch_images_noisy)
 
+    torch.save(batch_images_noisy, f"{folder_experiment}ImageDataSet_{i}")
+    torch.save(batch_images, f"{folder_experiment}ImageDataSetNoNoise_{i}")
+    torch.save(batch_images_no_ctf, f"{folder_experiment}ImageDataSetNoNoiseNoCTF_{i}")
+
 all_images_noise = torch.concat(all_images_noise, dim=0)
 all_images_no_noise = torch.concat(all_images_no_noise, dim=0)
 all_images_no_noise_no_ctf = torch.concat(all_images_no_noise_no_ctf, dim=0)
@@ -81,7 +85,7 @@ power_no_noise = torch.var(all_images_no_noise, dim=(-2, -1))
 snr = torch.mean(power_no_noise/var_noise)
 print("Signal-to_noise ratio:", snr)
 
-torch.save(all_images_noise, f"{folder_experiment}ImageDataSet")
-torch.save(all_images_no_noise, f"{folder_experiment}ImageDataSetNoNoise")
-torch.save(all_images_no_noise_no_ctf, f"{folder_experiment}ImageDataSetNoNoiseNoCTF")
+#torch.save(all_images_noise, f"{folder_experiment}ImageDataSet")
+#torch.save(all_images_no_noise, f"{folder_experiment}ImageDataSetNoNoise")
+#torch.save(all_images_no_noise_no_ctf, f"{folder_experiment}ImageDataSetNoNoiseNoCTF")
 

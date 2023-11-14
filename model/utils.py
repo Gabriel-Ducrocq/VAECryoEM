@@ -8,7 +8,6 @@ import torch
 import numpy as np
 from vae import VAE
 from mlp import MLP
-import Bio.PDB as bpdb
 from renderer import Renderer
 from dataset import ImageDataSet
 from Bio.PDB.PDBParser import PDBParser
@@ -107,7 +106,9 @@ def parse_yaml(path):
     else:
         raise Exception("Optimizer must be Adam")
 
-    dataset = ImageDataSet(experiment_settings["dataset_images_path"], experiment_settings["dataset_poses_path"])
+    dataset = ImageDataSet(experiment_settings["dataset_images_path"], experiment_settings["dataset_poses_path"],
+                           experiment_settings["dataset_poses_translation_path"])
+
     N_epochs = experiment_settings["N_epochs"]
     batch_size = experiment_settings["batch_size"]
     latent_type = experiment_settings["latent_type"]
@@ -156,7 +157,7 @@ def get_backbone(structure):
             for residue in chain:
                 residues_indexes.append(N_residue)
                 name = residue.get_resname()
-                if name != "LBV":
+                if name not in ["LBV", "NAG", "MAN", "DMS", "BMA"]:
                     x, y, z = get_atom_positions(residue, name)
                     absolute_positions.append(x)
                     absolute_positions.append(y)

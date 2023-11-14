@@ -34,7 +34,7 @@ def train(yaml_setting_path):
         tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
                             "kl_prior_mask_proportions":[], "l2_pen":[]}
         data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True))
-        for batch_images, batch_poses in data_loader:
+        for batch_images, batch_poses, batch_poses_translation in data_loader:
             start = time()
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
@@ -58,7 +58,7 @@ def train(yaml_setting_path):
                                                                            experiment_settings["N_residues"]*3, 3))
 
             batch_predicted_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_poses,
-                                                                           latent_type=latent_type)
+                                                                batch_poses_translation,latent_type=latent_type)
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
             loss = compute_loss(batch_predicted_images, batch_images, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics,

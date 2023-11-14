@@ -44,8 +44,8 @@ def translate_pdb_structure(pdb_structure, translation_vector):
     :param pdb_structure: PDB structure to translate
     :param translation_vector: numpy.array (3, ) vector of translation
     """
-    all_coords = np.concatenate([atom.coord[0, :, None] for atom in pdb_structure.get_atoms()], axis=1)
-    translated_coordinates = all_coords - translation_vector
+    all_coords = np.concatenate([atom.coord[:, None] for atom in pdb_structure.get_atoms()], axis=1)
+    translated_coordinates = all_coords - translation_vector[:, None]
     for index, atom in enumerate(pdb_structure.get_atoms()):
         atom.set_coord(translated_coordinates[:, index])
 
@@ -61,6 +61,7 @@ def compute_poses(structure_path, pose, translation, center_vector):
     struct = parser.get_structure("A", structure_path)
     center_protein(struct, center_vector)
     rotate_pdb_structure_matrix(struct, pose)
+    translate_pdb_structure(struct, translation)
     return struct
 
 
