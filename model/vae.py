@@ -35,8 +35,6 @@ class VAE(torch.nn.Module):
         self.mask_proportions_std = torch.nn.Parameter(torch.tensor(mask_start_values["clusters_proportions"]["std"], dtype=torch.float32, device=device)[None, :],
                            requires_grad=True)
 
-        self.exponential_distrib = torch.distributions.exponential.Exponential(rate=1)
-
         self.mask_parameters = {"means":{"mean":self.mask_means_mean, "std":self.mask_means_std},
                                    "stds":{"mean":self.mask_std_mean, "std":self.mask_std_std},
                                    "proportions":{"mean":self.mask_proportions_mean, "std":self.mask_proportions_std}}

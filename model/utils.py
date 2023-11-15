@@ -103,7 +103,14 @@ def parse_yaml(path):
     atom_positions = torch.tensor(get_backbone(centered_based_structure), dtype=torch.float32, device=device)
 
     if experiment_settings["optimizer"]["name"] == "adam":
-        optimizer = torch.optim.Adam(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
+        if "learning_rate_mask" not in experiment_settings["optimizer"]:
+            optimizer = torch.optim.Adam(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
+        else:
+            list_param = [{"params": param, "lr":experiment_settings["optimizer"]["learning_rate_mask"]} for name, param in
+                          vae.named_parameters() if "mask" in name]
+            list_param.append({"params": vae.encoder.parameters(), "lr":experiment_settings["optimizer"]["learning_rate"]})
+            list_param.append({"params": vae.decoder.parameters(), "lr":experiment_settings["optimizer"]["learning_rate"]})
+            optimizer = torch.optim.Adam(list_param)
     else:
         raise Exception("Optimizer must be Adam")
 
