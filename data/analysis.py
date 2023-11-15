@@ -64,8 +64,12 @@ renderer_no_ctf = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_re
                     device=device, use_ctf=False)
 
 model_path = os.listdir(f"{folder_experiment}models/")
-model = torch.load(f"{folder_experiment}models/{model_path[0]}", map_location=torch.device('cpu'))
-model.device = "cpu"
+if device != "cpu"
+    model = torch.load(f"{folder_experiment}models/{model_path[0]}", map_location=torch.device('cpu'))
+    model.device = "cpu"
+else:
+    model = torch.load(f"{folder_experiment}models/{model_path[0]}")
+
 
 images_path = torch.load(f"{folder_experiment}ImageDataSet")
 poses = torch.load(f"{folder_experiment}poses")
