@@ -110,7 +110,7 @@ for i, (batch_images, batch_poses, batch_poses_translation) in enumerate(data_lo
                                                        rotation_per_residue)
 
     batch_predicted_images = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, batch_poses,
-                                                                   latent_type=experiment_settings["latent_type"])
+                                            batch_poses_translation, latent_type=experiment_settings["latent_type"])
     batch_predicted_images_no_pose = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose,
                                     zeros_poses_translation, latent_type=experiment_settings["latent_type"])
 
