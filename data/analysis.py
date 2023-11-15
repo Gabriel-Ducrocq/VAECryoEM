@@ -65,6 +65,7 @@ renderer_no_ctf = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_re
 
 model_path = os.listdir(f"{folder_experiment}models/")
 if device != "cpu":
+    print("CPU")
     model = torch.load(f"{folder_experiment}models/{model_path[0]}", map_location=torch.device('cpu'))
     model.device = "cpu"
 else:
