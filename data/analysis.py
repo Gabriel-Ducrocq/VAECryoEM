@@ -116,12 +116,12 @@ for i, (batch_images, batch_poses, batch_poses_translation) in enumerate(data_lo
 
     #np.save(f"{folder_experiment}predicted_images_no_pose_{i}.npy", batch_predicted_images_no_pose.to("cpu").detach().numpy())
     np.save(f"{folder_experiment}predicted_images_{i}.npy", batch_predicted_images.to("cpu").detach().numpy())
-    all_latent_mean.append(latent_mean)
-    all_latent_std.append(latent_std)
-    all_rotations_per_residue.append(rotation_per_residue)
-    all_translation_per_residue.append(translation_per_residue)
-    all_axis_angle_per_domain.append(axis_angle_per_domain)
-    all_translation_per_domain.append(translations_per_domain)
+    #all_latent_mean.append(latent_mean)
+    #all_latent_std.append(latent_std)
+    #all_rotations_per_residue.append(rotation_per_residue)
+    #all_translation_per_residue.append(translation_per_residue)
+    #all_axis_angle_per_domain.append(axis_angle_per_domain)
+    #all_translation_per_domain.append(translations_per_domain)
 
 
 
