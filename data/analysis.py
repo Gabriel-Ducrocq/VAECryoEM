@@ -85,8 +85,8 @@ centering_structure = utils.read_pdb(experiment_settings["centering_structure_pa
 center_of_mass = utils.compute_center_of_mass(centering_structure)
 centered_based_structure = utils.center_protein(base_structure, center_of_mass)
 atom_positions = torch.tensor(utils.get_backbone(centered_based_structure), dtype=torch.float32, device=device)
-identity_pose = torch.broadcast_to(torch.eye(3,3)[None, :, :], (experiment_settings["batch_size"], 3, 3))
-zeros_poses_translation = torch.broadcast_to(torch.zeros((3,))[None, :], (experiment_settings["batch_size"], 3))
+identity_pose = torch.broadcast_to(torch.eye(3,3, device=device)[None, :, :], (experiment_settings["batch_size"], 3, 3))
+zeros_poses_translation = torch.broadcast_to(torch.zeros((3,), device=device)[None, :], (experiment_settings["batch_size"], 3))
 
 all_latent_mean = []
 all_latent_std = []
@@ -97,6 +97,9 @@ all_axis_angle_per_domain = []
 
 for i, (batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
     print("Batch number:", i)
+    batch_images = batch_images.to(device)
+    batch_poses = batch_poses.to(device)
+    batch_poses_translation = batch_poses_translation.to(device)
     latent_variables, latent_mean, latent_std = model.sample_latent(batch_images)
     mask = model.sample_mask(N_batch=experiment_settings["batch_size"])
     quaternions_per_domain, translations_per_domain = model.decode(latent_mean)
