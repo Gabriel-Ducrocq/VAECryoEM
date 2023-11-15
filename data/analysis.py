@@ -114,8 +114,8 @@ for i, (batch_images, batch_poses, batch_poses_translation) in enumerate(data_lo
     batch_predicted_images_no_pose = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose,
                                     zeros_poses_translation, latent_type=experiment_settings["latent_type"])
 
-    np.save(f"{folder_experiment}predicted_images_no_pose_{i}.npy", batch_predicted_images_no_pose.detach().numpy())
-    np.save(f"{folder_experiment}predicted_images_{i}.npy", batch_predicted_images.detach().numpy())
+    np.save(f"{folder_experiment}predicted_images_no_pose_{i}.npy", batch_predicted_images_no_pose.to("cpu").detach().numpy())
+    np.save(f"{folder_experiment}predicted_images_{i}.npy", batch_predicted_images.to("cpu").detach().numpy())
     all_latent_mean.append(latent_mean)
     all_latent_std.append(latent_std)
     all_rotations_per_residue.append(rotation_per_residue)
