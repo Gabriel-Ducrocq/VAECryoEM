@@ -68,7 +68,8 @@ if device == "cpu":
     model = torch.load(f"{folder_experiment}models/{model_path[0]}", map_location=torch.device('cpu'))
     model.device = "cpu"
 else:
-    model = torch.load(f"{folder_experiment}models/{model_path[0]}")
+    model = torch.load(f"{folder_experiment}models/{model_path[0]}", map_location=torch.device(device))
+    model.device = device
 
 
 images_path = torch.load(f"{folder_experiment}ImageDataSet")
