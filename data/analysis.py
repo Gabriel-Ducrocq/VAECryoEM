@@ -74,7 +74,8 @@ data_loader = iter(DataLoader(dataset, batch_size=experiment_settings["batch_siz
 
 parser = PDBParser(PERMISSIVE=0)
 base_structure = utils.read_pdb(experiment_settings["base_structure_path"])
-center_of_mass = utils.compute_center_of_mass(base_structure)
+centering_structure = utils.read_pdb(experiment_settings["centering_structure_path"])
+center_of_mass = utils.compute_center_of_mass(centering_structure)
 centered_based_structure = utils.center_protein(base_structure, center_of_mass)
 atom_positions = torch.tensor(utils.get_backbone(centered_based_structure), dtype=torch.float32, device=device)
 identity_pose = torch.broadcast_to(torch.eye(3,3)[None, :, :], (experiment_settings["batch_size"], 3, 3))

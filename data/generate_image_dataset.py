@@ -50,12 +50,13 @@ batch_size = experiment_settings["batch_size"]
 ## We don't use any pose since we are using structure that are already posed
 poses = torch.broadcast_to(torch.eye(3, 3, dtype=torch.float32, device=device)[None, :, :], (batch_size, 3, 3))
 poses = torch.tensor(poses, dtype=torch.float32, device=device)
+poses_translation = torch.broadcast_to(torch.zeros(3, dtype=torch.float32, device=device)[None,:], (batch_size, 3))
 #Get the structures to convert them into 2d images
 structures = [f"{folder_experiment}/posed_structures/" + path for path in os.listdir(f"{folder_experiment}/posed_structures/") if ".pdb" in path]
 indexes = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures]
 #Keep the backbone only. Note that there is NO NEED to recenter, since we centered the structures when generating the
 #posed structures, where the center of mass was computed using ALL the atoms.
-sorted_structures = [utils.get_backbone(parser.get_structure("A", struct))[None, :, :] for _, struct in tqdm(sorted(zip(indexes[:1000], structures[:1000])))]
+sorted_structures = [utils.get_backbone(parser.get_structure("A", struct))[None, :, :] for _, struct in tqdm(sorted(zip(indexes, structures)))]
 sorted_structures = torch.tensor(np.concatenate(sorted_structures, axis=0), dtype=torch.float32, device=device)
 
 N = int(np.ceil(experiment_settings["N_images"]/batch_size))
@@ -63,11 +64,11 @@ all_images_no_noise = []
 all_images_noise = []
 all_images_no_noise_no_ctf = []
 var_noise = image_settings["noise_var"]
-for i in range(0,10):
+for i in range(0,N):
     print(i)
     batch_structures = sorted_structures[i*batch_size:(i+1)*batch_size]
     batch_images = renderer.compute_x_y_values_all_atoms(batch_structures, poses, poses_translation)
-    batch_images_no_ctf = renderer_no_ctf.compute_x_y_values_all_atoms(batch_structures, poses)
+    batch_images_no_ctf = renderer_no_ctf.compute_x_y_values_all_atoms(batch_structures, poses, poses_translation)
     all_images_no_noise.append(batch_images)
     all_images_no_noise_no_ctf.append(batch_images_no_ctf)
     batch_images_noisy = batch_images + torch.randn_like(batch_images)*np.sqrt(var_noise)
