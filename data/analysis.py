@@ -69,7 +69,9 @@ model.device = "cpu"
 
 images_path = torch.load(f"{folder_experiment}ImageDataSet")
 poses = torch.load(f"{folder_experiment}poses")
-dataset = ImageDataSet(experiment_settings["dataset_images_path"], experiment_settings["dataset_poses_path"])
+poses_translations = torch.load(f"{folder_experiment}poses_translation")
+dataset = ImageDataSet(experiment_settings["dataset_images_path"], experiment_settings["dataset_poses_path"],
+                       experiment_settings["dataset_poses_translation_path"])
 data_loader = iter(DataLoader(dataset, batch_size=experiment_settings["batch_size"], shuffle=False))
 
 parser = PDBParser(PERMISSIVE=0)
@@ -79,6 +81,7 @@ center_of_mass = utils.compute_center_of_mass(centering_structure)
 centered_based_structure = utils.center_protein(base_structure, center_of_mass)
 atom_positions = torch.tensor(utils.get_backbone(centered_based_structure), dtype=torch.float32, device=device)
 identity_pose = torch.broadcast_to(torch.eye(3,3)[None, :, :], (experiment_settings["batch_size"], 3, 3))
+zeros_poses_translation = torch.broadcast_to(torch.zeros((3,))[None, :], (experiment_settings["batch_size"], 3))
 
 all_latent_mean = []
 all_latent_std = []
@@ -87,7 +90,7 @@ all_translation_per_residue = []
 all_translation_per_domain = []
 all_axis_angle_per_domain = []
 
-for i, (batch_images, batch_poses) in enumerate(data_loader):
+for i, (batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
     print("Batch number:", i)
     latent_variables, latent_mean, latent_std = model.sample_latent(batch_images)
     mask = model.sample_mask()
@@ -101,7 +104,7 @@ for i, (batch_images, batch_poses) in enumerate(data_loader):
     batch_predicted_images = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, batch_poses,
                                                                    latent_type=experiment_settings["latent_type"])
     batch_predicted_images_no_pose = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose,
-                                                                   latent_type=experiment_settings["latent_type"])
+                                    zeros_poses_translation, latent_type=experiment_settings["latent_type"])
 
     np.save(f"{folder_experiment}predicted_images_no_pose_{i}.npy", batch_predicted_images_no_pose.detach().numpy())
     np.save(f"{folder_experiment}predicted_images_{i}.npy", batch_predicted_images.detach().numpy())
