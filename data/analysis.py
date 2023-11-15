@@ -93,7 +93,7 @@ all_axis_angle_per_domain = []
 for i, (batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
     print("Batch number:", i)
     latent_variables, latent_mean, latent_std = model.sample_latent(batch_images)
-    mask = model.sample_mask()
+    mask = model.sample_mask(N_batch=experiment_settings["batch_size"])
     quaternions_per_domain, translations_per_domain = model.decode(latent_mean)
     axis_angle_per_domain = quaternion_to_axis_angle(quaternions_per_domain)
     rotation_per_residue = utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
