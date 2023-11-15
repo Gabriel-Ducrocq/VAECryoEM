@@ -71,6 +71,8 @@ else:
     model = torch.load(f"{folder_experiment}models/{model_path[0]}", map_location=torch.device(device))
     model.device = device
 
+model.eval()
+
 
 images_path = torch.load(f"{folder_experiment}ImageDataSet")
 poses = torch.load(f"{folder_experiment}poses")
