@@ -111,13 +111,11 @@ for i, (batch_images, batch_poses, batch_poses_translation) in enumerate(data_lo
     deformed_structures = utils.deform_structure(atom_positions, translation_per_residue,
                                                        rotation_per_residue)
 
-    batch_predicted_images = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, batch_poses,
-                                            batch_poses_translation, latent_type=experiment_settings["latent_type"])
-    #batch_predicted_images_no_pose = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose,
-    #                                zeros_poses_translation, latent_type=experiment_settings["latent_type"])
+    #batch_predicted_images = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, batch_poses,
+    #                                        batch_poses_translation, latent_type=experiment_settings["latent_type"])
+    #                         zeros_poses_translation, latent_type=experiment_settings["latent_type"])
 
-    #np.save(f"{folder_experiment}predicted_images_no_pose_{i}.npy", batch_predicted_images_no_pose.to("cpu").detach().numpy())
-    np.save(f"{folder_experiment}predicted_images_{i}.npy", batch_predicted_images.to("cpu").detach().numpy())
+    #np.save(f"{folder_experiment}predicted_images_{i}.npy", batch_predicted_images.to("cpu").detach().numpy())
     all_latent_mean.append(latent_mean.to("cpu"))
     all_latent_std.append(latent_std.to("cpu"))
     all_rotations_per_residue.append(rotation_per_residue.to("cpu"))
@@ -141,7 +139,7 @@ all_translation_per_residue = np.load(f"{folder_experiment}all_translation_per_r
 
 
 #for i in range(all_translation_per_residue.shape[0]):
-for i in range(0, 10000):
+for i in range(7000, 10000):
     print("Deform structure:", i)
     parser = PDBParser(PERMISSIVE=0)
     structure = utils.read_pdb(experiment_settings["base_structure_path"])
