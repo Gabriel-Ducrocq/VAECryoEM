@@ -141,7 +141,7 @@ all_translation_per_residue = np.load(f"{folder_experiment}all_translation_per_r
 
 
 #for i in range(all_translation_per_residue.shape[0]):
-for i in range(7000, 10000):
+for i in range(0, 10000):
     print("Deform structure:", i)
     parser = PDBParser(PERMISSIVE=0)
     structure = utils.read_pdb(experiment_settings["base_structure_path"])
