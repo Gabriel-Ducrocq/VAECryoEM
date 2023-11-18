@@ -30,6 +30,8 @@ def train(yaml_setting_path):
             "epochs": experiment_settings["N_epochs"],
         })
 
+    translation_per_residue_null = torch.zeros((100, 1006, 3), device=device)
+    rotation_per_residue_null = torch.broadcast_to(torch.eye(3, 3, device=device)[None, None, :, :], (100, 1006, 3, 3))
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
         tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
@@ -55,8 +57,8 @@ def train(yaml_setting_path):
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
             rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
-            deformed_structures = model.utils.deform_structure(atom_positions, translation_per_residue,
-                                                               rotation_per_residue)
+            deformed_structures = model.utils.deform_structure(atom_positions, translation_per_residue_null,
+                                                               rotation_per_residue_null)
 
             if latent_type == "categorical":
                 deformed_structures = torch.broadcast_to(deformed_structures, (batch_size, experiment_settings["latent_dimension"],
