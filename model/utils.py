@@ -82,7 +82,9 @@ def parse_yaml(path):
     #                    3*2, experiment_settings["encoder_pose"]["hidden_dimensions"], network_type="encoder", device=device,
     #                    latent_type="continuous")
 
-    encoder_poses = CNNEncoder(11, 0.01, num_octaves= 4,octave_scaling=10)
+    #encoder_poses = CNNEncoder(11, 0.01, num_octaves= 4,octave_scaling=10)
+    encoder_poses = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1], 6,
+                      experiment_settings["encoder"]["hidden_dimensions"], network_type="decoder", device=device)
 
     decoder_poses = MLP(3, 3, experiment_settings["decoder_pose"]["hidden_dimensions"], network_type="decoder",
                                   device=device)

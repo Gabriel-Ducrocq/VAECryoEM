@@ -207,7 +207,8 @@ class VGG16Like(nn.Module):
 
     def forward(self, input):
         input_augmented = input
-        out = self.net(self.normalize_repeat(input_augmented))
+        normalized_input = self.normalize_repeat(input_augmented)
+        out = self.net(normalized_input)
         return out
 
 
@@ -220,20 +221,20 @@ class CNNEncoder(nn.Module):
         self.fc = nn.Sequential(*[nn.Linear(2048, 512, device=device), nn.ReLU(), nn.Linear(512, 256, device=device), nn.ReLU(),
                     nn.Linear(256, 3*2, device=device)])
 
-        self.output_elu = torch.nn.ELU()
-
     def forward(self, images):
         """
 
-        :param images:
-        :return: torch.tensor(Batch_size, 3), torch.tensor(Batch_size, 3) the means and sds of the Gaussian distribution
-        over the latents
+        :param images: torch.tensor(N_batch, N_pix, N_pix)
+        :return: torch.tensor(Batch_size, 6) a representation of rotation in R^6
         """
         filtered_images = self.gaussian_pyramid(images)
+        print(self.vgg_like(filtered_images).shape)
         vgg_output = torch.flatten(self.vgg_like(filtered_images), start_dim=1)
+        print(vgg_output.shape)
         print("OUTPUT CONV SHAPE", vgg_output.shape)
+        print(vgg_output[:, :15])
         output = self.fc(vgg_output)
-        return output[:, :3], self.output_elu(output[:, 3:]) + 1
+        return output
 
 
 

@@ -5,7 +5,7 @@ import model.utils
 from time import time
 from model.loss import compute_loss
 from torch.utils.data import DataLoader
-from pytorch3d.transforms import quaternion_to_matrix
+from pytorch3d.transforms import quaternion_to_matrix, rotation_6d_to_matrix
 
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--experiment_yaml', type=str, required=True)
@@ -48,11 +48,11 @@ def train(yaml_setting_path):
                 latent_mean = None
                 latent_std = None
 
-            pose_latent_variables, pose_latent_mean, pose_latent_std = vae.sample_latent_pose(batch_images)
-
+            predicted_poses_r6 = vae.sample_latent_pose(batch_flattened_images)
+            print(predicted_poses_r6.shape)
+            predicted_poses = rotation_6d_to_matrix(predicted_poses_r6)
             mask = vae.sample_mask()
-            quaternions_per_domain, translations_per_domain, predicted_quaternions_poses = vae.decode(latent_variables, pose_latent_variables)
-            predicted_poses = quaternion_to_matrix(predicted_quaternions_poses)
+            quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
             rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
             deformed_structures = model.utils.deform_structure(atom_positions, translation_per_residue,
