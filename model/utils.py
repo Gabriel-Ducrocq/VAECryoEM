@@ -95,7 +95,6 @@ def parse_yaml(path):
                         device=device, use_ctf=image_settings["renderer"]["use_ctf"],
                         latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"])
 
-
     base_structure = read_pdb(experiment_settings["base_structure_path"])
     centering_structure = read_pdb(experiment_settings["centering_structure_path"])
     center_of_mass = compute_center_of_mass(centering_structure)

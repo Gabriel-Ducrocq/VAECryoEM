@@ -6,6 +6,8 @@ from time import time
 from model.loss import compute_loss
 from torch.utils.data import DataLoader
 
+import matplotlib.pyplot as plt
+
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--experiment_yaml', type=str, required=True)
 
@@ -29,16 +31,18 @@ def train(yaml_setting_path):
             "epochs": experiment_settings["N_epochs"],
         })
 
+    #non_noisy_images = torch.load("data/dataset/spike/ImageDataSetNoNoiseNoCTF")
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
         tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
                             "kl_prior_mask_proportions":[], "l2_pen":[]}
+
         data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True))
         for batch_images, batch_poses, batch_poses_translation in data_loader:
             start = time()
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
-            batch_poses_translation = batch_poses_translation.to(device)
+            batch_poses_translation = -batch_poses_translation.to(device)
             if latent_type == "continuous":
                 latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
                 log_latent_distrib = None
@@ -60,6 +64,7 @@ def train(yaml_setting_path):
 
             batch_predicted_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_poses,
                                                                 batch_poses_translation,latent_type=latent_type)
+
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
             loss = compute_loss(batch_predicted_images, batch_images, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics,
