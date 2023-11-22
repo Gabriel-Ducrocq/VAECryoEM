@@ -45,7 +45,7 @@ def translate_pdb_structure(pdb_structure, translation_vector):
     :param translation_vector: numpy.array (3, ) vector of translation
     """
     all_coords = np.concatenate([atom.coord[:, None] for atom in pdb_structure.get_atoms()], axis=1)
-    translated_coordinates = all_coords - translation_vector[:, None]
+    translated_coordinates = all_coords + translation_vector[:, None]
     for index, atom in enumerate(pdb_structure.get_atoms()):
         atom.set_coord(translated_coordinates[:, index])
 

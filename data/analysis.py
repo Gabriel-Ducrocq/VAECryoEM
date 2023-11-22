@@ -76,7 +76,7 @@ model.eval()
 
 images_path = torch.load(f"{folder_experiment}ImageDataSet")
 poses = torch.load(f"{folder_experiment}poses")
-poses_translations = -torch.load(f"{folder_experiment}poses_translation")
+poses_translations = torch.load(f"{folder_experiment}poses_translation")
 dataset = ImageDataSet(experiment_settings["dataset_images_path"], experiment_settings["dataset_poses_path"],
                        experiment_settings["dataset_poses_translation_path"])
 data_loader = iter(DataLoader(dataset, batch_size=experiment_settings["batch_size"], shuffle=False))

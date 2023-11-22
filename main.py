@@ -42,7 +42,7 @@ def train(yaml_setting_path):
             start = time()
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
-            batch_poses_translation = -batch_poses_translation.to(device)
+            batch_poses_translation = batch_poses_translation.to(device)
             if latent_type == "continuous":
                 latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
                 log_latent_distrib = None
