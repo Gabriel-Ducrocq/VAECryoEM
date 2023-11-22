@@ -49,7 +49,7 @@ axis_angle = normalized_axis*angle_rotation
 poses = axis_angle_to_matrix(axis_angle)
 poses_translation = torch.zeros((N_images, 3))
 #poses_translation[:, :2] = 20*torch.rand((N_images, 2)) - 10
-poses_translation[:, :2] = - 9
+#poses_translation[:, :2] = -9
 
 poses_py = poses.detach().numpy()
 poses_translation_py = poses_translation.detach().numpy()
