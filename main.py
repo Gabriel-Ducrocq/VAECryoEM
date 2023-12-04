@@ -43,24 +43,15 @@ def train(yaml_setting_path):
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
             batch_poses_translation = batch_poses_translation.to(device)
-            if latent_type == "continuous":
-                latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
-                log_latent_distrib = None
-            else:
-                latent_variables, log_latent_distrib, _ = vae.sample_latent(batch_images)
-                latent_mean = None
-                latent_std = None
+            #The following transformation are output per domain.
+            sampled_matrices, mean_rotations, noise_rot, translations_per_domain, mean_translation, sigma_translation = vae.sample_latent(batch_images)
+
 
             mask = vae.sample_mask(batch_size)
-            quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
-            rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
+            rotation_per_residue = model.utils.compute_rotations_per_residue(sampled_matrices, mask, device)
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
             deformed_structures = model.utils.deform_structure(atom_positions, translation_per_residue,
                                                                rotation_per_residue)
-
-            if latent_type == "categorical":
-                deformed_structures = torch.broadcast_to(deformed_structures, (batch_size, experiment_settings["latent_dimension"],
-                                                                           experiment_settings["N_residues"]*3, 3))
 
             batch_predicted_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_poses,
                                                                 batch_poses_translation,latent_type=latent_type)

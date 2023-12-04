@@ -1,4 +1,5 @@
 import torch as torch
+from pytorch3d.transforms import rotation_6d_to_matrix
 
 
 class VAE(torch.nn.Module):
@@ -14,6 +15,29 @@ class VAE(torch.nn.Module):
         self.tau_mask = tau_mask
         self.latent_type = latent_type
         self.latent_dim = latent_dim
+
+        self.slice_mean_rotation = slice(0, 6)
+        self.slice_sigma_rotation = slice(6, 9)
+        self.slice_mean_translation = slice(9, 12)
+        self.slice_std_translation = slice(12, 15)
+
+        self.lie_alg_l1 = torch.zeros((3, 3))
+        self.lie_alg_l1[2, 1] = 1
+        self.lie_alg_l1[1, 2] = -1
+
+        self.lie_alg_l2 = torch.zeros((3, 3))
+        self.lie_alg_l1[0, 2] = 1
+        self.lie_alg_l1[2, 0] = -1
+
+        self.lie_alg_l3 = torch.zeros((3, 3))
+        self.lie_alg_l3[1, 0] = 1
+        self.lie_alg_l3[0, 1] = -1
+
+        self.elu = torch.nn.ELU()
+
+        self.lie_alg_basis = torch.concat([self.lie_alg_l1[None, :, :], self.lie_alg_l2[None, :, :],
+                                           self.lie_alg_l3[None, :, :]], dim=0)
+
 
         self.residues = torch.arange(0, self.N_residues, 1, dtype=torch.float32, device=device)[:, None]
 
@@ -66,51 +90,34 @@ class VAE(torch.nn.Module):
 
     def sample_latent(self, images):
         """
-        Samples latent variables given an image
+        Samples latent variables given an image. This latent variable is a tensor of size
+        (N_batch, N_domain*15) where 15 comes from the fact that we sample a translation (3 dim), an uncertainty
+        std (3 dim) on translation, a mean rotation matrix R\mu (6 dim before Gram Schmidt) and uncertainties stds
+        (3 dim) on the Lie algebra.
         :param images: torch.tensor(N_batch, N_pix_x, N_pix_y)
-        :return: torch.tensor(N_batch, latent_dim) latent variables,
-                torch.tensor(N_batch, latent_dim) latent_mean,
-                torch.tensor(N_batch, latent_dim) latent std if latent_type is "continuous"
-                else
-                torch.tensor(N_batch, 1) sampled latent variable per batch
-                torch.tensor(N_batch, latent_dim) log probabilities of the multinomial.
+        :return: torch.tensor(N_batch, N_domains, 3, 3) rotation matrix,
+                torch.tensor(N_batch, N_domains, 3, 3) mean rotation matrix,
+                torch.tensor(N_batch, N_domains, 3) rotation std
+                torch.tensor(N_batch, N_domains, 3) translation
+                torch.tensor(N_batch, N_domains, 3) mean translation
+                torch.tensor(N_batch, N_domains, 3) std translation
         """
-        if self.latent_type == "continuous":
-            latent_mean, latent_std = self.encoder(images)
-            latent_variables = latent_mean + torch.randn_like(latent_mean, dtype=torch.float32, device=self.device)\
-                                *latent_std
 
-            return latent_variables, latent_mean, latent_std
-        else:
-            log_distribution_latent = self.encoder(images)
-            distribution_latent = torch.softmax(log_distribution_latent, dim=-1)
-            latent_variable = torch.multinomial(distribution_latent, 1)
-            return latent_variable, log_distribution_latent, None
+        # Be careful, I now need to pass the stds through ELU + 1
+        N_batch = images.shape[0]
+        output = self.encoder(images)
+        output_per_domain = torch.reshape(output, (N_batch, self.N_domains, 12))
+        mean_translation = output_per_domain[:, :, self.slice_mean_translation]
+        sigma_translation = self.elu(output_per_domain[:, :, self.slice_std_translation]) + 1
+        translation_per_domain = mean_translation + torch.randn_like(mean_translation)*sigma_translation
+        mean_rotations = rotation_6d_to_matrix(output_per_domain[:, :, self.slice_mean_rotation])
+        std_rot = self.elu(output_per_domain[:, :, self.slice_sigma_rotation]) + 1
+        noise_rot = torch.randn_like(std_rot)*std_rot
+        uncertainty_matrices = torch.einsum("blk, kjj -> bljj", noise_rot, self.lie_alg_basis)
+        sample_matrix = torch.einsum("blkj, bljk->blkk", mean_rotations, uncertainty_matrices)
+        return sample_matrix, mean_rotations, noise_rot, translation_per_domain, mean_translation, sigma_translation
 
-    def decode(self, latent_variables):
-        """
-        Decode the latent variables
-        :param latent_variables: torch.tensor(N_batch, latent_dim)
-        :return: torch.tensor(N_batch, N_domains, 4) quaternions, torch.tensor(N_batch, N_domains, 3) translations
-                OR torch.tensor(N_latent_dim, N_domains, 4)
-        """
-        N_batch = latent_variables.shape[0]
-        if self.latent_type == "continuous":
-            transformations = self.decoder(latent_variables)
-            transformations_per_domain = torch.reshape(transformations, (N_batch, self.N_domains, 6))
-            ones = torch.ones(size=(N_batch, self.N_domains, 1), device=self.device)
-            quaternions_per_domain = torch.concat([ones, transformations_per_domain[:, :, 3:]], dim=-1)
-            translations_per_domain = transformations_per_domain[:, :, :3]
-        else:
-            latent_variables = torch.tensor([latent_variable for latent_variable in range(self.latent_dim)],
-                                           dtype=torch.float32, device=self.device)[:, None]
-            transformations = self.decoder(latent_variables)
-            transformations_per_domain = torch.reshape(transformations, (self.latent_dim, self.N_domains, 6))
-            ones = torch.ones(size=(self.latent_dim, self.N_domains, 1), device=self.device)
-            quaternions_per_domain = torch.concat([ones, transformations_per_domain[:, :, 3:]], dim=-1)
-            translations_per_domain = transformations_per_domain[:, :, :3]
 
-        return quaternions_per_domain, translations_per_domain
 
 
 

@@ -11,7 +11,7 @@ from mlp import MLP
 from renderer import Renderer
 from dataset import ImageDataSet
 from Bio.PDB.PDBParser import PDBParser
-from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
+from pytorch3d.transforms import axis_angle_to_matrix, matrix_to_axis_angle
 
 
 def compute_center_of_mass(structure):
@@ -63,7 +63,7 @@ def parse_yaml(path):
 
     if experiment_settings["latent_type"] == "continuous":
         encoder = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
-                      experiment_settings["latent_dimension"] * 2,
+                      experiment_settings["N_domains"] * 12,
                       experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
                       latent_type="continuous")
         decoder = MLP(experiment_settings["latent_dimension"], experiment_settings["N_domains"]*6,
@@ -187,19 +187,19 @@ def read_pdb(path):
     return structure
 
 
-def compute_rotations_per_residue(quaternions, mask, device):
+def compute_rotations_per_residue(matrices_per_domain, mask, device):
     """
     Computes the rotation matrix corresponding to each domain for each residue, where the angle of rotation has been
     weighted by the mask value of the corresponding domain.
-    :param quaternions: tensor (N_batch, N_domains, 4) of non normalized quaternions defining rotations
+    :param matrices_per_domain: tensor (N_batch, N_domains, 3, 3) of rotation matrices
     :param mask: tensor (N_batch, N_residues, N_domains)
     :return: tensor (N_batch, N_residues, 3, 3) rotation matrix for each residue
     """
     N_residues = mask.shape[1]
-    batch_size = quaternions.shape[0]
+    batch_size = matrices_per_domain.shape[0]
     N_domains = mask.shape[-1]
     # NOTE: no need to normalize the quaternions, quaternion_to_axis does it already.
-    rotation_per_domains_axis_angle = quaternion_to_axis_angle(quaternions)
+    rotation_per_domains_axis_angle = matrix_to_axis_angle(matrices_per_domain)
     mask_rotation_per_domains_axis_angle = mask[:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
 
     mask_rotation_matrix_per_domain_per_residue = axis_angle_to_matrix(mask_rotation_per_domains_axis_angle)

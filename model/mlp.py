@@ -29,9 +29,4 @@ class MLP(nn.Module):
         x = self.input_layer(x)
         hidden = self.linear_relu_stack(x)
         output = self.output_layer(hidden)
-        if self.type == "encoder" and self.latent_type == "continuous":
-            latent_mean = output[:, :int(self.out_dim/2)]
-            latent_std = self.output_ELU(output[:, int(self.out_dim/2):]) + 1
-            return latent_mean, latent_std
-
         return output
