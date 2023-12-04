@@ -1,4 +1,3 @@
-import tqdm
 import numpy as np
 from Bio.PDB import PDBIO
 from Bio.PDB.PDBParser import PDBParser

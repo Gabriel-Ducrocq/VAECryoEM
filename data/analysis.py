@@ -8,7 +8,6 @@ import utils
 
 import argparse
 import numpy as np
-from tqdm import tqdm
 import Bio.PDB as bpdb
 from Bio.PDB import PDBIO
 from protein.main import rotate_residues, translate_residues
@@ -108,10 +107,6 @@ for i, (batch_images, batch_poses, batch_poses_translation) in enumerate(data_lo
     axis_angle_per_domain = quaternion_to_axis_angle(quaternions_per_domain)
     rotation_per_residue = utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
     translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
-    if i == 34:
-        print("3467", translations_per_domain[67])
-        print("Per res", translation_per_residue[67])
-
     translation_per_residue = torch.zeros_like(translation_per_residue)
     deformed_structures = utils.deform_structure(atom_positions, translation_per_residue,
                                                        rotation_per_residue)
@@ -143,7 +138,7 @@ all_translation_per_residue = np.load(f"{folder_experiment}all_translation_per_r
 
 
 #for i in range(all_translation_per_residue.shape[0]):
-for i in range(0, 10000):
+for i in range(0, 9000):
     print("Deform structure:", i)
     parser = PDBParser(PERMISSIVE=0)
     structure = utils.read_pdb(experiment_settings["base_structure_path"])

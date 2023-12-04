@@ -52,6 +52,7 @@ def train(yaml_setting_path):
                 latent_std = None
 
             mask = vae.sample_mask(batch_size)
+            print("MASK", mask[0, -10:])
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
             rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
