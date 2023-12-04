@@ -97,6 +97,7 @@ class VAE(torch.nn.Module):
         :param images: torch.tensor(N_batch, N_pix_x, N_pix_y)
         :return: torch.tensor(N_batch, N_domains, 3, 3) rotation matrix,
                 torch.tensor(N_batch, N_domains, 3, 3) mean rotation matrix,
+                torch.tensor(N_batch, N_domains, 3, 3) noise rotation matrix,
                 torch.tensor(N_batch, N_domains, 3) rotation std
                 torch.tensor(N_batch, N_domains, 3) translation
                 torch.tensor(N_batch, N_domains, 3) mean translation
@@ -115,7 +116,7 @@ class VAE(torch.nn.Module):
         noise_rot = torch.randn_like(std_rot)*std_rot
         uncertainty_matrices = torch.einsum("blk, kjj -> bljj", noise_rot, self.lie_alg_basis)
         sample_matrix = torch.einsum("blkj, bljk->blkk", mean_rotations, uncertainty_matrices)
-        return sample_matrix, mean_rotations, noise_rot, translation_per_domain, mean_translation, sigma_translation
+        return sample_matrix, mean_rotations, noise_rot, std_rot, translation_per_domain, mean_translation, sigma_translation
 
 
 

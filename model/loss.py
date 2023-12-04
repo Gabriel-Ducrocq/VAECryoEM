@@ -18,18 +18,20 @@ def compute_rmsd(predicted_images, images, log_latent_distribution = None, type=
         latent_distribution = torch.softmax(log_latent_distribution, dim=-1)
         return torch.mean(torch.sum(rmsd_per_latent_per_batch*latent_distribution, dim=-1))
 
-def compute_KL_prior_latent(latent_mean, latent_std, epsilon_loss):
+def compute_KL_prior_latent_translation(latent_mean, latent_std, epsilon_loss):
     """
-    Computes the KL divergence between the approximate posterior and the prior over the latent,
+    Computes the KL divergence between the approximate posterior and the prior over the translations,
     where the latent prior is given by a standard Gaussian distribution.
-    :param latent_mean: torch.tensor(N_batch, latent_dim), mean of the Gaussian approximate posterior
-    :param latent_std: torch.tensor(N_batch, latent_dim), std of the Gaussian approximate posterior
+    :param latent_mean: torch.tensor(N_batch, N_domains, 3), mean of the Gaussian for translation
+    :param latent_std: torch.tensor(N_batch, N_domains, 3), std of the Gaussian for translation
     :param epsilon_loss: float, a constant added in the log to avoid log(0) situation.
-    :return: torch.float32, average of the KL losses accross batch samples
+    :return: torch.float32, average of the KL losses accross batch samples for translations
     """
-    return torch.mean(-0.5 * torch.sum(1 + torch.log(latent_std ** 2 + eval(epsilon_loss)) \
+    return torch.mean(torch.sum(-0.5 * torch.sum(1 + torch.log(latent_std ** 2 + eval(epsilon_loss)) \
                                            - latent_mean ** 2 \
-                                           - latent_std ** 2, dim=1))
+                                           - latent_std ** 2, dim=-1)), dim=-1)
+
+def compute_entropy_rotations()
 
 def compute_KL_prior_latent_discrete(log_latent_distribution):
     """

@@ -247,3 +247,16 @@ def deform_structure(atom_positions, translation_per_residue, rotations_per_resi
     new_atom_positions = transformed_atom_positions + torch.repeat_interleave(translation_per_residue,
                                                                                               3, 1)
     return new_atom_positions
+
+
+
+def exponential_map(matrices):
+    """
+    Maps a point from the Lie algebra of SO(3) to SO(3). This is the Rodrigues
+    :param matrices: torch.tensor(N_batch, N_domains, 3, 3) rotation matrices from Lie algebra
+    :return: torch.tensor(N_batch, N_domains, 3, 3) rotation matrices in SO(3)
+    """
+    norm = torch.sqrt(torch.sum(matrices, dim=(-1, -2)))
+    unit_matrices = matrices/norm[:, :, None, None]
+    return torch.eye(3)[None, None, :, :] - torch.sin(norm)*unit_matrices + (1-torch.cos(norm))**2*torch.einsum("bklj, bkjl->bkll",
+                                                    unit_matrices, unit_matrices)

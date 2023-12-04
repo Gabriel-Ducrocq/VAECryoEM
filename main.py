@@ -44,7 +44,8 @@ def train(yaml_setting_path):
             batch_poses = batch_poses.to(device)
             batch_poses_translation = batch_poses_translation.to(device)
             #The following transformation are output per domain.
-            sampled_matrices, mean_rotations, noise_rot, translations_per_domain, mean_translation, sigma_translation = vae.sample_latent(batch_images)
+            sampled_matrices, mean_rotations, noise_rot, noise_rot, translations_per_domain, mean_translation, \
+            sigma_translation = vae.sample_latent(batch_images)
 
 
             mask = vae.sample_mask(batch_size)
