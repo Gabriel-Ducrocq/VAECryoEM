@@ -31,7 +31,38 @@ def compute_KL_prior_latent_translation(latent_mean, latent_std, epsilon_loss):
                                            - latent_mean ** 2 \
                                            - latent_std ** 2, dim=-1)), dim=-1)
 
-def compute_entropy_rotations()
+
+def log_gaussian_pdf(x, stds):
+    """
+    compute the log pdf of Gaussian with mean 0
+    :param x: torch.tensor(N_batch, N_domains, N_k, 3)
+    :param stds: torch.tensor(N_batch, N_domains, 3)
+    :return: torch.tensor(N_batch, N_domains, N_k)
+    """
+    return -0.5* torch.sum(x**2/stds[:, :, None, :]**2, dim=-1) - 0.5*torch.sum(torch.log(stds), dim=-1)[:, :, None] - 1.5*np.log(2*np.pi)
+
+def compute_entropy_rotations(std_rot, noise_rot, K=10):
+    """
+    Compute the entropy of the distribution over SO(3)
+    :param std_rot: torch.tensor(N_batch, N_domains, 3) of standard deviation over R^3
+    :param noise_rot: torch.tensor(N_batch, N_domains, 3) of sampled noise
+    :return:
+    """
+    twokpi = torch.linspace(-K, K, steps=2*K)[None, None, :]
+    norms = torch.sqrt(torch.sum(noise_rot**2, dim=-1))[:, :, None]
+    normalized_noise_rot = noise_rot/norms
+    norms_plus_twokpi = norms + twokpi
+    first_term = log_gaussian_pdf(torch.einsum("bdk, bdl -> bdkl", norms_plus_twokpi, normalized_noise_rot), std_rot)
+    second_term = torch.log(norms_plus_twokpi**2/(2-2*torch.cos(norms)))
+    #The tensor first_plus_second is (N_batch, N_domains, N_k)
+    first_plus_second = first_term + second_term
+    entropy_per_domain = torch.logsumexp(first_plus_second, dim=-1)
+    entropy = torch.sum(entropy_per_domain, dim=-1)
+    return entropy
+
+
+
+
 
 def compute_KL_prior_latent_discrete(log_latent_distribution):
     """

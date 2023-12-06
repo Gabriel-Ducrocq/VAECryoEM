@@ -252,7 +252,7 @@ def deform_structure(atom_positions, translation_per_residue, rotations_per_resi
 
 def exponential_map(matrices):
     """
-    Maps a point from the Lie algebra of SO(3) to SO(3). This is the Rodrigues
+    Maps a point from the Lie algebra so(3) of SO(3) to SO(3). To do that, we find a
     :param matrices: torch.tensor(N_batch, N_domains, 3, 3) rotation matrices from Lie algebra
     :return: torch.tensor(N_batch, N_domains, 3, 3) rotation matrices in SO(3)
     """
