@@ -32,27 +32,29 @@ def compute_KL_prior_latent_translation(latent_mean, latent_std, epsilon_loss):
                                            - latent_std ** 2, dim=-1)), dim=-1)
 
 
-def log_gaussian_pdf(x, stds):
+def log_gaussian_pdf(x, stds, device="cpu"):
     """
     compute the log pdf of Gaussian with mean 0
     :param x: torch.tensor(N_batch, N_domains, N_k, 3)
     :param stds: torch.tensor(N_batch, N_domains, 3)
     :return: torch.tensor(N_batch, N_domains, N_k)
     """
-    return -0.5* torch.sum(x**2/stds[:, :, None, :]**2, dim=-1) - 0.5*torch.sum(torch.log(stds), dim=-1)[:, :, None] - 1.5*np.log(2*np.pi)
+    twopi = torch.ones(1, device=device)*2*torch.pi
+    return -0.5* torch.sum(x**2/stds[:, :, None, :]**2, dim=-1) - 0.5*torch.sum(torch.log(stds), dim=-1)[:, :, None] - 1.5*np.log(twopi)
 
-def compute_entropy_rotations(std_rot, noise_rot, K=10):
+def compute_entropy_rotations(std_rot, noise_rot, K=10, device="cpu"):
     """
     Compute the entropy of the distribution over SO(3)
     :param std_rot: torch.tensor(N_batch, N_domains, 3) of standard deviation over R^3
     :param noise_rot: torch.tensor(N_batch, N_domains, 3) of sampled noise
     :return:
     """
-    twokpi = torch.linspace(-K, K, steps=2*K)[None, None, :]
+    twokpi = torch.linspace(-K, K, steps=2*K, device=device)[None, None, :]
     norms = torch.sqrt(torch.sum(noise_rot**2, dim=-1))[:, :, None]
     normalized_noise_rot = noise_rot/norms
     norms_plus_twokpi = norms + twokpi
-    first_term = log_gaussian_pdf(torch.einsum("bdk, bdl -> bdkl", norms_plus_twokpi, normalized_noise_rot), std_rot)
+    first_term = log_gaussian_pdf(torch.einsum("bdk, bdl -> bdkl", norms_plus_twokpi, normalized_noise_rot), std_rot,
+                                  device=device)
     second_term = torch.log(norms_plus_twokpi**2/(2-2*torch.cos(norms)))
     #The tensor first_plus_second is (N_batch, N_domains, N_k)
     first_plus_second = first_term + second_term
@@ -108,7 +110,7 @@ def compute_l2_pen(network):
 
 
 def compute_loss(predicted_images, images, translation_mean, translation_std, std_rot, noise_rot, vae, loss_weights,
-                 experiment_settings, tracking_dict, log_latent_distribution=None, type="continuous"):
+                 experiment_settings, tracking_dict, device):
     """
     Compute the entire loss
     :param predicted_images: torch.tensor(batch_size, N_pix), predicted images
@@ -124,10 +126,10 @@ def compute_loss(predicted_images, images, translation_mean, translation_std, st
     :param log_latent_distribution: torch.tensor(N_batch. latent_dim) if latent is categorical, else None
     :return:
     """
-    assert type in ["continuous", "categorical"]
     rmsd = compute_rmsd(predicted_images, images)
-    KL_prior_translations = compute_KL_prior_latent_translation(translation_mean, translation_std, experiment_settings["epsilon_kl"])
-    KL_prior_rotations = compute_entropy_rotations(std_rot, noise_rot)
+    KL_prior_translations = compute_KL_prior_latent_translation(translation_mean, translation_std,
+                                                                experiment_settings["epsilon_kl"])
+    KL_prior_rotations = compute_entropy_rotations(std_rot, noise_rot, device=device)
 
     KL_prior_mask_means = compute_KL_prior_mask(
         vae.mask_parameters, experiment_settings["mask_prior"],"means", epsilon_kl=experiment_settings["epsilon_kl"])

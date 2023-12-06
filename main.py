@@ -60,7 +60,7 @@ def train(yaml_setting_path):
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
             loss = compute_loss(batch_predicted_images, batch_images, mean_translation, sigma_translation, std_rot,
                                 noise_rot, vae, experiment_settings["loss_weights"], experiment_settings, tracking_metrics,
-                                type=latent_type)
+                                device=device)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
