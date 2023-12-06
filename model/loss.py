@@ -40,7 +40,8 @@ def log_gaussian_pdf(x, stds, device="cpu"):
     :return: torch.tensor(N_batch, N_domains, N_k)
     """
     twopi = torch.ones(1, device=device)*2*torch.pi
-    return -0.5* torch.sum(x**2/stds[:, :, None, :]**2, dim=-1) - 0.5*torch.sum(torch.log(stds), dim=-1)[:, :, None] - 1.5*np.log(twopi)
+    return -0.5* torch.sum(x**2/stds[:, :, None, :]**2, dim=-1) - 0.5*torch.sum(torch.log(stds), dim=-1)[:, :, None] \
+        - 1.5*torch.log(twopi)
 
 def compute_entropy_rotations(std_rot, noise_rot, K=10, device="cpu"):
     """
