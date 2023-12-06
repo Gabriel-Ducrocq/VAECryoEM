@@ -21,15 +21,15 @@ class VAE(torch.nn.Module):
         self.slice_mean_translation = slice(9, 12)
         self.slice_std_translation = slice(12, 15)
 
-        self.lie_alg_l1 = torch.zeros((3, 3))
+        self.lie_alg_l1 = torch.zeros((3, 3), device=self.device)
         self.lie_alg_l1[2, 1] = 1
         self.lie_alg_l1[1, 2] = -1
 
-        self.lie_alg_l2 = torch.zeros((3, 3))
+        self.lie_alg_l2 = torch.zeros((3, 3), device=self.device)
         self.lie_alg_l1[0, 2] = 1
         self.lie_alg_l1[2, 0] = -1
 
-        self.lie_alg_l3 = torch.zeros((3, 3))
+        self.lie_alg_l3 = torch.zeros((3, 3), device=self.device)
         self.lie_alg_l3[1, 0] = 1
         self.lie_alg_l3[0, 1] = -1
 
