@@ -124,9 +124,6 @@ class VAE(torch.nn.Module):
         normalized_matrices = torch.einsum("blk, kmn -> blmn", normalized_noise_rot, self.lie_alg_basis)
         #Finally, we use the exponential map (Rodrigues formula) to map from the Lie algebra so(3) to the
         # Lie group SO(3)
-        print("NORM MAT", normalized_matrices.shape)
-        print("Noise rot", normalized_noise_rot.shape)
-        print("THETA", theta.shape)
         uncertainty_matrices = 1 + torch.sin(theta)[:, :, None, None]*normalized_matrices + (1-torch.cos(theta))[:, :, None, None]\
                                         *torch.einsum("blmj, bljn -> blmn", normalized_matrices, normalized_matrices)
 
