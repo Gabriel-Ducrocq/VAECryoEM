@@ -63,7 +63,7 @@ def parse_yaml(path):
 
     if experiment_settings["latent_type"] == "continuous":
         encoder = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
-                      experiment_settings["N_domains"] * 12,
+                      experiment_settings["N_domains"] * 15,
                       experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
                       latent_type="continuous")
         decoder = MLP(experiment_settings["latent_dimension"], experiment_settings["N_domains"]*6,

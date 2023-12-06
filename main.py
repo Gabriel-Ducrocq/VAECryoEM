@@ -34,7 +34,7 @@ def train(yaml_setting_path):
     #non_noisy_images = torch.load("data/dataset/spike/ImageDataSetNoNoiseNoCTF")
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
-        tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
+        tracking_metrics = {"rmsd":[], "kl_prior_translation":[], "kl_prior_rotation":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
                             "kl_prior_mask_proportions":[], "l2_pen":[]}
 
         data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True))
@@ -44,7 +44,7 @@ def train(yaml_setting_path):
             batch_poses = batch_poses.to(device)
             batch_poses_translation = batch_poses_translation.to(device)
             #The following transformation are output per domain.
-            sampled_matrices, mean_rotations, noise_rot, noise_rot, translations_per_domain, mean_translation, \
+            sampled_matrices, mean_rotations, noise_rot, std_rot, translations_per_domain, mean_translation, \
             sigma_translation = vae.sample_latent(batch_images)
 
 
@@ -58,9 +58,9 @@ def train(yaml_setting_path):
                                                                 batch_poses_translation,latent_type=latent_type)
 
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
-            loss = compute_loss(batch_predicted_images, batch_images, latent_mean, latent_std, vae,
-                                experiment_settings["loss_weights"], experiment_settings, tracking_metrics,
-                                type=latent_type, log_latent_distribution=log_latent_distrib)
+            loss = compute_loss(batch_predicted_images, batch_images, mean_translation, sigma_translation, std_rot,
+                                noise_rot, vae, experiment_settings["loss_weights"], experiment_settings, tracking_metrics,
+                                type=latent_type)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()

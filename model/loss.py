@@ -57,7 +57,7 @@ def compute_entropy_rotations(std_rot, noise_rot, K=10):
     #The tensor first_plus_second is (N_batch, N_domains, N_k)
     first_plus_second = first_term + second_term
     entropy_per_domain = torch.logsumexp(first_plus_second, dim=-1)
-    entropy = torch.sum(entropy_per_domain, dim=-1)
+    entropy = torch.mean(torch.sum(entropy_per_domain, dim=-1))
     return entropy
 
 
@@ -107,14 +107,16 @@ def compute_l2_pen(network):
     return l2_pen
 
 
-def compute_loss(predicted_images, images, latent_mean, latent_std, vae, loss_weights,
+def compute_loss(predicted_images, images, translation_mean, translation_std, std_rot, noise_rot, vae, loss_weights,
                  experiment_settings, tracking_dict, log_latent_distribution=None, type="continuous"):
     """
     Compute the entire loss
     :param predicted_images: torch.tensor(batch_size, N_pix), predicted images
     :param images: torch.tensor(batch_size, N_pix), images
-    :param latent_mean:torch.tensor(batch_size, latent_dim), mean of the approximate latent distribution
-    :param latent_std:torch.tensor(batch_size, latent_dim), std of the approximate latent distribution
+    :param translation_mean: torch.tensor(batch_size, N_domains, 3) mean of the distributions over the translations
+    :param translation_std: torch.tensor(batch_size, N_domains, 3) std of thedistribution over the translations
+    :param std_rot: torch.tensor(N_batch, N_domains, 3) of standard deviation over R^3
+    :param noise_rot: torch.tensor(N_batch, N_domains, 3) of sampled noise
     :param mask_prior: dict containing the tensors of the parameters of the prior distribution
     :param vae: torch.nn.Module
     :param loss_weights: dict containing the weights of each part of the losses
@@ -123,16 +125,12 @@ def compute_loss(predicted_images, images, latent_mean, latent_std, vae, loss_we
     :return:
     """
     assert type in ["continuous", "categorical"]
-    if type == "continuous":
-        rmsd = compute_rmsd(predicted_images, images)
-        KL_prior_latent = compute_KL_prior_latent(latent_mean, latent_std, experiment_settings["epsilon_kl"])
-    else:
-        rmsd = compute_rmsd(predicted_images, images, log_latent_distribution=log_latent_distribution, type="categorical")
-        KL_prior_latent = compute_KL_prior_latent_discrete(log_latent_distribution)
+    rmsd = compute_rmsd(predicted_images, images)
+    KL_prior_translations = compute_KL_prior_latent_translation(translation_mean, translation_std, experiment_settings["epsilon_kl"])
+    KL_prior_rotations = compute_entropy_rotations(std_rot, noise_rot)
 
     KL_prior_mask_means = compute_KL_prior_mask(
-        vae.mask_parameters, experiment_settings["mask_prior"],
-        "means", epsilon_kl=experiment_settings["epsilon_kl"])
+        vae.mask_parameters, experiment_settings["mask_prior"],"means", epsilon_kl=experiment_settings["epsilon_kl"])
     KL_prior_mask_stds = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
                                                "stds", epsilon_kl=experiment_settings["epsilon_kl"])
     KL_prior_mask_proportions = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
@@ -140,13 +138,15 @@ def compute_loss(predicted_images, images, latent_mean, latent_std, vae, loss_we
     l2_pen = compute_l2_pen(vae)
 
     tracking_dict["rmsd"].append(rmsd.detach().cpu().numpy())
-    tracking_dict["kl_prior_latent"].append(KL_prior_latent.detach().cpu().numpy())
+    tracking_dict["kl_prior_translation"].append(KL_prior_translations.detach().cpu().numpy())
+    tracking_dict["kl_prior_rotation"].append(KL_prior_rotations.detach().cpu().numpy())
     tracking_dict["kl_prior_mask_mean"].append(KL_prior_mask_means.detach().cpu().numpy())
     tracking_dict["kl_prior_mask_std"].append(KL_prior_mask_stds.detach().cpu().numpy())
     tracking_dict["kl_prior_mask_proportions"].append(KL_prior_mask_proportions.detach().cpu().numpy())
     tracking_dict["l2_pen"].append(l2_pen.detach().cpu().numpy())
 
-    loss = rmsd + loss_weights["KL_prior_latent"]*KL_prior_latent \
+    loss = rmsd + loss_weights["KL_prior_latent"]*KL_prior_translations \
+           + loss_weights["KL_prior_latent"]*KL_prior_rotations \
            + loss_weights["KL_prior_mask_mean"]*KL_prior_mask_means \
            + loss_weights["KL_prior_mask_std"] * KL_prior_mask_stds \
            + loss_weights["KL_prior_mask_proportions"] * KL_prior_mask_proportions \
