@@ -148,11 +148,12 @@ def compute_loss(predicted_images, images, translation_mean, translation_std, st
     tracking_dict["kl_prior_mask_proportions"].append(KL_prior_mask_proportions.detach().cpu().numpy())
     tracking_dict["l2_pen"].append(l2_pen.detach().cpu().numpy())
 
-    loss = rmsd + loss_weights["KL_prior_latent"]*KL_prior_translations \
-           + loss_weights["KL_prior_latent"]*KL_prior_rotations \
+    loss = rmsd \
            + loss_weights["KL_prior_mask_mean"]*KL_prior_mask_means \
            + loss_weights["KL_prior_mask_std"] * KL_prior_mask_stds \
            + loss_weights["KL_prior_mask_proportions"] * KL_prior_mask_proportions \
            + loss_weights["l2_pen"] * l2_pen
+           #+ loss_weights["KL_prior_latent"]*KL_prior_translations \
+           #+ loss_weights["KL_prior_latent"]*KL_prior_rotations \
 
     return loss
