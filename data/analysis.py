@@ -90,27 +90,26 @@ atom_positions = torch.tensor(utils.get_backbone(centered_based_structure), dtyp
 identity_pose = torch.broadcast_to(torch.eye(3,3, device=device)[None, :, :], (experiment_settings["batch_size"], 3, 3))
 zeros_poses_translation = torch.broadcast_to(torch.zeros((3,), device=device)[None, :], (experiment_settings["batch_size"], 3))
 
-all_latent_mean = []
-all_latent_std = []
+all_translation_domain = []
+all_rotation_domain = []
 all_rotations_per_residue = []
 all_translation_per_residue = []
 all_translation_per_domain = []
 all_axis_angle_per_domain = []
 
+model.lie_alg_l2 = torch.zeros((3, 3), device=device)
+model.lie_alg_l2[0, 2] = 1
+model.lie_alg_l2[2, 0] = -1
 for i, (batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
     print("Batch number:", i)
     batch_images = batch_images.to(device)
     batch_poses = batch_poses.to(device)
     batch_poses_translation = batch_poses_translation.to(device)
-    latent_variables, latent_mean, latent_std = model.sample_latent(batch_images)
+    sampled_matrices, mean_rotations, noise_rot, std_rot, translations_per_domain, mean_translation, \
+        sigma_translation = model.sample_latent(batch_images)
     mask = model.sample_mask(N_batch=experiment_settings["batch_size"])
-    quaternions_per_domain, translations_per_domain = model.decode(latent_mean)
-    axis_angle_per_domain = quaternion_to_axis_angle(quaternions_per_domain)
-    rotation_per_residue = utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
+    rotation_per_residue = utils.compute_rotations_per_residue(sampled_matrices, mask, device)
     translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
-    if i == 34:
-        print("3467", translations_per_domain[67])
-        print("Per res", translation_per_residue[67])
 
     translation_per_residue = torch.zeros_like(translation_per_residue)
     deformed_structures = utils.deform_structure(atom_positions, translation_per_residue,
@@ -120,22 +119,22 @@ for i, (batch_images, batch_poses, batch_poses_translation) in enumerate(data_lo
                                             batch_poses_translation, latent_type=experiment_settings["latent_type"])
     #                         zeros_poses_translation, latent_type=experiment_settings["latent_type"])
     np.save(f"{folder_experiment}predicted_images_{i}.npy", batch_predicted_images.to("cpu").detach().numpy())
-    all_latent_mean.append(latent_mean.to("cpu"))
-    all_latent_std.append(latent_std.to("cpu"))
+    #all_translation_domain.append(tr.to("cpu"))
+    #all_latent_std.append(latent_std.to("cpu"))
     all_rotations_per_residue.append(rotation_per_residue.to("cpu"))
     all_translation_per_residue.append(translation_per_residue.to("cpu"))
-    all_axis_angle_per_domain.append(axis_angle_per_domain.to("cpu"))
-    all_translation_per_domain.append(translations_per_domain.to("cpu"))
+    #all_axis_angle_per_domain.append(axis_angle_per_domain.to("cpu"))
+    #all_translation_per_domain.append(translations_per_domain.to("cpu"))
 
 
 
 all_rotations_per_residue = concat_and_save(all_rotations_per_residue, f"{folder_experiment}all_rotations_per_residue.npy")
 all_translation_per_residue = concat_and_save(all_translation_per_residue, f"{folder_experiment}all_translation_per_residue.npy")
-all_latent_mean = concat_and_save(all_latent_mean, f"{folder_experiment}all_latent_mean.npy")
-all_latent_std = concat_and_save(all_latent_std, f"{folder_experiment}all_latent_std.npy")
+#all_latent_mean = concat_and_save(all_latent_mean, f"{folder_experiment}all_latent_mean.npy")
+#all_latent_std = concat_and_save(all_latent_std, f"{folder_experiment}all_latent_std.npy")
 
-all_rotations_per_domain = concat_and_save(all_axis_angle_per_domain, f"{folder_experiment}all_rotations_per_domain.npy")
-all_translation_per_domain = concat_and_save(all_translation_per_domain, f"{folder_experiment}all_translation_per_domain.npy")
+#all_rotations_per_domain = concat_and_save(all_axis_angle_per_domain, f"{folder_experiment}all_rotations_per_domain.npy")
+#all_translation_per_domain = concat_and_save(all_translation_per_domain, f"{folder_experiment}all_translation_per_domain.npy")
 
 
 all_rotations_per_residue = np.load(f"{folder_experiment}all_rotations_per_residue.npy")
@@ -143,7 +142,7 @@ all_translation_per_residue = np.load(f"{folder_experiment}all_translation_per_r
 
 
 #for i in range(all_translation_per_residue.shape[0]):
-for i in range(0, 10000):
+for i in range(9000, 10000):
     print("Deform structure:", i)
     parser = PDBParser(PERMISSIVE=0)
     structure = utils.read_pdb(experiment_settings["base_structure_path"])

@@ -26,8 +26,8 @@ class VAE(torch.nn.Module):
         self.lie_alg_l1[1, 2] = -1
 
         self.lie_alg_l2 = torch.zeros((3, 3), device=self.device)
-        self.lie_alg_l1[0, 2] = 1
-        self.lie_alg_l1[2, 0] = -1
+        self.lie_alg_l2[0, 2] = 1
+        self.lie_alg_l2[2, 0] = -1
 
         self.lie_alg_l3 = torch.zeros((3, 3), device=self.device)
         self.lie_alg_l3[1, 0] = 1
@@ -104,7 +104,6 @@ class VAE(torch.nn.Module):
                 torch.tensor(N_batch, N_domains, 3) std translation
         """
 
-        # Be careful, I now need to pass the stds through ELU + 1
         N_batch = images.shape[0]
         output = self.encoder(images)
         output_per_domain = torch.reshape(output, (N_batch, self.N_domains, 15))
@@ -121,10 +120,15 @@ class VAE(torch.nn.Module):
         theta = torch.sqrt(torch.sum(noise_rot**2, dim=-1))
         normalized_noise_rot = noise_rot/theta[:, :, None]
         #Then, we project the normalized vectors in the Lie algebra so(3) thanks to the isomorphism.
-        normalized_matrices = torch.einsum("blk, kmn -> blmn", normalized_noise_rot, self.lie_alg_basis)
+        normalized_matrices = normalized_noise_rot[:, :, 0, None, None] * self.lie_alg_l1[None, None, :, :] + \
+                             normalized_noise_rot[:, :, 1, None, None] * self.lie_alg_l2[None, None, :, :] + \
+                              normalized_noise_rot[:, :, 2, None, None] * self.lie_alg_l3[None, None, :, :]
+
+        #normalized_matrices = torch.einsum("blk, kmn -> blmn", normalized_noise_rot, self.lie_alg_basis)
         #Finally, we use the exponential map (Rodrigues formula) to map from the Lie algebra so(3) to the
         # Lie group SO(3)
-        uncertainty_matrices = 1 + torch.sin(theta)[:, :, None, None]*normalized_matrices + (1-torch.cos(theta))[:, :, None, None]\
+
+        uncertainty_matrices = torch.eye(3)[None, None, :, :] + torch.sin(theta)[:, :, None, None]*normalized_matrices + (1-torch.cos(theta))[:, :, None, None]\
                                         *torch.einsum("blmj, bljn -> blmn", normalized_matrices, normalized_matrices)
 
         #We then shift the noise matrix (centered in the neutral element) with the mean matrix, using the group
