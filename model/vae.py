@@ -128,7 +128,7 @@ class VAE(torch.nn.Module):
         #Finally, we use the exponential map (Rodrigues formula) to map from the Lie algebra so(3) to the
         # Lie group SO(3)
 
-        uncertainty_matrices = torch.eye(3)[None, None, :, :] + torch.sin(theta)[:, :, None, None]*normalized_matrices + (1-torch.cos(theta))[:, :, None, None]\
+        uncertainty_matrices = torch.eye(3, device=self.device)[None, None, :, :] + torch.sin(theta)[:, :, None, None]*normalized_matrices + (1-torch.cos(theta))[:, :, None, None]\
                                         *torch.einsum("blmj, bljn -> blmn", normalized_matrices, normalized_matrices)
 
         #We then shift the noise matrix (centered in the neutral element) with the mean matrix, using the group
