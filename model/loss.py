@@ -128,9 +128,9 @@ def compute_loss(predicted_images, images, translation_mean, translation_std, st
     :return:
     """
     rmsd = compute_rmsd(predicted_images, images)
-    KL_prior_translations = compute_KL_prior_latent_translation(translation_mean, translation_std,
-                                                                experiment_settings["epsilon_kl"])
-    KL_prior_rotations = compute_entropy_rotations(std_rot, noise_rot, device=device)
+    #KL_prior_translations = compute_KL_prior_latent_translation(translation_mean, translation_std,
+    #                                                            experiment_settings["epsilon_kl"])
+    #KL_prior_rotations = compute_entropy_rotations(std_rot, noise_rot, device=device)
 
     KL_prior_mask_means = compute_KL_prior_mask(
         vae.mask_parameters, experiment_settings["mask_prior"],"means", epsilon_kl=experiment_settings["epsilon_kl"])
@@ -141,8 +141,8 @@ def compute_loss(predicted_images, images, translation_mean, translation_std, st
     l2_pen = compute_l2_pen(vae)
 
     tracking_dict["rmsd"].append(rmsd.detach().cpu().numpy())
-    tracking_dict["kl_prior_translation"].append(KL_prior_translations.detach().cpu().numpy())
-    tracking_dict["kl_prior_rotation"].append(KL_prior_rotations.detach().cpu().numpy())
+    #tracking_dict["kl_prior_translation"].append(KL_prior_translations.detach().cpu().numpy())
+    #tracking_dict["kl_prior_rotation"].append(KL_prior_rotations.detach().cpu().numpy())
     tracking_dict["kl_prior_mask_mean"].append(KL_prior_mask_means.detach().cpu().numpy())
     tracking_dict["kl_prior_mask_std"].append(KL_prior_mask_stds.detach().cpu().numpy())
     tracking_dict["kl_prior_mask_proportions"].append(KL_prior_mask_proportions.detach().cpu().numpy())

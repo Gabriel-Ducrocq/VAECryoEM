@@ -46,7 +46,6 @@ def train(yaml_setting_path):
             #The following transformation are output per domain.
             sampled_matrices, mean_rotations, noise_rot, std_rot, translations_per_domain, mean_translation, \
             sigma_translation = vae.sample_latent(batch_images)
-            print("\n\n\n\n")
 
 
             mask = vae.sample_mask(batch_size)

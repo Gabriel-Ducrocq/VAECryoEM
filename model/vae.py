@@ -117,23 +117,24 @@ class VAE(torch.nn.Module):
         #We first sample in R^3
         noise_rot = torch.randn_like(std_rot)*std_rot
         #Then we get the norm of the vectors and normalize them
-        theta = torch.sqrt(torch.sum(noise_rot**2, dim=-1))
-        normalized_noise_rot = noise_rot/theta[:, :, None]
+        #theta = torch.sqrt(torch.sum(noise_rot**2, dim=-1))
+        #normalized_noise_rot = noise_rot/theta[:, :, None]
         #Then, we project the normalized vectors in the Lie algebra so(3) thanks to the isomorphism.
-        normalized_matrices = normalized_noise_rot[:, :, 0, None, None] * self.lie_alg_l1[None, None, :, :] + \
-                             normalized_noise_rot[:, :, 1, None, None] * self.lie_alg_l2[None, None, :, :] + \
-                              normalized_noise_rot[:, :, 2, None, None] * self.lie_alg_l3[None, None, :, :]
+        #normalized_matrices = normalized_noise_rot[:, :, 0, None, None] * self.lie_alg_l1[None, None, :, :] + \
+        #                     normalized_noise_rot[:, :, 1, None, None] * self.lie_alg_l2[None, None, :, :] + \
+        #                      normalized_noise_rot[:, :, 2, None, None] * self.lie_alg_l3[None, None, :, :]
 
         #normalized_matrices = torch.einsum("blk, kmn -> blmn", normalized_noise_rot, self.lie_alg_basis)
         #Finally, we use the exponential map (Rodrigues formula) to map from the Lie algebra so(3) to the
         # Lie group SO(3)
 
-        uncertainty_matrices = torch.eye(3, device=self.device)[None, None, :, :] + torch.sin(theta)[:, :, None, None]*normalized_matrices + (1-torch.cos(theta))[:, :, None, None]\
-                                        *torch.einsum("blmj, bljn -> blmn", normalized_matrices, normalized_matrices)
+        #uncertainty_matrices = torch.eye(3, device=self.device)[None, None, :, :] + torch.sin(theta)[:, :, None, None]*normalized_matrices + (1-torch.cos(theta))[:, :, None, None]\
+        #                                *torch.einsum("blmj, bljn -> blmn", normalized_matrices, normalized_matrices)
 
         #We then shift the noise matrix (centered in the neutral element) with the mean matrix, using the group
         #operation: left multiplication.
-        sample_matrix = torch.einsum("blmj, bljn->blmn", mean_rotations, uncertainty_matrices)
+        #sample_matrix = torch.einsum("blmj, bljn->blmn", mean_rotations, uncertainty_matrices)
+        sample_matrix = mean_rotations
         return sample_matrix, mean_rotations, noise_rot, std_rot, translation_per_domain, mean_translation, sigma_translation
 
 
