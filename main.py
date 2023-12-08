@@ -52,7 +52,6 @@ def train(yaml_setting_path):
                 latent_std = None
 
             mask = vae.sample_mask(batch_size)
-            print("MASK", mask[0, -10:])
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
             rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
@@ -67,9 +66,14 @@ def train(yaml_setting_path):
                                                                 batch_poses_translation,latent_type=latent_type)
 
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
+
+            if not experiment_settings["clashing_loss"]:
+                deformed_structures = None
+
             loss = compute_loss(batch_predicted_images, batch_images, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics,
-                                type=latent_type, log_latent_distribution=log_latent_distrib)
+                                predicted_structures=deformed_structures, type=latent_type,
+                                log_latent_distribution=log_latent_distrib)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
