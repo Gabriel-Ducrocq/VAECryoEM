@@ -159,6 +159,9 @@ def compute_loss(predicted_images, images, translation_mean, translation_std, st
                                                "proportions", epsilon_kl=experiment_settings["epsilon_kl"])
     l2_pen = compute_l2_pen(vae)
 
+    if predicted_structures is not None:
+        clashing_loss = compute_clashing_distances(predicted_structures)
+
     tracking_dict["rmsd"].append(rmsd.detach().cpu().numpy())
     #tracking_dict["kl_prior_translation"].append(KL_prior_translations.detach().cpu().numpy())
     #tracking_dict["kl_prior_rotation"].append(KL_prior_rotations.detach().cpu().numpy())
@@ -171,7 +174,7 @@ def compute_loss(predicted_images, images, translation_mean, translation_std, st
            + loss_weights["KL_prior_mask_mean"]*KL_prior_mask_means \
            + loss_weights["KL_prior_mask_std"] * KL_prior_mask_stds \
            + loss_weights["KL_prior_mask_proportions"] * KL_prior_mask_proportions \
-           + loss_weights["l2_pen"] * l2_pen
+           + loss_weights["l2_pen"] * l2_pen +
            #+ loss_weights["KL_prior_latent"]*KL_prior_translations \
            #+ loss_weights["KL_prior_latent"]*KL_prior_rotations \
 
