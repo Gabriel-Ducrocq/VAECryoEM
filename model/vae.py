@@ -109,7 +109,7 @@ class VAE(torch.nn.Module):
         output_per_domain = torch.reshape(output, (N_batch, self.N_domains, 15))
         mean_translation = output_per_domain[:, :, self.slice_mean_translation]
         sigma_translation = self.elu(output_per_domain[:, :, self.slice_std_translation]) + 1
-        translation_per_domain = mean_translation + torch.randn_like(mean_translation)*sigma_translation
+        translation_per_domain = mean_translation #+ torch.randn_like(mean_translation)*sigma_translation
 
 
         mean_rotations = rotation_6d_to_matrix(output_per_domain[:, :, self.slice_mean_rotation])
