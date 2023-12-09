@@ -109,6 +109,25 @@ def compute_l2_pen(network):
 
     return l2_pen
 
+def compute_clashing_distances(new_structures):
+    """
+    Computes the clashing distance loss. The cutoff is set to 4Å for non contiguous residues and the distance above this cutoff
+    are not penalized
+    Computes the distances between all C_\alpha atoms
+    :param new_structures: torch.tensor(N_batch, 3*N_residues, 3), atom positions
+    :return: torch.tensor(1, ) of the averaged clashing distance for distance inferior to 4Å,
+    reaverage over the batch dimension
+    """
+    c_alphas = new_structures[:, ::3, :]
+    N_residues = c_alphas.shape[1]
+    #distances is torch.tensor(N_batch, N_residues, N_residues)
+    distances = torch.cdist(c_alphas, c_alphas)
+    triu_indices = torch.triu_indices(N_residues, N_residues, 1)
+    distances = distances[:, triu_indices[0], triu_indices[1]]
+    return torch.mean(torch.mean(torch.minimum(distances - 4, torch.zeros_like(distances))**2, dim=-1))
+
+
+
 
 def compute_loss(predicted_images, images, translation_mean, translation_std, std_rot, noise_rot, vae, loss_weights,
                  experiment_settings, tracking_dict, device):
