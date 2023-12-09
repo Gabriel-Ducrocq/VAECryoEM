@@ -17,7 +17,8 @@ def train(yaml_setting_path):
     :param yaml_setting_path: str, path the yaml containing all the details of the experiment
     :return:
     """
-    vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device = model.utils.parse_yaml(yaml_setting_path)
+    vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device,\
+        distances_subsequent_res = model.utils.parse_yaml(yaml_setting_path)
     wandb.init(
         # Set the project where this run will be logged
         project="VAECryoEM",
@@ -35,7 +36,7 @@ def train(yaml_setting_path):
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
         tracking_metrics = {"rmsd":[], "kl_prior_translation":[], "kl_prior_rotation":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
-                            "kl_prior_mask_proportions":[], "l2_pen":[]}
+                            "kl_prior_mask_proportions":[], "l2_pen":[], "clashing":[], "bond_length":[]}
 
         data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True))
         for batch_images, batch_poses, batch_poses_translation in data_loader:
@@ -60,7 +61,7 @@ def train(yaml_setting_path):
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
             loss = compute_loss(batch_predicted_images, batch_images, mean_translation, sigma_translation, std_rot,
                                 noise_rot, vae, experiment_settings["loss_weights"], experiment_settings, tracking_metrics,
-                                device=device)
+                                deformed_structures, distances_subsequent_res, device=device)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()

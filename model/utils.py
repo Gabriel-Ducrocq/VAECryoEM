@@ -122,7 +122,10 @@ def parse_yaml(path):
     latent_type = experiment_settings["latent_type"]
     assert latent_type in ["continuous", "categorical"]
 
-    return vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device
+    underlying_c_alphas = atom_positions[::3, :]
+    distances_subsequent_res = torch.sqrt(torch.sum((underlying_c_alphas[:-1, :] - underlying_c_alphas[1:, :])**2, dim=-1))
+
+    return vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, distances_subsequent_res
 
 
 def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae):

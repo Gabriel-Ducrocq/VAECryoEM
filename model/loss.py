@@ -127,10 +127,21 @@ def compute_clashing_distances(new_structures):
     return torch.mean(torch.mean(torch.minimum(distances - 4, torch.zeros_like(distances))**2, dim=-1))
 
 
+def compute_bound_length_loss(new_structures, distances_subsequent_res):
+    """
+    Subsequent residues should stay close to each other. We compute the distance between subsequent residues
+    based on the distance of the underlying AF structure
+    :param new_structures: torch.tensor(N_batch, N_residues*3, 3)
+    :param underlying_structure: torch.tensor(N_residues*3, 3
+    :return:
+    """
+    new_c_alphas = new_structures[:, ::3, :]
+    distances_new = torch.sqrt(torch.sum((new_c_alphas[:, :-1, :] - new_c_alphas[:, 1:, :])**2, dim=-1))
+    return torch.mean(torch.mean((distances_new - distances_subsequent_res[None, :])**2, dim=-1))
 
 
 def compute_loss(predicted_images, images, translation_mean, translation_std, std_rot, noise_rot, vae, loss_weights,
-                 experiment_settings, tracking_dict, device):
+                 experiment_settings, tracking_dict, predicted_structures, distances_subsequent_res, device="cpu"):
     """
     Compute the entire loss
     :param predicted_images: torch.tensor(batch_size, N_pix), predicted images
@@ -159,12 +170,17 @@ def compute_loss(predicted_images, images, translation_mean, translation_std, st
                                                "proportions", epsilon_kl=experiment_settings["epsilon_kl"])
     l2_pen = compute_l2_pen(vae)
 
+    clashing_loss = 0
+    length_loss = 0
     if predicted_structures is not None:
         clashing_loss = compute_clashing_distances(predicted_structures)
+        length_loss = compute_bound_length_loss(predicted_structures, distances_subsequent_res)
 
     tracking_dict["rmsd"].append(rmsd.detach().cpu().numpy())
     #tracking_dict["kl_prior_translation"].append(KL_prior_translations.detach().cpu().numpy())
     #tracking_dict["kl_prior_rotation"].append(KL_prior_rotations.detach().cpu().numpy())
+    tracking_dict["clashing"].append(clashing_loss.detach().cpu().numpy())
+    tracking_dict["bond_length"].append(length_loss.detach().cpu().numpy())
     tracking_dict["kl_prior_mask_mean"].append(KL_prior_mask_means.detach().cpu().numpy())
     tracking_dict["kl_prior_mask_std"].append(KL_prior_mask_stds.detach().cpu().numpy())
     tracking_dict["kl_prior_mask_proportions"].append(KL_prior_mask_proportions.detach().cpu().numpy())
@@ -174,7 +190,8 @@ def compute_loss(predicted_images, images, translation_mean, translation_std, st
            + loss_weights["KL_prior_mask_mean"]*KL_prior_mask_means \
            + loss_weights["KL_prior_mask_std"] * KL_prior_mask_stds \
            + loss_weights["KL_prior_mask_proportions"] * KL_prior_mask_proportions \
-           + loss_weights["l2_pen"] * l2_pen +
+           + loss_weights["l2_pen"] * l2_pen + loss_weights["clashing"]*clashing_loss \
+           + loss_weights["bond_length"]*length_loss
            #+ loss_weights["KL_prior_latent"]*KL_prior_translations \
            #+ loss_weights["KL_prior_latent"]*KL_prior_rotations \
 
