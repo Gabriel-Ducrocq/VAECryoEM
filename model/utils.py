@@ -162,9 +162,7 @@ def get_backbone(structure):
     residues_indexes = []
     absolute_positions = []
     for model in structure:
-        print("model", model)
         for chain in model:
-            print("chains", chain)
             for residue in chain:
                 residues_indexes.append(N_residue)
                 name = residue.get_resname()
@@ -176,8 +174,6 @@ def get_backbone(structure):
 
                     N_residue += 1
 
-    print(N_residue)
-    print(len(absolute_positions))
     return np.vstack(absolute_positions)
 
 
