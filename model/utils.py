@@ -100,6 +100,7 @@ def parse_yaml(path):
     center_of_mass = compute_center_of_mass(centering_structure)
     centered_based_structure = center_protein(base_structure, center_of_mass)
     atom_positions = torch.tensor(get_backbone(centered_based_structure), dtype=torch.float32, device=device)
+    print(atom_positions.shape)
 
     if experiment_settings["optimizer"]["name"] == "adam":
         if "learning_rate_mask" not in experiment_settings["optimizer"]:
@@ -161,7 +162,9 @@ def get_backbone(structure):
     residues_indexes = []
     absolute_positions = []
     for model in structure:
+        print("model", model)
         for chain in model:
+            print("chains", chain)
             for residue in chain:
                 residues_indexes.append(N_residue)
                 name = residue.get_resname()
@@ -173,6 +176,8 @@ def get_backbone(structure):
 
                     N_residue += 1
 
+    print(N_residue)
+    print(len(absolute_positions))
     return np.vstack(absolute_positions)
 
 
