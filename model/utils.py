@@ -55,11 +55,15 @@ def parse_yaml(path):
     else:
         device = "cpu"
 
-    for mask_prior_key in experiment_settings["mask_prior"].keys():
-        experiment_settings["mask_prior"][mask_prior_key]["mean"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["mean"],
-                                                                                 dtype=torch.float32, device=device)
-        experiment_settings["mask_prior"][mask_prior_key]["std"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["std"],
-                                                                                 dtype=torch.float32, device=device)
+    if experiment_settings["mask_prior"]["type"] == "uniform":
+        experiment_settings["mask_prior"] = compute_mask_prior(experiment_settings["N_residues"],
+                                                               experiment_settings["N_domains"], device)
+    else:
+        for mask_prior_key in experiment_settings["mask_prior"].keys():
+            experiment_settings["mask_prior"][mask_prior_key]["mean"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["mean"],
+                                                                                     dtype=torch.float32, device=device)
+            experiment_settings["mask_prior"][mask_prior_key]["std"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["std"],
+                                                                                     dtype=torch.float32, device=device)
 
     if experiment_settings["latent_type"] == "continuous":
         encoder = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
@@ -76,7 +80,7 @@ def parse_yaml(path):
         decoder = MLP(1, experiment_settings["N_domains"]*6,
                       experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
 
-    if experiment_settings["resume_training"]["model"] is None:
+    if experiment_settings["resume_training"]["model"] == "None":
         vae = VAE(encoder, decoder, device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
                   tau_mask=experiment_settings["tau_mask"], mask_start_values=experiment_settings["mask_start"],
                   latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"])
@@ -128,6 +132,35 @@ def parse_yaml(path):
 
     return vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device
 
+
+def compute_mask_prior(N_residues, N_domains, device):
+    """
+    Computes the mask prior if "uniform" is set in the yaml file
+    :param N_residues: integer, number of residues
+    :param N_domains: integer, number of domains
+    :param device: str, device to use
+    :return:
+    """
+    bound_0 = N_residues / N_domains
+    mask_means_mean = torch.tensor(np.array([bound_0 / 2 + i * bound_0 for i in range(N_domains)]), dtype=torch.float32,
+                          device=device)[None, :]
+
+    mask_means_std = torch.tensor(np.ones(N_domains) * 10.0, dtype=torch.float32, device=device)[None, :]
+
+    mask_stds_mean = torch.tensor(np.ones(N_domains) * bound_0, dtype=torch.float32, device=device)[None, :]
+
+    mask_stds_std = torch.tensor(np.ones(N_domains) * 10.0, dtype=torch.float32, device=device)[None, :]
+
+    mask_proportions_mean = torch.tensor(np.ones(N_domains) * 0, dtype=torch.float32, device=device)[None, :]
+
+    mask_proportions_std = torch.tensor(np.ones(N_domains), dtype=torch.float32, device=device)[None, :]
+
+    mask_prior = {}
+    mask_prior["means"] = {"mean":mask_means_mean, "std":mask_means_std}
+    mask_prior["stds"] = {"mean":mask_stds_mean, "std":mask_stds_std}
+    mask_prior["proportions"] = {"mean":mask_proportions_mean, "std":mask_proportions_std}
+
+    return mask_prior
 
 def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae):
     """
