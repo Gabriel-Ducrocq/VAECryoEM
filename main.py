@@ -22,7 +22,7 @@ def train(yaml_setting_path):
         # Set the project where this run will be logged
         project="VAECryoEM",
         # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
-            name=f"experiment_{experiment_settings['name']}_resume" if experiment_settings["resume_training"]["model"] else
+            name=f"experiment_{experiment_settings['name']}_resume" if experiment_settings["resume_training"]["model"] != "None" else
             f"experiment_{experiment_settings['name']}",
 
 
