@@ -1,4 +1,5 @@
-import torch as torch
+import torch
+import numpy as np
 
 
 class VAE(torch.nn.Module):
@@ -17,23 +18,45 @@ class VAE(torch.nn.Module):
 
         self.residues = torch.arange(0, self.N_residues, 1, dtype=torch.float32, device=device)[:, None]
 
-        self.mask_means_mean = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_mean"]["mean"], dtype=torch.float32,device=device)[None, :],
-                                                requires_grad=True)
-
-        self.mask_means_std = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_mean"]["std"], dtype=torch.float32, device=device)[None, :],
-                                              requires_grad=True)
-
-        self.mask_std_mean = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_std"]["mean"], dtype=torch.float32, device=device)[None, :],
-                                              requires_grad=True)
-
-        self.mask_std_std = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_std"]["std"], dtype=torch.float32, device=device)[None, :],
-                                              requires_grad=True)
-
-        self.mask_proportions_mean = torch.nn.Parameter(torch.tensor(mask_start_values["clusters_proportions"]["mean"], dtype=torch.float32, device=device)[None, :],
+        if mask_start_values["type"] == "uniform":
+            bound_0 = self.N_residues/N_domains
+            self.mask_means_mean = torch.nn.Parameter(data=torch.tensor(np.array([bound_0/2 + i*bound_0 for i in range(N_domains)]), dtype=torch.float32, device=device)[None, :],
                                                       requires_grad=True)
+            self.mask_mean_std = torch.nn.Parameter(data= torch.tensor(np.ones(N_domains)*10.0, dtype=torch.float32, device=device)[None,:],
+                                                    requires_grad=True)
+            self.mask_std_mean = torch.nn.Parameter(data= torch.tensor(np.ones(N_domains)*bound_0, dtype=torch.float32, device=device)[None,:],
+                                                    requires_grad=True)
 
-        self.mask_proportions_std = torch.nn.Parameter(torch.tensor(mask_start_values["clusters_proportions"]["std"], dtype=torch.float32, device=device)[None, :],
-                           requires_grad=True)
+            self.mask_std_std = torch.nn.Parameter(
+                data=torch.tensor(np.ones(N_domains) * 10.0, dtype=torch.float32, device=device)[None, :],
+                requires_grad=True)
+
+            self.mask_proportions_mean = torch.nn.Parameter(
+                data=torch.tensor(np.ones(N_domains) * 0, dtype=torch.float32, device=device)[None, :],
+                requires_grad=True)
+
+            self.mask_proportions_std = torch.nn.Parameter(
+                data=torch.tensor(np.ones(N_domains), dtype=torch.float32, device=device)[None, :],
+                requires_grad=True)
+
+        else:
+            self.mask_means_mean = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_mean"]["mean"], dtype=torch.float32,device=device)[None, :],
+                                                    requires_grad=True)
+
+            self.mask_means_std = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_mean"]["std"], dtype=torch.float32, device=device)[None, :],
+                                                  requires_grad=True)
+
+            self.mask_std_mean = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_std"]["mean"], dtype=torch.float32, device=device)[None, :],
+                                                  requires_grad=True)
+
+            self.mask_std_std = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_std"]["std"], dtype=torch.float32, device=device)[None, :],
+                                                  requires_grad=True)
+
+            self.mask_proportions_mean = torch.nn.Parameter(torch.tensor(mask_start_values["clusters_proportions"]["mean"], dtype=torch.float32, device=device)[None, :],
+                                                          requires_grad=True)
+
+            self.mask_proportions_std = torch.nn.Parameter(torch.tensor(mask_start_values["clusters_proportions"]["std"], dtype=torch.float32, device=device)[None, :],
+                               requires_grad=True)
 
         self.mask_parameters = {"means":{"mean":self.mask_means_mean, "std":self.mask_means_std},
                                    "stds":{"mean":self.mask_std_mean, "std":self.mask_std_std},
