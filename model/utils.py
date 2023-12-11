@@ -76,10 +76,14 @@ def parse_yaml(path):
         decoder = MLP(1, experiment_settings["N_domains"]*6,
                       experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
 
-    vae = VAE(encoder, decoder, device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
-              tau_mask=experiment_settings["tau_mask"], mask_start_values=experiment_settings["mask_start"],
-              latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"])
-    vae.to(device)
+    if experiment_settings["resume_training"]["model"] is None:
+        vae = VAE(encoder, decoder, device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
+                  tau_mask=experiment_settings["tau_mask"], mask_start_values=experiment_settings["mask_start"],
+                  latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"])
+        vae.to(device)
+    else:
+        vae = torch.load(experiment_settings["resume_training"]["model"])
+        vae.to(device)
 
     pixels_x = np.linspace(image_settings["image_lower_bounds"][0], image_settings["image_upper_bounds"][0],
                            num=image_settings["N_pixels_per_axis"][0]).reshape(1, -1)
@@ -100,7 +104,6 @@ def parse_yaml(path):
     center_of_mass = compute_center_of_mass(centering_structure)
     centered_based_structure = center_protein(base_structure, center_of_mass)
     atom_positions = torch.tensor(get_backbone(centered_based_structure), dtype=torch.float32, device=device)
-    print(atom_positions.shape)
 
     if experiment_settings["optimizer"]["name"] == "adam":
         if "learning_rate_mask" not in experiment_settings["optimizer"]:
