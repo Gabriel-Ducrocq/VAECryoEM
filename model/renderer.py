@@ -35,7 +35,7 @@ class Renderer():
             / self.pixel_span
         )
         freqs = freqs.reshape(-1, 2)
-
+        freqs = freqs.to(device)
         ctf = self.compute_ctf(freqs, dfU, dfV, dfang, self.accelerating_voltage, self.spherical_aberration,
                                self.amplitude_contrast_ratio)
         self.ctf_grid = torch.reshape(ctf, (self.len_x, self.len_y))
