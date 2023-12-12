@@ -89,19 +89,22 @@ def parse_yaml(path):
         vae = torch.load(experiment_settings["resume_training"]["model"])
         vae.to(device)
 
+    #Note that in this configuration the pixels are not really centered on "round" value, e.g
+    #if we take linsapce(-10, 10, 20) the pixels won't be centered at -9, -8 and so on.
+    #This is no problem as long as we use the same convention for the CTF.
     pixels_x = np.linspace(image_settings["image_lower_bounds"][0], image_settings["image_upper_bounds"][0],
                            num=image_settings["N_pixels_per_axis"][0]).reshape(1, -1)
 
     pixels_y = np.linspace(image_settings["image_lower_bounds"][1], image_settings["image_upper_bounds"][1],
                            num=image_settings["N_pixels_per_axis"][1]).reshape(1, -1)
 
-    renderer = Renderer(pixels_x, pixels_y, N_atoms = experiment_settings["N_residues"]*3,
-                        period=image_settings["renderer"]["period"], std=1, defocus=image_settings["renderer"]["defocus"],
+    renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"] * 3,
+                        dfU=image_settings["renderer"]["dfU"], dfV=image_settings["renderer"]["dfV"],
+                        dfang=image_settings["renderer"]["dfang"],
                         spherical_aberration=image_settings["renderer"]["spherical_aberration"],
                         accelerating_voltage=image_settings["renderer"]["accelerating_voltage"],
                         amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
-                        device=device, use_ctf=image_settings["renderer"]["use_ctf"],
-                        latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"])
+                        device=device, use_ctf=image_settings["renderer"]["use_ctf"])
 
     base_structure = read_pdb(experiment_settings["base_structure_path"])
     centering_structure = read_pdb(experiment_settings["centering_structure_path"])
