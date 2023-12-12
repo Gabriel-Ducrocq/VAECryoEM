@@ -3,7 +3,7 @@ import numpy as np
 
 
 class Renderer():
-    def __init__(self, pixels_x, pixels_y, N_atoms=4530, period= 300/128, std = 1, defocus= 5000, spherical_aberration=21,
+    def __init__(self, pixels_x, pixels_y, N_atoms=4530, period= "300/128", std = 1, defocus= 5000, spherical_aberration=21,
                  accelerating_voltage=300 , amplitude_contrast_ratio = 0.06, device="cpu", use_ctf=True,
                  latent_type="continuous", latent_dim = 10):
         self.std_blob = std

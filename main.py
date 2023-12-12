@@ -18,12 +18,16 @@ def train(yaml_setting_path):
     :return:
     """
     vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device = model.utils.parse_yaml(yaml_setting_path)
+    if experiment_settings["resume_training"]["model"] != "None":
+        name = f"experiment_{experiment_settings['name']}_resume"
+    else:
+        name = f"experiment_{experiment_settings['name']}"
+
     wandb.init(
         # Set the project where this run will be logged
         project="VAECryoEM",
         # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
-            name=f"experiment_{experiment_settings['name']}_resume" if experiment_settings["resume_training"]["model"] != "None" else
-            f"experiment_{experiment_settings['name']}",
+            name=name,
 
 
         # Track hyperparameters and run metadata
