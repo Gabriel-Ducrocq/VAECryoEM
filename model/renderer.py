@@ -29,7 +29,7 @@ class Renderer():
 
         freqs = (
             torch.stack(
-                self.meshgrid_2d(-0.5, 0.5, self.len_x, endpoint=False).to(self.device),
+                self.meshgrid_2d(-0.5, 0.5, self.len_x, endpoint=False),
                 -1,
             )
             / self.pixel_span
