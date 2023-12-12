@@ -27,11 +27,9 @@ class Renderer():
         self.latent_type = latent_type
         self.latent_dim = latent_dim
 
-        meshgrid = self.meshgrid_2d(-0.5, 0.5, self.len_x, endpoint=False)
-        meshgrid = meshgrid.to(device)
         freqs = (
             torch.stack(
-                meshgrid,
+                self.meshgrid_2d(-0.5, 0.5, self.len_x, endpoint=False).to(self.device),
                 -1,
             )
             / self.pixel_span
@@ -53,9 +51,9 @@ class Renderer():
         and the behavior of torch.meshgrid is different unless the 'indexing' argument is supplied.
         """
         if endpoint:
-            values = torch.linspace(lo, hi, n)
+            values = torch.linspace(lo, hi, n, device=self.device)
         else:
-            values = torch.linspace(lo, hi, n + 1)[:-1]
+            values = torch.linspace(lo, hi, n + 1, device=self.device)[:-1]
 
         return torch.meshgrid(values, values, indexing="xy")
 
