@@ -27,9 +27,11 @@ class Renderer():
         self.latent_type = latent_type
         self.latent_dim = latent_dim
 
+        meshgrid = self.meshgrid_2d(-0.5, 0.5, self.len_x, endpoint=False)
+        meshgrid = meshgrid.to(device)
         freqs = (
             torch.stack(
-                self.meshgrid_2d(-0.5, 0.5, self.len_x, endpoint=False),
+                meshgrid,
                 -1,
             )
             / self.pixel_span
