@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class Renderer():
@@ -39,6 +40,9 @@ class Renderer():
         ctf = self.compute_ctf(freqs, dfU, dfV, dfang, self.accelerating_voltage, self.spherical_aberration,
                                self.amplitude_contrast_ratio)
         self.ctf_grid = torch.reshape(ctf, (self.len_x, self.len_y))
+        ## BE CAREFUL, the CTF potentially works only for an even number of pixels along one dimension !
+        self.ctf_grid = torch.fft.ifftshift(self.ctf_grid)
+
 
     def meshgrid_2d(self, lo, hi, n, endpoint=False):
         """
@@ -135,9 +139,9 @@ class Renderer():
         :param image: torch tensor (N_batch, N_pixels_s, N_pixels_y), non corrupted image.
         :return:  torch tensor (N_batch, N_pixels_s, N_pixels_y), corrupted image
         """
-        fourier_images = torch.fft.rfft2(image)
-        corrupted_fourier = fourier_images*self.ctf_grid[:, :int(self.len_y/2) + 1]
-        corrupted_images = torch.fft.irfft2(corrupted_fourier)
+        fourier_images = torch.fft.fft2(image)
+        corrupted_fourier = fourier_images*self.ctf_grid
+        corrupted_images = torch.fft.ifft2(corrupted_fourier).real
         return corrupted_images
 
     def compute_x_y_values_all_atoms(self, atom_positions, rotation_matrices, translation_vectors,

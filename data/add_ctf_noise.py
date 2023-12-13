@@ -88,4 +88,4 @@ plt.show()
 
 torch.save(all_images_noNoise, folder_experiment+"ImageDataSetNoNoise")
 torch.save(all_images, folder_experiment+"ImageDataSet")
-print(torch.mean(torch.var(all_images, dim=(-2, -1))))
+print(torch.mean(torch.var(all_images_noNoise, dim=(-2, -1))))

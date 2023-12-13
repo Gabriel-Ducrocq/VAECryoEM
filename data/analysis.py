@@ -55,12 +55,13 @@ pixels_x = np.linspace(image_settings["image_lower_bounds"][0], image_settings["
 pixels_y = np.linspace(image_settings["image_lower_bounds"][1], image_settings["image_upper_bounds"][1],
                        num=image_settings["N_pixels_per_axis"][1]).reshape(1, -1)
 
-renderer_no_ctf = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"]*3,
-                    period=image_settings["renderer"]["period"], std=1, defocus=image_settings["renderer"]["defocus"],
+renderer_no_ctf = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"] * 3,
+                    dfU=image_settings["renderer"]["dfU"], dfV=image_settings["renderer"]["dfV"],
+                    dfang=image_settings["renderer"]["dfang"],
                     spherical_aberration=image_settings["renderer"]["spherical_aberration"],
                     accelerating_voltage=image_settings["renderer"]["accelerating_voltage"],
                     amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
-                    device=device, use_ctf=True)
+                    device=device, use_ctf=image_settings["renderer"]["use_ctf"])
 
 model_path = os.listdir(f"{folder_experiment}models/")
 if device == "cpu":
@@ -148,7 +149,7 @@ all_translation_per_residue = np.concatenate(all_translation_per_residue, axis=0
 
 
 #for i in range(all_translation_per_residue.shape[0]):
-for i in range(0, 10000):
+for i in range(9000, 10000):
     print("Deform structure:", i)
     parser = PDBParser(PERMISSIVE=0)
     structure = utils.read_pdb(experiment_settings["base_structure_path"])
