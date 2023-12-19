@@ -12,7 +12,7 @@ input_path = args.poses_torch
 output_path = args.o
 
 rotations = torch.load(input_path)
-rotations_euler = matrix_to_euler_angles(rotations, convention="ZYZ").detach().numpy()
+rotations_euler = matrix_to_euler_angles(rotations, convention="ZYZ").detach().cpu().numpy()
 
 with open(output_path, "w") as f:
 	f.write("data_\n")
