@@ -51,7 +51,7 @@ centering_structure = parser.get_structure("A", centering_structure_path)
 
 #Create poses:
 N_images = experiment_settings["N_images"]
-axis_rotation = torch.randn((N_images, 3))
+axis_rotation = torch.randn((N_images, 3), device=device)
 norm_axis = torch.sqrt(torch.sum(axis_rotation**2, dim=-1))
 normalized_axis = axis_rotation/norm_axis[:, None]
 print("Min norm of rotation axis", torch.min(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
