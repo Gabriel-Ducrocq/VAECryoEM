@@ -1,0 +1,5 @@
+/Users/gabdu45/.local/bin/cryodrgn train_vae Images.mrcs --poses poses.pkl --zdim 8 -o test
+Namespace(particles='/Users/gabdu45/PycharmProjects/VAECryoEM/Images.mrcs', outdir='/Users/gabdu45/PycharmProjects/VAECryoEM/test', zdim=8, poses='/Users/gabdu45/PycharmProjects/VAECryoEM/poses.pkl', ctf=None, load=None, checkpoint=1, log_interval=1000, verbose=False, seed=29490, ind=None, invert_data=True, window=True, window_r=0.85, datadir=None, lazy=False, preprocessed=False, num_workers_per_gpu=4, max_threads=16, tilt=None, tilt_deg=45, num_epochs=20, batch_size=8, wd=0, lr=0.0001, beta=None, beta_control=None, norm=None, amp=True, multigpu=False, do_pose_sgd=False, pretrain=1, emb_type='quat', pose_lr=0.0003, qlayers=3, qdim=1024, encode_mode='resid', enc_mask=None, use_real=False, players=3, pdim=1024, pe_type='gaussian', feat_sigma=0.5, pe_dim=None, domain='fourier', activation='relu', func=<function main at 0x7f8814233400>)
+Use cuda False
+WARNING: No GPUs detected
+Loading dataset from /Users/gabdu45/PycharmProjects/VAECryoEM/Images.mrcs

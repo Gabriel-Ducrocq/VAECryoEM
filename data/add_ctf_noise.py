@@ -74,8 +74,9 @@ dataset = ImageDataSet(folder_experiment + "ImageDataSetNoNoiseNoCTF", experimen
 data_loader = iter(DataLoader(dataset, batch_size=experiment_settings["batch_size"], shuffle=False))
 all_images = []
 for batch_images, batch_poses, batch_poses_translation in tqdm(data_loader):
-    batch_ctf_corrupted_images = renderer.ctf_corrupting(batch_images)
-    all_images.append(batch_ctf_corrupted_images)
+    #batch_ctf_corrupted_images = renderer.ctf_corrupting(batch_images)
+    #all_images.append(batch_ctf_corrupted_images)
+    all_images.append(batch_images)
     #plt.imshow(batch_ctf_corrupted_images[0].detach().numpy())
     #plt.show()
 
@@ -87,5 +88,5 @@ plt.imshow(all_images_noNoise[0].detach().numpy(), cmap="gray")
 plt.show()
 
 torch.save(all_images_noNoise, folder_experiment+"ImageDataSetNoNoise")
-torch.save(all_images, folder_experiment+"ImageDataSet")
+torch.save(all_images, folder_experiment+"ImageDataSetNoCTFWithNoise")
 print(torch.mean(torch.var(all_images_noNoise, dim=(-2, -1))))
