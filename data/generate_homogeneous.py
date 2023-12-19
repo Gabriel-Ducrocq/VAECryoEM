@@ -6,6 +6,7 @@ import torch
 import yaml
 import utils
 import argparse
+from cryodrgn import mrc 
 import numpy as np
 from tqdm import tqdm
 from Bio.PDB import PDBParser
@@ -91,7 +92,9 @@ for i in tqdm(range(1500)):
 
 all_images = torch.concat(all_images, dim=0)
 all_images += torch.randn((N_images, N_pix, N_pix), device=device)*np.sqrt(noise_var)
+
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoCTF")
+mrc.write("ImageDataSetNoCTF.mrcs", Apix=1.0, is_vol=False)
 
 
 
