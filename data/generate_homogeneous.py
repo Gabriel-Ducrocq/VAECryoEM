@@ -58,7 +58,7 @@ print("Min norm of rotation axis", torch.min(torch.sqrt(torch.sum(normalized_axi
 print("Max norm of rotation axis", torch.max(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
 
 angle_rotation = torch.rand((N_images,1), device=device)*torch.pi
-plt.hist(angle_rotation[:, 0].detach().numpy())
+plt.hist(angle_rotation[:, 0].detach().cpu().numpy())
 plt.show()
 
 axis_angle = normalized_axis*angle_rotation
@@ -66,8 +66,8 @@ poses = axis_angle_to_matrix(axis_angle)
 poses_translation = torch.zeros((N_images, 3), device=device)
 
 
-poses_py = poses.detach().numpy()
-poses_translation_py = poses_translation.detach().numpy()
+poses_py = poses.detach().cpu().numpy()
+poses_translation_py = poses_translation.detach().cpu().numpy()
 
 
 print("Min translation", torch.min(poses_translation))
