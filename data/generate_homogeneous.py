@@ -94,7 +94,7 @@ all_images = torch.concat(all_images, dim=0)
 all_images += torch.randn((N_images, N_pix, N_pix), device=device)*np.sqrt(noise_var)
 
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoCTF")
-mrc.write("ImageDataSetNoCTF.mrcs", Apix=1.0, is_vol=False)
+mrc.write("ImageDataSetNoCTF.mrcs", all_images.detach().cpu().numpy(), Apix=1.0, is_vol=False)
 
 
 
