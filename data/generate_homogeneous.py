@@ -85,10 +85,9 @@ backbones = torch.tensor(utils.get_backbone(centering_structure) - center_vector
 backbones = torch.concatenate([backbones[None, :, :] for _ in range(100)]) 
 all_images = []
 for i in tqdm(range(1500)):
-    print(poses[i*100:(i+1)*100].shape, backbones.shape)
-	batch_images = renderer_no_ctf.compute_x_y_values_all_atoms(backbones, poses[i*100:(i+1)*100], 
-						poses_translation[i*100:(i+1)*100])
-	all_images.append(batch_images)
+    batch_images = renderer_no_ctf.compute_x_y_values_all_atoms(backbones, poses[i*100:(i+1)*100], 
+    					poses_translation[i*100:(i+1)*100])
+    all_images.append(batch_images)
 
 
 torch.save(torch.concat(all_images, dim=0) + torch.randn((N_images, N_pix, N_pix), device=device)*np.sqrt(noise_var), f"{folder_experiment}ImageDataSetNoNoiseNoCTF")
