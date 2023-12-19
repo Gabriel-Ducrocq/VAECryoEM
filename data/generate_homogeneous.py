@@ -57,13 +57,13 @@ normalized_axis = axis_rotation/norm_axis[:, None]
 print("Min norm of rotation axis", torch.min(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
 print("Max norm of rotation axis", torch.max(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
 
-angle_rotation = torch.rand((N_images,1))*torch.pi
+angle_rotation = torch.rand((N_images,1), device=device)*torch.pi
 plt.hist(angle_rotation[:, 0].detach().numpy())
 plt.show()
 
 axis_angle = normalized_axis*angle_rotation
 poses = axis_angle_to_matrix(axis_angle)
-poses_translation = torch.zeros((N_images, 3))
+poses_translation = torch.zeros((N_images, 3), device=device)
 
 
 poses_py = poses.detach().numpy()
@@ -81,7 +81,7 @@ torch.save(poses_translation, f"{folder_experiment}poses_translation")
 #Finding the center of mass to center the protein
 center_vector = utils.compute_center_of_mass(centering_structure)
 
-backbones = torch.tensor(utils.get_backbone(centering_structure) - center_vector, dtype=torch.float32)
+backbones = torch.tensor(utils.get_backbone(centering_structure) - center_vector, dtype=torch.float32, device=device)
 backbones = torch.concatenate([backbones[None, :, :] for _ in range(100)]) 
 all_images = []
 for i in tqdm(range(1500)):
@@ -90,7 +90,7 @@ for i in tqdm(range(1500)):
 	all_images.append(batch_images)
 
 
-torch.save(torch.concat(all_images, dim=0) + torch.randn((N_images, N_pix, N_pix))*np.sqrt(noise_var), f"{folder_experiment}ImageDataSetNoNoiseNoCTF")
+torch.save(torch.concat(all_images, dim=0) + torch.randn((N_images, N_pix, N_pix), device=device)*np.sqrt(noise_var), f"{folder_experiment}ImageDataSetNoNoiseNoCTF")
 
 
 
