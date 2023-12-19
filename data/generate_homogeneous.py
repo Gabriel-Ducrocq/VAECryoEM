@@ -89,8 +89,9 @@ for i in tqdm(range(1500)):
     					poses_translation[i*100:(i+1)*100])
     all_images.append(batch_images)
 
-
-torch.save(torch.concat(all_images, dim=0), f"{folder_experiment}ImageDataSetNoNoiseNoCTF")
+all_images = torch.concat(all_images, dim=0)
+all_images += torch.randn((N_images, N_pix, N_pix), device=device)*np.sqrt(noise_var)
+torch.save(all_images, f"{folder_experiment}ImageDataSetNoCTF")
 
 
 
