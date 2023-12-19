@@ -90,7 +90,7 @@ for i in tqdm(range(1500)):
     all_images.append(batch_images)
 
 
-torch.save(torch.concat(all_images, dim=0) + torch.randn((N_images, N_pix, N_pix), device=device)*np.sqrt(noise_var), f"{folder_experiment}ImageDataSetNoNoiseNoCTF")
+torch.save(torch.concat(all_images, dim=0), f"{folder_experiment}ImageDataSetNoNoiseNoCTF")
 
 
 
