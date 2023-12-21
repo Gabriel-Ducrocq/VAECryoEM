@@ -7,7 +7,7 @@ parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--yaml', type=str, required=True)
 parser_arg.add_argument('--pkl', type=str, required=True)
 parser_arg.add_argument('--Nimages', type=int, required=True)
-
+args = parser_arg.parse_args()
 
 with open(args.yaml, "r") as file:
 	image_settings = yaml.safe_load(file)
