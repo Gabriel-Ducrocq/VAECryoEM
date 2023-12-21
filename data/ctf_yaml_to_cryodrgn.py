@@ -9,7 +9,7 @@ parser_arg.add_argument('--pkl', type=str, required=True)
 parser_arg.add_argument('--Nimages', type=int, required=True)
 
 
-with open(experiment_settings["image_yaml"], "r") as file:
+with open(args.yaml, "r") as file:
 	image_settings = yaml.safe_load(file)
 
 ctf_params = np.zeros((args.Nimages, 9))
