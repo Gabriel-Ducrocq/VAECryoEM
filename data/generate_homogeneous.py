@@ -41,7 +41,7 @@ renderer_no_ctf = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_re
                     spherical_aberration=image_settings["renderer"]["spherical_aberration"],
                     accelerating_voltage=image_settings["renderer"]["accelerating_voltage"],
                     amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
-                    device=device, use_ctf=False)
+                    device=device, use_ctf=image_settings["renderer"]["use_ctf"])
 
 
 N_pix = image_settings["N_pixels_per_axis"][0]
@@ -91,10 +91,12 @@ for i in tqdm(range(1500)):
     all_images.append(batch_images)
 
 all_images = torch.concat(all_images, dim=0)
+print(torch.mean(torch.var(all_images, dim=(-2, -1))))
+torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
 all_images += torch.randn((N_images, N_pix, N_pix), device=device)*np.sqrt(noise_var)
 
-torch.save(all_images, f"{folder_experiment}ImageDataSetNoCTF")
-mrc.write("ImageDataSetNoCTF.mrcs", all_images.detach().cpu().numpy(), Apix=1.0, is_vol=False)
+torch.save(all_images, f"{folder_experiment}ImageDataSet")
+mrc.write("ImageDataSet.mrcs", all_images.detach().cpu().numpy(), Apix=1.0, is_vol=False)
 
 
 
