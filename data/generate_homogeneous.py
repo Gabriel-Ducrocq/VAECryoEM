@@ -58,7 +58,8 @@ normalized_axis = axis_rotation/norm_axis[:, None]
 print("Min norm of rotation axis", torch.min(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
 print("Max norm of rotation axis", torch.max(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
 
-angle_rotation = torch.rand((N_images,1), device=device)*torch.pi
+#ADDED A 2pi factor !
+angle_rotation = torch.rand((N_images,1), device=device)*2*torch.pi
 plt.hist(angle_rotation[:, 0].detach().cpu().numpy())
 plt.show()
 
