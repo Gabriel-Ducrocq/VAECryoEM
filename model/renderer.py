@@ -3,6 +3,75 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+class Lattice:
+    def __init__(
+        self, D: int, extent: float = 0.5, ignore_DC: bool = True, device=None
+    ):
+        assert D % 2 == 1, "Lattice size must be odd"
+        x0, x1 = np.meshgrid(
+            np.linspace(-extent, extent, D, endpoint=True),
+            np.linspace(-extent, extent, D, endpoint=True),
+        )
+        coords = np.stack([x0.ravel(), x1.ravel(), np.zeros(D**2)], 1).astype(
+            np.float32
+        )
+        self.coords = torch.tensor(coords, device=device)
+        self.extent = extent
+        self.D = D
+        self.D2 = int(D / 2)
+
+        # todo: center should now just be 0,0; check Lattice.rotate...
+        # c = 2/(D-1)*(D/2) -1
+        # self.center = torch.tensor([c,c]) # pixel coordinate for img[D/2,D/2]
+        self.center = torch.tensor([0.0, 0.0], device=device)
+
+        self.square_mask = {}
+        self.circle_mask = {}
+
+        self.freqs2d = self.coords[:, 0:2] / extent / 2
+        self.device = device
+
+
+class RendererFourier():
+        def __init__(self, D, std = 1, device= "cpu", sigma=1):
+            self.D = D
+            if D % 2 == 0:
+                self.D += 1
+
+            self.lattice = Lattice(self.D, device=device)
+            self.sigma = sigma
+
+        def compute_fourier(self, atom_positions, rotation_matrices):
+            """
+            :param: atom_positions, torch.tensor(N_batch, N_atoms, 3)
+            :param rotation_matrices: torch.tensor(N_batch, 3, 3), right multiplication convention ! So transpose before feeding to the function !
+            """
+            N_batch = rotation_matrices.shape[0]
+            #coord is of shape (N_batch, D**2, 3)
+            #There is a 2pi coeff here for taking into account the different convention of Fourier transform I do and the one
+            #used by the FFT in torch
+            coords = 2*torch.pi*self.lattice.coords / self.lattice.extent / 2 @ rotation_matrices
+            #dot_prod is (batch, coordinates, atoms)
+            dot_prod = torch.einsum("bkj, baj-> bka", coords, atom_positions)
+            #norm_squared is (N_batch, D**2, 1)
+            norm_squared = torch.sum(coords**2, dim=-1)[:, :, None]
+            fourier_per_coord_per_atom = torch.exp(-1j*dot_prod - 0.5*(self.sigma**2)*norm_squared)
+            #Fourier_per_coord is (N_batch, D**2)
+            fourier_per_coord = torch.sum(fourier_per_coord_per_atom, dim=-1)
+            ##TRANSPOSING HERE BE CAREFUL !!!
+            fourier_per_coord_2d = torch.transpose(torch.reshape(fourier_per_coord, (N_batch, self.D, self.D)), dim0=-2, dim1=-1)
+            # BE CAREFUL: I AM REMOVING THE LAST ROWS AND COLUMNS BECAUSE WE ALREADY HAVE THE NYQUIST FREQUENCY !
+            fourier_per_coord_2d = fourier_per_coord_2d[: , :-1, :-1]
+            images = torch.fft.ifft2(torch.fft.ifftshift(fourier_per_coord_2d, dim = (-2, -1)))
+            images = torch.fft.fftshift(images, dim=(-2, -1))
+            #images = torch.fft.ifft2(fourier_per_coord_2d)
+            return images
+
+
+
+
+
+
 class Renderer():
     def __init__(self, pixels_x, pixels_y, N_atoms, dfU, dfV, dfang, spherical_aberration=21,
                  accelerating_voltage=300 , amplitude_contrast_ratio = 0.06, device="cpu", use_ctf=True,
@@ -173,6 +242,10 @@ class Renderer():
             #prod = torch.einsum("blki,blkj->blkij", (all_x, all_y))
             #projected_densities = torch.sum(prod, dim=-3)
             projected_densities = torch.einsum("blki,blkj->blij", (all_x, all_y))
+
+
+        fftimage = torch.fft.fft2(projected_densities)
+        print("FFT SHAPE", fftimage.shape)
 
         if self.use_ctf:
             projected_densities = self.ctf_corrupting(projected_densities)

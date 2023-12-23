@@ -10,7 +10,7 @@ from cryodrgn import mrc
 import numpy as np
 from tqdm import tqdm
 from Bio.PDB import PDBParser
-from renderer import Renderer
+from renderer import Renderer, RendererFourier
 import matplotlib.pyplot as plt
 from pytorch3d.transforms import axis_angle_to_matrix
 
@@ -43,6 +43,8 @@ renderer_no_ctf = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_re
                     amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
                     device=device, use_ctf=image_settings["renderer"]["use_ctf"])
 
+rendererFourier = RendererFourier(190, device=device)
+
 
 N_pix = image_settings["N_pixels_per_axis"][0]
 noise_var = image_settings["noise_var"]
@@ -59,12 +61,13 @@ print("Min norm of rotation axis", torch.min(torch.sqrt(torch.sum(normalized_axi
 print("Max norm of rotation axis", torch.max(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
 
 #ADDED A 2pi factor !
-angle_rotation = torch.rand((N_images,1), device=device)*2*torch.pi
+angle_rotation = torch.rand((N_images,1), device=device)*torch.pi
 plt.hist(angle_rotation[:, 0].detach().cpu().numpy())
 plt.show()
 
 axis_angle = normalized_axis*angle_rotation
 poses = axis_angle_to_matrix(axis_angle)
+#poses = torch.repeat_interleave(torch.eye(3,3)[None, :, :], 150000, 0)
 poses_translation = torch.zeros((N_images, 3), device=device)
 
 
@@ -86,9 +89,22 @@ center_vector = utils.compute_center_of_mass(centering_structure)
 backbones = torch.tensor(utils.get_backbone(centering_structure) - center_vector, dtype=torch.float32, device=device)
 backbones = torch.concatenate([backbones[None, :, :] for _ in range(100)]) 
 all_images = []
-for i in tqdm(range(1500)):
-    batch_images = renderer_no_ctf.compute_x_y_values_all_atoms(backbones, poses[i*100:(i+1)*100], 
-    					poses_translation[i*100:(i+1)*100])
+for i in tqdm(range(15000)):
+    batch_images = renderer_no_ctf.compute_x_y_values_all_atoms(backbones[:10], poses[i*10:(i+1)*10], 
+    					poses_translation[i*10:(i+1)*10])
+
+    #batch_images_fourier = rendererFourier.compute_fourier(backbones[:10], torch.transpose(poses[i*10:(i+1)*10],dim0=-2, dim1=-1))
+    batch_images_fourier = rendererFourier.compute_fourier(backbones[:10], poses[i*10:(i+1)*10])
+    print(torch.max(torch.abs(batch_images_fourier.imag)))
+    image_mine = batch_images[0].real.detach().numpy()
+    image_fourier = batch_images_fourier[0].real.detach().numpy()
+    print("MAX relative error:", np.nanmax(np.abs(image_mine - image_fourier)))
+    fig, (ax1, ax2, ax3) = plt.subplots(1,3)
+    fig.suptitle('Vertically stacked subplots')
+    ax1.imshow(image_mine)
+    ax2.imshow(image_fourier)
+    ax3.imshow(image_mine - image_fourier)
+    plt.show()
     all_images.append(batch_images)
 
 all_images = torch.concat(all_images, dim=0)
