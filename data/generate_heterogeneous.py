@@ -14,6 +14,7 @@ from cryodrgn import mrc
 from Bio.PDB import PDBParser
 from renderer import Renderer
 import matplotlib.pyplot as plt
+from Bio import BiopythonWarning
 from pytorch3d.transforms import axis_angle_to_matrix
 
 parser_arg = argparse.ArgumentParser()
