@@ -112,7 +112,7 @@ torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
 mean_variance_signal = torch.mean(torch.var(all_images, dim=(-2, -1)))
 noise_var = mean_variance_signal*10
 print(f"Mean variance of non noisy images: {mean_variance_signal}, adding noise with variance {noise_var}.")
-all_images += torch.randn((N_images, N_pix, N_pix), device=device)*np.sqrt(noise_var)
+all_images += torch.randn((N_images, N_pix, N_pix), device=device)*torch.sqrt(noise_var)
 torch.save(all_images, f"{folder_experiment}ImageDataSet")
 all_images_np = np.transpose(all_images.detach().cpu().numpy(), axes=(0, 2, 1))
 mrc.write(f"{folder_experiment}ImageDataSet.mrcs", all_images.detach().cpu().numpy(), Apix=Apix, is_vol=False)

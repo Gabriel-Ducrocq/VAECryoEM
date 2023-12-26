@@ -33,6 +33,9 @@ class Lattice:
         self.device = device
 
 
+        self.x0 = np.linspace(-extent, extent, D, endpoint=True)
+        self.x1 = np.linspace(-extent, extent, D, endpoint=True)
+
 class RendererFourier():
         def __init__(self, D, std = 1, device= "cpu", sigma=1):
             self.D = D
