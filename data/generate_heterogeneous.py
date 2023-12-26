@@ -25,6 +25,7 @@ parser_arg.add_argument('--Apix', type=float, required=True)
 args = parser_arg.parse_args()
 folder_experiment = args.folder_experiment
 folder_structures = args.folder_structures
+Apix = args.Apix
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
