@@ -101,7 +101,7 @@ with warnings.catch_warnings():
 		centered_structure = utils.center_protein(centering_structure, center_vector[0])
 		#posed_structure = utils_data.compute_poses(structure, poses_py[i], poses_translation_py[i], center_vector)
 		backbone = utils.get_backbone(centered_structure)[None, :, :]
-		backbone = torch.tensor(backbone, dtype=torch.float32)
+		backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
 		backbones = torch.concatenate([backbone for _ in range(N_pose_per_struct)], dim=0)
 		batch_images = renderer.compute_x_y_values_all_atoms(backbones, poses[i*N_pose_per_struct:(i+1)*N_pose_per_struct], poses_translation[i*N_pose_per_struct:(i+1)*N_pose_per_struct])
 		all_images.append(batch_images)
