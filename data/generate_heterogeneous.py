@@ -120,7 +120,7 @@ mrc.write(f"{folder_experiment}ImageDataSet.mrcs", all_images.detach().cpu().num
 with open(f"{folder_experiment}poses.pkl", "wb") as f:
 	pickle.dump((poses_py, poses_translation_py[:, :2]), f)
 
-np.save(all_images.detach().cpu().numpy()[1:N_pose_per_struct*10:N_pose_per_struct], f"{folder_experiment}ExcerptImageDataSetNoNoise")
+np.save(f"{folder_experiment}ExcerptImageDataSetNoNoise", all_images.detach().cpu().numpy()[1:N_pose_per_struct*10:N_pose_per_struct])
 mrc.write(f"{folder_experiment}ExcerptImageDataSet.mrcs", all_images.detach().cpu().numpy()[1:N_pose_per_struct*10:N_pose_per_struct], Apix=Apix, is_vol=False)
 
 
