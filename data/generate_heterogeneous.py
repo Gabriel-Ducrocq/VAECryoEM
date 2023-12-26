@@ -56,6 +56,7 @@ parser = PDBParser(PERMISSIVE=0)
 centering_structure = parser.get_structure("A", centering_structure_path)
 
 #Get all the structure and sort their names to have them in the right order.
+print("N_files in folder structure", len(os.listdir(folder_structures)))
 structures = [folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path]
 indexes = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures]
 sorted_structures = [struct for _, struct in sorted(zip(indexes, structures))]

@@ -92,6 +92,41 @@ class RendererFourier():
             return images
 
 
+        def compute_complex_exponential(self, atom_coordinates, freq_coordinates):
+            """
+            Computes the complex exponential appearing in the Fourier transform
+            :param: atom_coordinates, torch.tensor(N_batch, N_atoms, 1)
+            :param: freq_coordinates, torch.tensor(N_pix) or torch.tensor(N_pix+1) 
+            """
+            return torch.exp(1j*atom_coordinates*freq_coordinates[None, None, :])
+
+
+        def compute_exponential(self, freq_coordinates):
+            """
+            Computes the regular exponential appearing in the Fourier transform
+            :param: freq_coordinates, torch.tensor(N_pix) or torch.tensor(N_pix+1) 
+            """
+            return torch.exp(-0.5*self.sigma**2*freq_coordinates**2)
+
+        def compute_fourier(self, atom_positions, rotation_matrices):
+            """
+            :param: atom_positions, torch.tensor(N_batch, N_atoms, 3)
+            :param rotation_matrices: torch.tensor(N_batch, 3, 3), right multiplication convention ! So transpose before feeding to the function !
+            """
+            N_batch = rotation_matrices.shape[0]
+            #coord is of shape (N_batch, D**2, 3)
+            #There is a 2pi coeff here for taking into account the different convention of Fourier transform I do and the one
+            #used by the FFT in torch
+            coords = 2*torch.pi*self.lattice.coords / self.lattice.extent / 2 
+            rotated_structures = atom_positions @ torch.tranpose(rotation_matrices, dim0=-2, dim1=-1)
+            first_exp = self.compute_complex_exponential(atom_positions[:, :, 0], )
+            second_exp = self.compute_complex_exponential(atom_positions[:, :, 1], )
+
+
+
+
+
+
 
 
 
