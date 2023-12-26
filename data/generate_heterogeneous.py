@@ -95,7 +95,6 @@ torch.save(poses_translation, f"{folder_experiment}poses_translation")
 center_vector = utils.compute_center_of_mass(centering_structure)
 
 all_images = []
-renderer_
 with warnings.catch_warnings():
 	warnings.simplefilter('ignore', BiopythonWarning)
 	for i, structure in tqdm(enumerate(sorted_structures)):
