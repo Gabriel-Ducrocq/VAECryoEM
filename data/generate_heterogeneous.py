@@ -104,6 +104,7 @@ with warnings.catch_warnings():
 		backbone = utils.get_backbone(centered_structure)[None, :, :]
 		backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
 		backbones = torch.concatenate([backbone for _ in range(N_pose_per_struct)], dim=0)
+		print(i*N_pose_per_struct, (i+1)*N_pose_per_struct)
 		batch_images = renderer.compute_x_y_values_all_atoms(backbones, poses[i*N_pose_per_struct:(i+1)*N_pose_per_struct], poses_translation[i*N_pose_per_struct:(i+1)*N_pose_per_struct])
 		all_images.append(batch_images)
 
