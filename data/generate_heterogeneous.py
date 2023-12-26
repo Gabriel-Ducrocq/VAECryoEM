@@ -1,4 +1,5 @@
 import torch
+import pickle
 import numpy as np
 
 parser_arg = argparse.ArgumentParser()
@@ -61,7 +62,20 @@ plt.show()
 
 axis_angle = normalized_axis*angle_rotation
 poses = axis_angle_to_matrix(axis_angle)
-poses_translation = torch.zeros((N_images, 3))
+poses_translation = torch.zeros((N_images, 2))
+
+poses_py = poses.detach().cpu().numpy()
+poses_translation_py = poses_translation.detach().cpu().numpy()
+
+
+print("Min translation", torch.min(poses_translation))
+print("Max translation", torch.max(poses_translation))
+
+np.save(f"{folder_experiment}poses.npy", poses_py)
+np.save(f"{folder_experiment}poses_translation.npy", poses_translation_py)
+torch.save(poses, f"{folder_experiment}poses")
+torch.save(poses_translation, f"{folder_experiment}poses_translation")
+
  
 center_vector = utils.compute_center_of_mass(centering_structure)
 
@@ -85,6 +99,8 @@ all_images += torch.randn((N_images, N_pix, N_pix), device=device)*np.sqrt(noise
 torch.save(all_images, f"{folder_experiment}ImageDataSet")
 all_images_np = np.transpose(all_images.detach().cpu().numpy(), axes=(0, 2, 1))
 mrc.write(f"{folder_experiment}ImageDataSet.mrcs", all_images.detach().cpu().numpy(), Apix=Apix, is_vol=False)
+with open(f"{folder_experiment}poses.pkl", "wb") as f:
+	pickle.dump((poses_py, poses_translation_py), f)
 
 torch.save(all_images[1:experiment_settings["N_pose_per_structure"]*10:experiment_settings["N_pose_per_structure"]], f"{folder_experiment}ExcerptImageDataSetNoNoise")
 mrc.write(f"{folder_experiment}ExcerptImageDataSet.mrcs", all_images.detach().cpu().numpy()[1:experiment_settings["N_pose_per_structure"]*10:experiment_settings["N_pose_per_structure"]], Apix=Apix, is_vol=False)
