@@ -10,7 +10,6 @@ parser_arg.add_argument('--Apix', type=float, required=True)
 args = parser_arg.parse_args()
 folder_experiment = args.folder_experiment
 folder_structures = args.folder_structures
-N_pose_per_struct = args.N_pose_per_struct
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -35,7 +34,7 @@ renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"
                     amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
                     device=device, use_ctf=image_settings["renderer"]["use_ctf"])
 
-
+N_pose_per_struct = experiment_settings["N_pose_per_structure"]
 N_pix = image_settings["N_pixels_per_axis"][0]
 noise_var = image_settings["noise_var"]
 centering_structure_path = experiment_settings["centering_structure_path"]
@@ -50,7 +49,7 @@ sorted_structures = [struct for struct in sorted_structures for _ in range(N_pos
 
 
 #Create poses:
-N_images = experiments_settings["N_images"]*experiment_settings["N_pose_per_structure"]
+N_images = experiments_settings["N_images"]*N_pose_per_struct
 axis_rotation = torch.randn((N_images, 3))
 norm_axis = torch.sqrt(torch.sum(axis_rotation**2, dim=-1))
 normalized_axis = axis_rotation/norm_axis[:, None]
@@ -103,8 +102,8 @@ mrc.write(f"{folder_experiment}ImageDataSet.mrcs", all_images.detach().cpu().num
 with open(f"{folder_experiment}poses.pkl", "wb") as f:
 	pickle.dump((poses_py, poses_translation_py), f)
 
-torch.save(all_images[1:experiment_settings["N_pose_per_structure"]*10:experiment_settings["N_pose_per_structure"]], f"{folder_experiment}ExcerptImageDataSetNoNoise")
-mrc.write(f"{folder_experiment}ExcerptImageDataSet.mrcs", all_images.detach().cpu().numpy()[1:experiment_settings["N_pose_per_structure"]*10:experiment_settings["N_pose_per_structure"]], Apix=Apix, is_vol=False)
+torch.save(all_images[1:N_pose_per_struct*10:N_pose_per_struct], f"{folder_experiment}ExcerptImageDataSetNoNoise")
+mrc.write(f"{folder_experiment}ExcerptImageDataSet.mrcs", all_images.detach().cpu().numpy()[1:N_pose_per_struct*10:N_pose_per_struct], Apix=Apix, is_vol=False)
 
 
 
