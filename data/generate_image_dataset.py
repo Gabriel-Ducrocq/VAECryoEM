@@ -10,6 +10,7 @@ import numpy as np
 from tqdm import tqdm
 from Bio.PDB import PDBParser
 from renderer import Renderer
+from Bio import BiopythonWarning
 
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--folder_experiment', type=str, required=True)
