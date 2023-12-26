@@ -51,7 +51,6 @@ renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"
 
 N_pose_per_struct = experiment_settings["N_pose_per_structure"]
 N_pix = image_settings["N_pixels_per_axis"][0]
-noise_var = image_settings["noise_var"]
 centering_structure_path = experiment_settings["centering_structure_path"]
 parser = PDBParser(PERMISSIVE=0)
 centering_structure = parser.get_structure("A", centering_structure_path)
@@ -95,6 +94,8 @@ torch.save(poses_translation, f"{folder_experiment}poses_translation")
 center_vector = utils.compute_center_of_mass(centering_structure)
 print("Center vector shape", center_vector.shape)
 all_images = []
+print("LEN STRUCTURES", len(sorted_structures))
+print("SHAPES", poses.shape, poses_translation.shape)
 with warnings.catch_warnings():
 	warnings.simplefilter('ignore', BiopythonWarning)
 	for i, structure in tqdm(enumerate(sorted_structures)):
