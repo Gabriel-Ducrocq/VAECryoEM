@@ -97,8 +97,8 @@ center_vector = utils.compute_center_of_mass(centering_structure)
 all_images = []
 renderer_
 with warnings.catch_warnings():
-    warnings.simplefilter('ignore', BiopythonWarning)
-    for i, structure in tqdm(enumerate(sorted_structures)):
+	warnings.simplefilter('ignore', BiopythonWarning)
+	for i, structure in tqdm(enumerate(sorted_structures)):
 		centered_structure = utils.center_protein(centering_structure)
 		#posed_structure = utils_data.compute_poses(structure, poses_py[i], poses_translation_py[i], center_vector)
 		backbone = utils.get_backbone(centered_structure)[None, :, :]
