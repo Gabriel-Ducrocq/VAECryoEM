@@ -60,7 +60,7 @@ sorted_structures = [struct for struct in sorted_structures for _ in range(N_pos
 
 
 #Create poses:
-N_images = experiment_setting["N_images"]*N_pose_per_struct
+N_images = experiment_settings["N_images"]*N_pose_per_struct
 axis_rotation = torch.randn((N_images, 3))
 norm_axis = torch.sqrt(torch.sum(axis_rotation**2, dim=-1))
 normalized_axis = axis_rotation/norm_axis[:, None]
