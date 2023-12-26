@@ -99,7 +99,7 @@ with warnings.catch_warnings():
     warnings.simplefilter('ignore', BiopythonWarning)
     for i, structure in tqdm(enumerate(sorted_structures)):
         posed_structure = utils_data.compute_poses(structure, poses_py[i], poses_translation_py[i], center_vector)
-        backbone = utils.get_backbone(parser.get_structure("A", posed_structure))[None, :, :]
+        backbone = utils.get_backbone(posed_structure)[None, :, :]
         backbones = torch.concatenate([backbone for _ in range(N_pose_per_struct)], dim=0)
         batch_images = renderer.compute_x_y_values_all_atoms(batch_structures, poses, poses_translation)
         all_images.append(batch_images)
