@@ -93,12 +93,12 @@ torch.save(poses_translation, f"{folder_experiment}poses_translation")
 
  
 center_vector = utils.compute_center_of_mass(centering_structure)
-
+print("Center vector shape", center_vector.shape)
 all_images = []
 with warnings.catch_warnings():
 	warnings.simplefilter('ignore', BiopythonWarning)
 	for i, structure in tqdm(enumerate(sorted_structures)):
-		centered_structure = utils.center_protein(centering_structure)
+		centered_structure = utils.center_protein(centering_structure, center_vector)
 		#posed_structure = utils_data.compute_poses(structure, poses_py[i], poses_translation_py[i], center_vector)
 		backbone = utils.get_backbone(centered_structure)[None, :, :]
 		backbone = torch.tensor(backbone, dtype=torch.float32)
