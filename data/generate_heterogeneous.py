@@ -96,6 +96,7 @@ center_vector = utils.compute_center_of_mass(centering_structure)
 print("Center vector shape", center_vector.shape)
 all_images = []
 print("LEN STRUCTURES", len(sorted_structures))
+print("LEN ROT", poses.shape,poses_translation.shape)
 print("SHAPES", poses.shape, poses_translation.shape)
 with warnings.catch_warnings():
 	warnings.simplefilter('ignore', BiopythonWarning)
