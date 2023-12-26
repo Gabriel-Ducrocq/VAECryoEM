@@ -99,13 +99,13 @@ renderer_
 with warnings.catch_warnings():
     warnings.simplefilter('ignore', BiopythonWarning)
     for i, structure in tqdm(enumerate(sorted_structures)):
-    	centered_structure = utils.center_protein(centering_structure)
-        #posed_structure = utils_data.compute_poses(structure, poses_py[i], poses_translation_py[i], center_vector)
-        backbone = utils.get_backbone(centered_structure)[None, :, :]
-        backbone = torch.tensor(backbone, dtype=torch.float32)
-        backbones = torch.concatenate([backbone for _ in range(N_pose_per_struct)], dim=0)
-        batch_images = renderer.compute_x_y_values_all_atoms(batch_structures, poses[i*N_pose_per_struct:(i+1)*N_pose_per_struct], poses_translation[i*N_pose_per_struct:(i+1)*N_pose_per_struct])
-        all_images.append(batch_images)
+		centered_structure = utils.center_protein(centering_structure)
+		#posed_structure = utils_data.compute_poses(structure, poses_py[i], poses_translation_py[i], center_vector)
+		backbone = utils.get_backbone(centered_structure)[None, :, :]
+		backbone = torch.tensor(backbone, dtype=torch.float32)
+		backbones = torch.concatenate([backbone for _ in range(N_pose_per_struct)], dim=0)
+		batch_images = renderer.compute_x_y_values_all_atoms(batch_structures, poses[i*N_pose_per_struct:(i+1)*N_pose_per_struct], poses_translation[i*N_pose_per_struct:(i+1)*N_pose_per_struct])
+		all_images.append(batch_images)
 
 
 all_images = torch.concatenate(all_images, dim=0)
