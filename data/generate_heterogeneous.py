@@ -65,19 +65,19 @@ sorted_structures = [struct for struct in sorted_structures for _ in range(N_pos
 
 #Create poses:
 N_images = experiment_settings["N_images"]*N_pose_per_struct
-axis_rotation = torch.randn((N_images, 3))
+axis_rotation = torch.randn((N_images, 3), device=device)
 norm_axis = torch.sqrt(torch.sum(axis_rotation**2, dim=-1))
 normalized_axis = axis_rotation/norm_axis[:, None]
 print("Min norm of rotation axis", torch.min(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
 print("Max norm of rotation axis", torch.max(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
 
-angle_rotation = torch.rand((N_images,1))*torch.pi
-plt.hist(angle_rotation[:, 0].detach().numpy())
+angle_rotation = torch.rand((N_images,1), device=device)*torch.pi
+plt.hist(angle_rotation[:, 0].detach().cpu().numpy())
 plt.show()
 
 axis_angle = normalized_axis*angle_rotation
 poses = axis_angle_to_matrix(axis_angle)
-poses_translation = torch.zeros((N_images, 3))
+poses_translation = torch.zeros((N_images, 3), device=device)
 
 poses_py = poses.detach().cpu().numpy()
 poses_translation_py = poses_translation.detach().cpu().numpy()
@@ -95,13 +95,16 @@ torch.save(poses_translation, f"{folder_experiment}poses_translation")
 center_vector = utils.compute_center_of_mass(centering_structure)
 
 all_images = []
+renderer_
 with warnings.catch_warnings():
     warnings.simplefilter('ignore', BiopythonWarning)
     for i, structure in tqdm(enumerate(sorted_structures)):
-        posed_structure = utils_data.compute_poses(structure, poses_py[i], poses_translation_py[i], center_vector)
-        backbone = utils.get_backbone(posed_structure)[None, :, :]
+    	centered_structure = utils.center_protein(centering_structure)
+        #posed_structure = utils_data.compute_poses(structure, poses_py[i], poses_translation_py[i], center_vector)
+        backbone = utils.get_backbone(centered_structure)[None, :, :]
+        backbone = torch.tensor(backbone, dtype=torch.float32)
         backbones = torch.concatenate([backbone for _ in range(N_pose_per_struct)], dim=0)
-        batch_images = renderer.compute_x_y_values_all_atoms(batch_structures, poses, poses_translation)
+        batch_images = renderer.compute_x_y_values_all_atoms(batch_structures, poses[i*N_pose_per_struct:(i+1)*N_pose_per_struct], poses_translation[i*N_pose_per_struct:(i+1)*N_pose_per_struct])
         all_images.append(batch_images)
 
 
