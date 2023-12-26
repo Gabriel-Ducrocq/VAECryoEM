@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
+from time import time
 
 
 class Lattice:
@@ -50,16 +51,39 @@ class RendererFourier():
             #coord is of shape (N_batch, D**2, 3)
             #There is a 2pi coeff here for taking into account the different convention of Fourier transform I do and the one
             #used by the FFT in torch
+            start = time()
             coords = 2*torch.pi*self.lattice.coords / self.lattice.extent / 2 @ rotation_matrices
-            #dot_prod is (batch, coordinates, atoms)
+            end = time()
+            print("Time coords rotating", end -start)
+            #dot_prod is (batch, D**2, atoms)
+            start = time()
             dot_prod = torch.einsum("bkj, baj-> bka", coords, atom_positions)
+            end = time()
+            print("Time dot_prod", end -start)
             #norm_squared is (N_batch, D**2, 1)
+            start = time()
             norm_squared = torch.sum(coords**2, dim=-1)[:, :, None]
+            end = time()
+            print("Time norm_squred", end -start)
+            print("TEST SHAPES", dot_prod.shape, norm_squared.shape)
+            start = time()
+            test_real = torch.cos(dot_prod)
+            test_imag = -torch.sin(dot_prod)
+            #test_real_imag = torch.stack([test_real, test_imag], dim=-1)
+            #test = -1j*dot_prod
+            end = time()
+            print("test time", end - start)
+            start = time()
             fourier_per_coord_per_atom = torch.exp(-1j*dot_prod - 0.5*(self.sigma**2)*norm_squared)
+            end = time()
+            print("Time exponential", end - start)
             #Fourier_per_coord is (N_batch, D**2)
             fourier_per_coord = torch.sum(fourier_per_coord_per_atom, dim=-1)
             ##TRANSPOSING HERE BE CAREFUL !!!
+            start = time()
             fourier_per_coord_2d = torch.transpose(torch.reshape(fourier_per_coord, (N_batch, self.D, self.D)), dim0=-2, dim1=-1)
+            end = time()
+            print("FOURIER time", end - start)
             # BE CAREFUL: I AM REMOVING THE LAST ROWS AND COLUMNS BECAUSE WE ALREADY HAVE THE NYQUIST FREQUENCY !
             fourier_per_coord_2d = fourier_per_coord_2d[: , :-1, :-1]
             images = torch.fft.ifft2(torch.fft.ifftshift(fourier_per_coord_2d, dim = (-2, -1)))
@@ -109,6 +133,7 @@ class Renderer():
         ctf = self.compute_ctf(freqs, dfU, dfV, dfang, self.accelerating_voltage, self.spherical_aberration,
                                self.amplitude_contrast_ratio)
         self.ctf_grid = torch.reshape(ctf, (self.len_x, self.len_y))
+        print("IS SYMMETRICAL", self.ctf_grid - torch.transpose(self.ctf_grid, dim0=1, dim1=0))
         ## BE CAREFUL, the CTF potentially works only for an even number of pixels along one dimension !
         self.ctf_grid = torch.fft.ifftshift(self.ctf_grid)
 
@@ -209,6 +234,13 @@ class Renderer():
         :return:  torch tensor (N_batch, N_pixels_s, N_pixels_y), corrupted image
         """
         fourier_images = torch.fft.fft2(image)
+        #test = torch.fft.fftshift(fourier_images, dim=(-2, -1))
+        #test_no_nyquist = test[:, 1:, 1:]
+        #print("SHAPE", test_no_nyquist.shape)
+        #print("TEST SYMMETRY", test_no_nyquist - torch.transpose(test_no_nyquist, dim0=-2, dim1=-1))
+        #ctf_grid_test = torch.fft.fftshift(self.ctf_grid)
+        #print("TEST CTF SYMMETRY", ctf_grid_test - torch.transpose(ctf_grid_test, dim0=-2, dim1=-2))
+
         corrupted_fourier = fourier_images*self.ctf_grid
         corrupted_images = torch.fft.ifft2(corrupted_fourier).real
         return corrupted_images
@@ -242,10 +274,6 @@ class Renderer():
             #prod = torch.einsum("blki,blkj->blkij", (all_x, all_y))
             #projected_densities = torch.sum(prod, dim=-3)
             projected_densities = torch.einsum("blki,blkj->blij", (all_x, all_y))
-
-
-        fftimage = torch.fft.fft2(projected_densities)
-        print("FFT SHAPE", fftimage.shape)
 
         if self.use_ctf:
             projected_densities = self.ctf_corrupting(projected_densities)

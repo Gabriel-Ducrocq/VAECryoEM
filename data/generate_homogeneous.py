@@ -35,13 +35,16 @@ pixels_y = np.linspace(image_settings["image_lower_bounds"][1], image_settings["
                        num=image_settings["N_pixels_per_axis"][1]).reshape(1, -1)
 
 
+
+### CHANGED CTF CORRUPTION TO False !!!
 renderer_no_ctf = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"] * 3,
                     dfU=image_settings["renderer"]["dfU"], dfV=image_settings["renderer"]["dfV"],
                     dfang=image_settings["renderer"]["dfang"],
                     spherical_aberration=image_settings["renderer"]["spherical_aberration"],
                     accelerating_voltage=image_settings["renderer"]["accelerating_voltage"],
                     amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
-                    device=device, use_ctf=image_settings["renderer"]["use_ctf"])
+                    device=device, use_ctf=False)
+
 
 rendererFourier = RendererFourier(190, device=device)
 
@@ -89,12 +92,19 @@ center_vector = utils.compute_center_of_mass(centering_structure)
 backbones = torch.tensor(utils.get_backbone(centering_structure) - center_vector, dtype=torch.float32, device=device)
 backbones = torch.concatenate([backbones[None, :, :] for _ in range(100)]) 
 all_images = []
+from time import time
 for i in tqdm(range(15000)):
+    start = time()
     batch_images = renderer_no_ctf.compute_x_y_values_all_atoms(backbones[:10], poses[i*10:(i+1)*10], 
     					poses_translation[i*10:(i+1)*10])
+    end = time()
+    print("Time mine", end - start)
 
     #batch_images_fourier = rendererFourier.compute_fourier(backbones[:10], torch.transpose(poses[i*10:(i+1)*10],dim0=-2, dim1=-1))
+    start = time()
     batch_images_fourier = rendererFourier.compute_fourier(backbones[:10], poses[i*10:(i+1)*10])
+    end = time()
+    print("Time fourier", end - start)
     print(torch.max(torch.abs(batch_images_fourier.imag)))
     image_mine = batch_images[0].real.detach().numpy()
     image_fourier = batch_images_fourier[0].real.detach().numpy()
