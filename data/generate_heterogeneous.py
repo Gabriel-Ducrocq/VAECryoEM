@@ -1,5 +1,7 @@
 import os
 import sys
+path = os.path.abspath("model")
+sys.path.append(path)
 import yaml
 import torch
 import pickle
@@ -11,9 +13,6 @@ from Bio.PDB import PDBParser
 from renderer import Renderer
 import matplotlib.pyplot as plt
 from pytorch3d.transforms import axis_angle_to_matrix
-
-path = os.path.abspath("model")
-sys.path.append(path)
 
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--folder_experiment', type=str, required=True)
