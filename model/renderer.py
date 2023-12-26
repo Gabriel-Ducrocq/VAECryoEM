@@ -133,9 +133,9 @@ class Renderer():
         ctf = self.compute_ctf(freqs, dfU, dfV, dfang, self.accelerating_voltage, self.spherical_aberration,
                                self.amplitude_contrast_ratio)
         self.ctf_grid = torch.reshape(ctf, (self.len_x, self.len_y))
-        print("IS SYMMETRICAL", self.ctf_grid - torch.transpose(self.ctf_grid, dim0=1, dim1=0))
         ## BE CAREFUL, the CTF potentially works only for an even number of pixels along one dimension !
         self.ctf_grid = torch.fft.ifftshift(self.ctf_grid)
+        #print("IS SYMMETRICAL", self.ctf_grid - torch.transpose(self.ctf_grid, dim0=1, dim1=0))
 
 
     def meshgrid_2d(self, lo, hi, n, endpoint=False):
