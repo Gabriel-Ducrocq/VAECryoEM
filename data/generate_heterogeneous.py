@@ -77,7 +77,7 @@ plt.show()
 
 axis_angle = normalized_axis*angle_rotation
 poses = axis_angle_to_matrix(axis_angle)
-poses_translation = torch.zeros((N_images, 2))
+poses_translation = torch.zeros((N_images, 3))
 
 poses_py = poses.detach().cpu().numpy()
 poses_translation_py = poses_translation.detach().cpu().numpy()
@@ -115,7 +115,7 @@ torch.save(all_images, f"{folder_experiment}ImageDataSet")
 all_images_np = np.transpose(all_images.detach().cpu().numpy(), axes=(0, 2, 1))
 mrc.write(f"{folder_experiment}ImageDataSet.mrcs", all_images.detach().cpu().numpy(), Apix=Apix, is_vol=False)
 with open(f"{folder_experiment}poses.pkl", "wb") as f:
-	pickle.dump((poses_py, poses_translation_py), f)
+	pickle.dump((poses_py, poses_translation_py[:, :2]), f)
 
 torch.save(all_images[1:N_pose_per_struct*10:N_pose_per_struct], f"{folder_experiment}ExcerptImageDataSetNoNoise")
 mrc.write(f"{folder_experiment}ExcerptImageDataSet.mrcs", all_images.detach().cpu().numpy()[1:N_pose_per_struct*10:N_pose_per_struct], Apix=Apix, is_vol=False)
