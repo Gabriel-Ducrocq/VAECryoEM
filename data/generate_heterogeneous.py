@@ -104,7 +104,7 @@ torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
 all_images += torch.randn((N_images, N_pix, N_pix), device=device)*np.sqrt(noise_var)
 
 torch.save(all_images, f"{folder_experiment}ImageDataSet")
-mrc.write("ImageDataSet.mrcs", np.transpose(all_images.detach().cpu().numpy(), axes=(0, 2, 1)), Apix=1.0, is_vol=False)
+mrc.write(f"{folder_experiment}ImageDataSet.mrcs", np.transpose(all_images.detach().cpu().numpy(), axes=(0, 2, 1)), Apix=1.0, is_vol=False)
 with open(f"{folder_experiment}poses.pkl", "wb") as f:
 	pickle.dump((poses_py, poses_translation_py[:, :2]), f)
 
