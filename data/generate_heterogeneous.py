@@ -60,7 +60,6 @@ print("N_files in folder structure", len(os.listdir(folder_structures)))
 structures = [folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path]
 indexes = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures]
 sorted_structures = [struct for _, struct in sorted(zip(indexes, structures))]
-sorted_structures = [struct for struct in sorted_structures for _ in range(N_pose_per_struct)]
 
 
 #Create poses:
@@ -93,11 +92,8 @@ torch.save(poses_translation, f"{folder_experiment}poses_translation")
 
  
 center_vector = utils.compute_center_of_mass(centering_structure)
-print("Center vector shape", center_vector.shape)
 all_images = []
 print("LEN STRUCTURES", len(sorted_structures))
-print("LEN ROT", poses.shape,poses_translation.shape)
-print("SHAPES", poses.shape, poses_translation.shape)
 with warnings.catch_warnings():
 	warnings.simplefilter('ignore', BiopythonWarning)
 	for i, structure in tqdm(enumerate(sorted_structures)):
