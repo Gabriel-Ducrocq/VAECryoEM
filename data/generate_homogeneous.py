@@ -102,7 +102,7 @@ for i in tqdm(range(15000)):
 
     #batch_images_fourier = rendererFourier.compute_fourier(backbones[:10], torch.transpose(poses[i*10:(i+1)*10],dim0=-2, dim1=-1))
     start = time()
-    batch_images_fourier = rendererFourier.compute_fourier(backbones[:10], poses[i*10:(i+1)*10])
+    batch_images_fourier = rendererFourier.compute_fourier_test(backbones[:10], poses[i*10:(i+1)*10])
     end = time()
     print("Time fourier", end - start)
     print(torch.max(torch.abs(batch_images_fourier.imag)))

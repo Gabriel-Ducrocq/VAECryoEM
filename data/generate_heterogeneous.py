@@ -94,16 +94,16 @@ torch.save(poses_translation, f"{folder_experiment}poses_translation")
  
 center_vector = utils.compute_center_of_mass(centering_structure)
 all_images = []
+import matplotlib.pyplot as plt
 print("LEN STRUCTURES", len(sorted_structures))
+centered_structure = utils.center_protein(centering_structure, center_vector[0])
+backbone = utils.get_backbone(centered_structure)[None, :, :]
+backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
+backbones = torch.concatenate([backbone for _ in range(N_pose_per_struct)], dim=0)
 with warnings.catch_warnings():
 	warnings.simplefilter('ignore', BiopythonWarning)
 	for i, structure in tqdm(enumerate(sorted_structures)):
-		centered_structure = utils.center_protein(centering_structure, center_vector[0])
 		#posed_structure = utils_data.compute_poses(structure, poses_py[i], poses_translation_py[i], center_vector)
-		backbone = utils.get_backbone(centered_structure)[None, :, :]
-		backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
-		backbones = torch.concatenate([backbone for _ in range(N_pose_per_struct)], dim=0)
-		print(i)
 		batch_images = renderer.compute_x_y_values_all_atoms(backbones, poses[i*N_pose_per_struct:(i+1)*N_pose_per_struct], poses_translation[i*N_pose_per_struct:(i+1)*N_pose_per_struct])
 		all_images.append(batch_images)
 
@@ -120,7 +120,7 @@ mrc.write(f"{folder_experiment}ImageDataSet.mrcs", all_images.detach().cpu().num
 with open(f"{folder_experiment}poses.pkl", "wb") as f:
 	pickle.dump((poses_py, poses_translation_py[:, :2]), f)
 
-torch.save(all_images[1:N_pose_per_struct*10:N_pose_per_struct], f"{folder_experiment}ExcerptImageDataSetNoNoise")
+np.save(all_images.detach().cpu().numpy()[1:N_pose_per_struct*10:N_pose_per_struct], f"{folder_experiment}ExcerptImageDataSetNoNoise")
 mrc.write(f"{folder_experiment}ExcerptImageDataSet.mrcs", all_images.detach().cpu().numpy()[1:N_pose_per_struct*10:N_pose_per_struct], Apix=Apix, is_vol=False)
 
 

@@ -111,7 +111,7 @@ class RendererFourier():
             """
             return torch.exp(-0.5*self.sigma**2*freq_coordinates**2)
 
-        def compute_fourier(self, atom_positions, rotation_matrices):
+        def compute_fourier_test(self, atom_positions, rotation_matrices):
             """
             :param: atom_positions, torch.tensor(N_batch, N_atoms, 3)
             :param rotation_matrices: torch.tensor(N_batch, 3, 3), right multiplication convention ! So transpose before feeding to the function !
@@ -121,9 +121,16 @@ class RendererFourier():
             #There is a 2pi coeff here for taking into account the different convention of Fourier transform I do and the one
             #used by the FFT in torch
             coords = 2*torch.pi*self.lattice.coords / self.lattice.extent / 2 
-            rotated_structures = atom_positions @ torch.tranpose(rotation_matrices, dim0=-2, dim1=-1)
-            first_exp = self.compute_complex_exponential(atom_positions[:, :, 0], )
-            second_exp = self.compute_complex_exponential(atom_positions[:, :, 1], )
+            rotated_structures = atom_positions @ torch.transpose(rotation_matrices, dim0=-2, dim1=-1)
+            #first_exp and second_exp are torch.tensor(N_batch. N_atom, Npix or Npix+1)
+            first_exp = self.compute_complex_exponential(atom_positions[:, :, 0], self.lattice.x0)*self.compute_exponential(self.lattice.x0)
+            second_exp = self.compute_complex_exponential(atom_positions[:, :, 1], self.lattice.x1)*self.compute_exponential(self.lattice.x1)
+            fourier_images =torch.einsum("bak, bal->bkl", first_exp, second_exp)
+            images = torch.fft.ifft2(torch.fft.ifftshift(fourier_images, dim = (-2, -1)))
+            images = torch.fft.fftshift(images, dim=(-2, -1))
+            return images
+
+
 
 
 
