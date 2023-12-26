@@ -94,27 +94,27 @@ backbones = torch.concatenate([backbones[None, :, :] for _ in range(100)])
 all_images = []
 from time import time
 for i in tqdm(range(15000)):
-    start = time()
+    #start = time()
     batch_images = renderer_no_ctf.compute_x_y_values_all_atoms(backbones[:10], poses[i*10:(i+1)*10], 
     					poses_translation[i*10:(i+1)*10])
-    end = time()
-    print("Time mine", end - start)
+    #end = time()
+    #print("Time mine", end - start)
 
     #batch_images_fourier = rendererFourier.compute_fourier(backbones[:10], torch.transpose(poses[i*10:(i+1)*10],dim0=-2, dim1=-1))
-    start = time()
-    batch_images_fourier = rendererFourier.compute_fourier_test(backbones[:10], poses[i*10:(i+1)*10])
-    end = time()
-    print("Time fourier", end - start)
-    print(torch.max(torch.abs(batch_images_fourier.imag)))
-    image_mine = batch_images[0].real.detach().numpy()
-    image_fourier = batch_images_fourier[0].real.detach().numpy()
-    print("MAX relative error:", np.nanmax(np.abs(image_mine - image_fourier)))
-    fig, (ax1, ax2, ax3) = plt.subplots(1,3)
-    fig.suptitle('Vertically stacked subplots')
-    ax1.imshow(image_mine)
-    ax2.imshow(image_fourier)
-    ax3.imshow(image_mine - image_fourier)
-    plt.show()
+    #start = time()
+    #batch_images_fourier = rendererFourier.compute_fourier_test(backbones[:10], poses[i*10:(i+1)*10])
+    #end = time()
+    #print("Time fourier", end - start)
+    #print(torch.max(torch.abs(batch_images_fourier.imag)))
+    #image_mine = batch_images[0].real.detach().numpy()
+    #image_fourier = batch_images_fourier[0].real.detach().numpy()
+    #print("MAX relative error:", np.nanmax(np.abs(image_mine - image_fourier)))
+    #fig, (ax1, ax2, ax3) = plt.subplots(1,3)
+    #fig.suptitle('Vertically stacked subplots')
+    #ax1.imshow(image_mine)
+    #ax2.imshow(image_fourier)
+    #ax3.imshow(image_mine - image_fourier)
+    #plt.show()
     all_images.append(batch_images)
 
 all_images = torch.concat(all_images, dim=0)
@@ -124,7 +124,7 @@ all_images += torch.randn((N_images, N_pix, N_pix), device=device)*np.sqrt(noise
 
 torch.save(all_images, f"{folder_experiment}ImageDataSet")
 mrc.write("ImageDataSet.mrcs", all_images.detach().cpu().numpy(), Apix=1.0, is_vol=False)
-
+#mrc.write("ImageDataSet.mrcs", np.transpose(all_images.detach().cpu().numpy(), axes=(0, 2, 1)), Apix=1.0, is_vol=False)
 
 
 
