@@ -110,7 +110,10 @@ for i in tqdm(range(len(sorted_structures))):
 	all_images.append(batch_images)
 
 all_images = torch.concat(all_images, dim=0)
-print(torch.mean(torch.var(all_images, dim=(-2, -1))))
+mean_variance = torch.mean(torch.var(all_images, dim=(-2, -1)))
+print("Mean variance accross images", mean_variance)
+noise_var = 10*mean_variance
+print("Adding Gaussian noise with variance", noise_var)
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
 all_images += torch.randn((N_images, N_pix, N_pix), device=device)*np.sqrt(noise_var)
 
