@@ -17,11 +17,18 @@ from pytorch3d.transforms import axis_angle_to_matrix
 
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--folder_experiment', type=str, required=True)
+parser_arg.add_argument('--folder_structures', type=str, required=True)
 args = parser_arg.parse_args()
 folder_experiment = args.folder_experiment
+folder_structures = args.folder_structures
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
+#Get all the structure and sort their names to have them in the right order.
+structures = [folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path]
+indexes = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures]
+sorted_structures = [struct for _, struct in sorted(zip(indexes, structures))]
 
 with open(f"{folder_experiment}/parameters.yaml", "r") as file:
     experiment_settings = yaml.safe_load(file)
@@ -50,6 +57,7 @@ renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"
 rendererFourier = RendererFourier(190, device=device)
 
 
+N_pose_per_structure = experiment_settings["N_pose_per_structure"]
 N_pix = image_settings["N_pixels_per_axis"][0]
 noise_var = image_settings["noise_var"]
 centering_structure_path = experiment_settings["centering_structure_path"]
@@ -57,7 +65,7 @@ parser = PDBParser(PERMISSIVE=0)
 centering_structure = parser.get_structure("A", centering_structure_path)
 
 #Create poses:
-N_images = experiment_settings["N_images"]
+N_images = len(sorted_structures)*N_pose_per_structure
 axis_rotation = torch.randn((N_images, 3), device=device)
 norm_axis = torch.sqrt(torch.sum(axis_rotation**2, dim=-1))
 normalized_axis = axis_rotation/norm_axis[:, None]
@@ -89,15 +97,17 @@ torch.save(poses_translation, f"{folder_experiment}poses_translation")
 #Finding the center of mass to center the protein
 center_vector = utils.compute_center_of_mass(centering_structure)
 
-backbones = torch.tensor(utils.get_backbone(centering_structure) - center_vector, dtype=torch.float32, device=device)
-backbones = torch.concatenate([backbones[None, :, :] for _ in range(100)]) 
 all_images = []
 from time import time
-for i in tqdm(range(15000)):
-    batch_images = renderer.compute_x_y_values_all_atoms(backbones[:10], poses[i*10:(i+1)*10], 
-    					poses_translation[i*10:(i+1)*10])
-
-    all_images.append(batch_images)
+for i in tqdm(range(N_images)):
+	structure = parser.get_structure("A", sorted_structures[i])
+	backbone = utils.get_backbone(structure) - center_vector
+	backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
+	backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
+	batch_images = renderer.compute_x_y_values_all_atoms(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
+	plt.imshow(batch_images[0].detach().cpu().numpy())
+	plt.show()
+	all_images.append(batch_images)
 
 all_images = torch.concat(all_images, dim=0)
 print(torch.mean(torch.var(all_images, dim=(-2, -1))))
