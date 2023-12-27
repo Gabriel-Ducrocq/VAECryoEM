@@ -38,7 +38,7 @@ pixels_y = np.linspace(image_settings["image_lower_bounds"][1], image_settings["
 
 
 ### CHANGED CTF CORRUPTION TO False !!!
-renderer_no_ctf = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"] * 3,
+renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"] * 3,
                     dfU=image_settings["renderer"]["dfU"], dfV=image_settings["renderer"]["dfV"],
                     dfang=image_settings["renderer"]["dfang"],
                     spherical_aberration=image_settings["renderer"]["spherical_aberration"],
@@ -94,7 +94,7 @@ backbones = torch.concatenate([backbones[None, :, :] for _ in range(100)])
 all_images = []
 from time import time
 for i in tqdm(range(15000)):
-    batch_images = renderer_no_ctf.compute_x_y_values_all_atoms(backbones[:10], poses[i*10:(i+1)*10], 
+    batch_images = renderer.compute_x_y_values_all_atoms(backbones[:10], poses[i*10:(i+1)*10], 
     					poses_translation[i*10:(i+1)*10])
 
     all_images.append(batch_images)
