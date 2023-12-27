@@ -99,7 +99,7 @@ center_vector = utils.compute_center_of_mass(centering_structure)
 
 all_images = []
 from time import time
-for i in tqdm(range(N_images)):
+for i in tqdm(range(len(sorted_structures))):
 	structure = parser.get_structure("A", sorted_structures[i])
 	backbone = utils.get_backbone(structure) - center_vector
 	backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
