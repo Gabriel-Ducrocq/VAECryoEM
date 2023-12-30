@@ -17,10 +17,12 @@ from Bio import BiopythonWarning
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--folder_experiment', type=str, required=True)
 parser_arg.add_argument('--folder_volumes', type=str, required=True)
+parser.arg.add_argument('--folder_structures', type=str, required=True)
 parser_arg.add_argument('--batch_size', type=str, required=True)
 args = parser_arg.parse_args()
 folder_experiment = args.folder_experiment
 folder_volumes = args.folder_volumes
+folder_structures = args.folder_structures
 batch_size = args.batch_size
 
 
@@ -53,7 +55,7 @@ batch_size = experiment_settings["batch_size"]
 poses = torch.eye(3, 3, dtype=torch.float32, device=device)[None, :, :]
 poses_translation = torch.zeros(3, dtype=torch.float32, device=device)[None,:]
 #Get the structures to convert them into 2d images
-structures = [folder_experiment + path for path in os.listdir(folder_experiment) if ".pdb" in path]
+structures = [folder_experiment + path for path in os.listdir(folder_structures) if ".pdb" in path]
 #Keep the backbone only. Note that there is NO NEED to recenter, since we centered the structures when generating the
 #posed structures, where the center of mass was computed using ALL the atoms.
 centering_structure_path = experiment_settings["centering_structure_path"]
