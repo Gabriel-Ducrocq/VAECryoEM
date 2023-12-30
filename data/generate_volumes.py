@@ -61,7 +61,7 @@ structures = [folder_structures + path for path in os.listdir(folder_structures)
 centering_structure_path = experiment_settings["centering_structure_path"]
 centering_structure = parser.get_structure("A", centering_structure_path)
 center_vector = utils.compute_center_of_mass(centering_structure)
-all_structures = [utils.get_backbone(utils.center_protein(parser.get_structure("A", struct),center_vector[0]))[None, :, :] for struct in tqdm(structures[:50])]
+all_structures = [utils.get_backbone(utils.center_protein(parser.get_structure("A", struct),center_vector[0]))[None, :, :] for struct in tqdm(structures)]
 all_structures = torch.tensor(np.concatenate(all_structures, axis=0), dtype=torch.float32, device=device)
 N = len(all_structures)
 for i in tqdm(range(0,N)):
