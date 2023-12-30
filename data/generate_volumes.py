@@ -55,7 +55,7 @@ batch_size = experiment_settings["batch_size"]
 poses = torch.eye(3, 3, dtype=torch.float32, device=device)[None, :, :]
 poses_translation = torch.zeros(3, dtype=torch.float32, device=device)[None,:]
 #Get the structures to convert them into 2d images
-structures = [folder_experiment + path for path in os.listdir(folder_structures) if ".pdb" in path]
+structures = [folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path]
 #Keep the backbone only. Note that there is NO NEED to recenter, since we centered the structures when generating the
 #posed structures, where the center of mass was computed using ALL the atoms.
 centering_structure_path = experiment_settings["centering_structure_path"]
