@@ -27,7 +27,7 @@ assert sorted1 != sorted2, f"different number of volumes: {len(sorted1)} in {fol
 
 N_volumes = len(sorted1)
 
-for i in tqdm(range(N_volumes)):
+for i in tqdm(range(0, N_volumes,10)):
 	#os.system(f"pdb_selatom -CA,C,N {sorted1[i][1]} > backbone1.pdb")
 	#os.system(f"pdb_selatom -CA,C,N {sorted2[i][1]} > backbone2.pdb")
 	#os.system(f"pdb2mrc.py {backbone1} volume1 --apix={Apix}")
