@@ -1,7 +1,8 @@
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
 from time import time
+from cryodrgn import mrc
+import matplotlib.pyplot as plt
 
 
 class Lattice:
@@ -107,7 +108,12 @@ class RendererFourier():
             :param: atom_coordinates, torch.tensor(N_batch, N_atoms, 1)
             :param: freq_coordinates, torch.tensor(N_pix) or torch.tensor(N_pix+1) 
             """
-            return torch.exp(-1j*atom_coordinates[:, :, None]*freq_coordinates[None, None, :])
+            args = atom_coordinates[:, :, None]*freq_coordinates[None, None, :]
+            real = torch.cos(args)
+            imaginary = torch.sin(args)
+            complex_output = torch.concat([real[:, :, :, None], imaginary[:, :, :, None]], dim=-1)
+            return torch.view_as_complex(complex_output)
+            #return torch.exp(-1j*atom_coordinates[:, :, None]*freq_coordinates[None, None, :])
 
 
         def compute_exponential(self, freq_coordinates):
@@ -131,7 +137,10 @@ class RendererFourier():
             #first_exp and second_exp are torch.tensor(N_batch. N_atom, Npix or Npix+1)
             first_exp = self.compute_complex_exponential(rotated_structures[:, :, 0], self.x0)*self.exp0
             second_exp = self.compute_complex_exponential(rotated_structures[:, :, 1], self.x1)*self.exp1
+            start = time()
             fourier_images =torch.einsum("bak, bal->bkl", first_exp, second_exp)
+            end = time()
+            print("TIME INSIDE FOURIER", end - start)
             images = torch.fft.ifft2(torch.fft.ifftshift(fourier_images, dim = (-2, -1)))
             images = torch.fft.fftshift(images, dim=(-2, -1))
             return images
@@ -158,6 +167,7 @@ class Renderer():
         assert self.len_x % 2 == 0, "Number of pixel is not a multiple of 2"
         self.pixels_x = torch.tensor(pixels_x, dtype=torch.float32, device=device)
         self.pixels_y = torch.tensor(pixels_y, dtype=torch.float32, device=device)
+        self.pixels_z = torch.tensor(pixels_x, dtype=torch.float32, device=device)
         self.N_atoms = N_atoms
         self.torch_sqrt_2pi= torch.sqrt(torch.tensor(2*np.pi, device=device))
         self.dfU = torch.ones(1, device=device)*dfU
@@ -297,7 +307,7 @@ class Renderer():
         return corrupted_images
 
     def compute_x_y_values_all_atoms(self, atom_positions, rotation_matrices, translation_vectors,
-                                     latent_type="continuous"):
+                                     latent_type="continuous", volume=False):
         """
 
         :param atom_position: (N_batch, N_atoms, 3)
@@ -308,15 +318,26 @@ class Renderer():
         transposed_atom_positions = torch.transpose(atom_positions, dim0=-2, dim1=-1)
         if latent_type=="continuous":
             #Rotation pose
+            #TRYING TO ACCELERATE THIS PART
             rotated_transposed_atom_positions = torch.matmul(rotation_matrices, transposed_atom_positions)
             #Translation pose
             rotated_transposed_atom_positions += translation_vectors[:, :, None]
+            #Trying to accelerate with the commmented code ?
+            #rotated_atom_positions = torch.einsum("bkl, bal->bak", rotation_matrices, atom_positions)
+            #rotated_atom_positions += translation_vectors[:, None, :]
             rotated_atom_positions = torch.transpose(rotated_transposed_atom_positions, -2, -1)
             all_x = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 0], self.pixels_x)
             all_y = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 1], self.pixels_y)
             #prod = torch.einsum("bki,bkj->bkij", (all_x, all_y))
             #projected_densities = torch.sum(prod, dim=1)
-            projected_densities = torch.einsum("bki,bkj->bij", (all_x, all_y))
+            if volume:
+                all_z = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 2], self.pixels_z)
+                xy = torch.einsum("bki,bkj->bkij", (all_x, all_y))
+                volume = torch.einsum("bkij, bkl -> bijl", (xy, all_z))
+                return volume
+            else:
+                projected_densities = torch.einsum("bki,bkj->bij", (all_x, all_y))
+
         else:
             rotated_transposed_atom_positions = torch.matmul(rotation_matrices[:, None, :, :], transposed_atom_positions)
             rotated_atom_positions = torch.transpose(rotated_transposed_atom_positions, -2, -1)
