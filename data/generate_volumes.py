@@ -17,8 +17,8 @@ from Bio import BiopythonWarning
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--folder_experiment', type=str, required=True)
 parser_arg.add_argument('--folder_volumes', type=str, required=True)
-parser.arg.add_argument('--folder_structures', type=str, required=True)
-parser.arg.add_argument('--batch_size', type=str, required=True)
+parser_arg.add_argument('--folder_structures', type=str, required=True)
+parser_arg.add_argument('--batch_size', type=str, required=True)
 args = parser_arg.parse_args()
 folder_experiment = args.folder_experiment
 folder_volumes = args.folder_volumes
