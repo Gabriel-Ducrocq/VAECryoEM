@@ -63,7 +63,7 @@ centering_structure = parser.get_structure("A", centering_structure_path)
 center_vector = utils.compute_center_of_mass(centering_structure)
 all_structures = [utils.get_backbone(utils.center_protein(parser.get_structure("A", struct),center_vector[0]))[None, :, :] for struct in tqdm(structures[:50])]
 all_structures = torch.tensor(np.concatenate(all_structures, axis=0), dtype=torch.float32, device=device)
-
+N = len(all_structures)
 for i in tqdm(range(0,N)):
     batch_structures = all_structures[i]
     batch_volumes = renderer.compute_x_y_values_all_atoms(batch_structures, poses, poses_translation, volume=True)
