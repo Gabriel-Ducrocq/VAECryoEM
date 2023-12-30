@@ -32,5 +32,5 @@ for i in tqdm(range(N_volumes)):
 	#os.system(f"pdb_selatom -CA,C,N {sorted2[i][1]} > backbone2.pdb")
 	#os.system(f"pdb2mrc.py {backbone1} volume1 --apix={Apix}")
 	#os.system(f"pdb2mrc.py {backbone2} volume2 --apix={Apix}")
-	os.system(f" e2proc3d.py {sorted1[i][1]} {output} --calcfsc={sorted2[i][1]}  --apix={Apix}")
+	os.system(f" e2proc3d.py {sorted1[i][1]} {output}/fsc_{i}.txt --calcfsc={sorted2[i][1]}  --apix={Apix}")
 
