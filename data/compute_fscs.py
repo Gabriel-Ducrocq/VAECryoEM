@@ -17,7 +17,7 @@ Apix = args.Apix
 volumes1 = [folder_1 + path for path in os.listdir(folder_1) if ".mrc" in path]
 volumes2 = [folder_2 + path for path in os.listdir(folder_2) if ".mrc" in path]
 indexes1 = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in volumes1]
-indexes2 = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in volumes1]
+indexes2 = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in volumes2]
 print(f"Example indexes: indexes1 {indexes1[0]}, indexes2 {indexes2[0]}")
 
 sorted1 = sorted(zip(indexes1, volumes1))
