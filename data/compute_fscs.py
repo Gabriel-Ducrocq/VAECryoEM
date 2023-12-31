@@ -36,5 +36,3 @@ for i in tqdm(range(0, N_volumes,10)):
 	#os.system(f"pdb2mrc.py {backbone1} volume1 --apix={Apix}")
 	#os.system(f"pdb2mrc.py {backbone2} volume2 --apix={Apix}")
 	os.system(f" e2proc3d.py {sorted1[i][1]} {output}/fsc_{i}.txt --calcfsc={sorted2[i][1]}  --apix={Apix}")
-
-python data/compute_fscs.py --folder1 data/dataset/heterogeneous_test/output_cryoDRGN/all_volumes23/ --folder2 data/dataset/heterogeneous_test/volumes/ --output data/dataset/heterogeneous_test/fsc_cryodrgn/ --Apix 1.0
