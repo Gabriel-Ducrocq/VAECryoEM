@@ -23,8 +23,8 @@ print(f"Example indexes: indexes1 {indexes1[0]}, indexes2 {indexes2[0]}")
 sorted1 = sorted(zip(indexes1, volumes1))
 sorted2 = sorted(zip(indexes2, volumes2))
 
-assert sorted(l1) == sorted(l2), "incorrect matching of the volumes !"
-print(sorted(l1) == sorted(l2))
+assert sorted(indexes1) == sorted(indexes2), "incorrect matching of the volumes !"
+print(sorted(indexes2) == sorted(indexes1))
 
 assert sorted1 != sorted2, f"different number of volumes: {len(sorted1)} in {folder_1},  {len(sorted2)} in {folder_2}"
 
