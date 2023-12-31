@@ -42,16 +42,14 @@ parser_arg.add_argument('--folder_experiment', type=str, required=True)
 parser_arg.add_argument("--model", type=str, required=True)
 parser_arg.add_argument("--folder_output", type=str, required=True)
 parser_arg.add_argument("--type", type=str, required=True)
-parser_arg.add_argument("--batch_size", type=int, required=True)
 parser_arg.add_argument("--step", type=int, required=True)
 args = parser_arg.parse_args()
 folder_experiment = args.folder_experiment
 folder_output = args.folder_output
 output_type = args.type
-batch_size = args.batch_size
 model_path = args.model
 step = args.step
-
+batch_size = 1
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -108,12 +106,10 @@ all_translation_per_residue = []
 all_translation_per_domain = []
 all_axis_angle_per_domain = []
 
-k = 0
-for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(data_loader)):
-    if (i+1)%step != 0 and i !=0:
-        continue 
-
-
+iterable = zip(torch.load(experiment_settings["dataset_images_path"])[::step], torch.load(experiment_settings["dataset_poses_path"])[::step], 
+    torch.load(experiment_settings["dataset_poses_translation_path"])[::step])
+#for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(data_loader)):
+for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(iterable)):
     #print("Batch number:", i)
     batch_images = batch_images.to(device)
     batch_poses = batch_poses.to(device)
