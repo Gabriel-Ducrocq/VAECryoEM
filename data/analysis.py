@@ -38,6 +38,7 @@ def concat_and_save(tens, path):
 
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--folder_experiment', type=str, required=True)
+parser_arg.add_argument("--model", type=str, required=True)
 parser_args.add_argument("--folder_output", type=str, required=True)
 parser_arg.add_argument("--type", type=str, required=True)
 parser_arg.add_argument("--batch_size", type=int, required=True)
@@ -46,6 +47,8 @@ folder_experiment = args.folder_experiment
 folder_output = args.folder_output
 output_type = args.type
 batch_size = args.batch_size
+model_path = args.model
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -69,12 +72,11 @@ renderer_no_ctf = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_re
                     amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
                     device=device, use_ctf=image_settings["renderer"]["use_ctf"])
 
-model_path = os.listdir(f"{folder_experiment}models/")
 if device == "cpu":
-    model = torch.load(f"{folder_experiment}models/{model_path[0]}", map_location=torch.device('cpu'))
+    model = torch.load(model_path, map_location=torch.device('cpu'))
     model.device = "cpu"
 else:
-    model = torch.load(f"{folder_experiment}models/{model_path[0]}", map_location=torch.device(device))
+    model = torch.load(model_path, map_location=torch.device(device))
     model.device = device
 
 model.eval()
@@ -129,34 +131,34 @@ for i, (batch_images, batch_poses, batch_poses_translation) in enumerate(data_lo
 
     all_latent_mean.append(latent_mean.to("cpu"))
     all_latent_std.append(latent_std.to("cpu"))
-    np.save(f"{folder_output}all_rotations_per_residue_{i}.npy", rotation_per_residue.to("cpu").detach().numpy())
-    np.save(f"{folder_output}all_translation_per_residue_{i}.npy", translation_per_residue.to("cpu").detach().numpy())
-    #all_translation_per_residue.append(translation_per_residue.to("cpu"))
-    #all_rotations_per_residue.append(rotation_per_residue.to("cpu"))
+    #np.save(f"{folder_output}all_rotations_per_residue_{i}.npy", rotation_per_residue.to("cpu").detach().numpy())
+    #np.save(f"{folder_output}all_translation_per_residue_{i}.npy", translation_per_residue.to("cpu").detach().numpy())
+    all_translation_per_residue.append(translation_per_residue.to("cpu"))
+    all_rotations_per_residue.append(rotation_per_residue.to("cpu"))
     #all_axis_angle_per_domain.append(axis_angle_per_domain.to("cpu"))
     #all_translation_per_domain.append(translations_per_domain.to("cpu"))
 
 
 
-#all_rotations_per_residue = concat_and_save(all_rotations_per_residue, f"{folder_experiment}all_rotations_per_residue.npy")
-#all_translation_per_residue = concat_and_save(all_translation_per_residue, f"{folder_experiment}all_translation_per_residue.npy")
-#all_latent_mean = concat_and_save(all_latent_mean, f"{folder_experiment}all_latent_mean.npy")
-#all_latent_std = concat_and_save(all_latent_std, f"{folder_experiment}all_latent_std.npy")
+all_rotations_per_residue = concat_and_save(all_rotations_per_residue, f"{folder_output}all_rotations_per_residue.npy")
+all_translation_per_residue = concat_and_save(all_translation_per_residue, f"{folder_output}all_translation_per_residue.npy")
+all_latent_mean = concat_and_save(all_latent_mean, f"{folder_output}all_latent_mean.npy")
+all_latent_std = concat_and_save(all_latent_std, f"{folder_output}all_latent_std.npy")
 
 #all_rotations_per_domain = concat_and_save(all_axis_angle_per_domain, f"{folder_experiment}all_rotations_per_domain.npy")
 #all_translation_per_domain = concat_and_save(all_translation_per_domain, f"{folder_experiment}all_translation_per_domain.npy")
 #print("REGISTERED !")
-#all_rotations_per_residue = np.load(f"{folder_experiment}all_rotations_per_residue.npy")
-#all_translation_per_residue = np.load(f"{folder_experiment}all_translation_per_residue.npy")
+all_rotations_per_residue = np.load(f"{folder_output}all_rotations_per_residue.npy")
+all_translation_per_residue = np.load(f"{folder_output}all_translation_per_residue.npy")
 
-all_rotations_per_residue = []
-all_translation_per_residue = []
-for i in range(100):
-    all_rotations_per_residue.append(np.load(f"{folder_output}all_rotations_per_residue_{i}.npy"))
-    all_translation_per_residue.append(np.load(f"{folder_output}all_translation_per_residue_{i}.npy"))
+#all_rotations_per_residue = []
+#all_translation_per_residue = []
+#for i in range(100):
+#    all_rotations_per_residue.append(np.load(f"{folder_output}all_rotations_per_residue_{i}.npy"))
+#    all_translation_per_residue.append(np.load(f"{folder_output}all_translation_per_residue_{i}.npy"))
 
-all_rotations_per_residue = np.concatenate(all_rotations_per_residue, axis=0)
-all_translation_per_residue = np.concatenate(all_translation_per_residue, axis=0)
+#all_rotations_per_residue = np.concatenate(all_rotations_per_residue, axis=0)
+#all_translation_per_residue = np.concatenate(all_translation_per_residue, axis=0)
 
 
 #for i in range(all_translation_per_residue.shape[0]):
