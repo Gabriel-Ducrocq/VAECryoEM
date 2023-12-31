@@ -24,8 +24,8 @@ sorted1 = sorted(zip(indexes1, volumes1))
 sorted2 = sorted(zip(indexes2, volumes2))
 
 for i in range(len(sorted1)):
-	print(sorted1[i], sorted2[i])
-	if sorted1[i] !=sorted2[i]:
+	print(sorted(indexes1)[i], sorted(indexes2)[i])
+	if sorted(indexes1)[i] !=sorted(indexes2)[i]:
 		break
 
 assert sorted(indexes1) == sorted(indexes2), "incorrect matching of the volumes !"
