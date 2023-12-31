@@ -122,7 +122,8 @@ for i, (batch_images, batch_poses, batch_poses_translation) in enumerate(data_lo
     if output_type == "images":
         batch_predicted_images = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose,
                                             zeros_poses_translation, latent_type=experiment_settings["latent_type"])
-    np.save(f"{folder_output}predicted_images_{i}.npy", batch_predicted_images.to("cpu").detach().numpy())
+        np.save(f"{folder_output}predicted_images_{i}.npy", batch_predicted_images.to("cpu").detach().numpy())
+        
     if output_type == "volumes":
         batch_predicted_volumes = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose, zeros_poses_translation, 
             latent_type=experiment_settings["latent_type"], volume=True)
