@@ -7,6 +7,7 @@ import yaml
 import utils
 import argparse
 import numpy as np
+from tqdm import tqdm
 import Bio.PDB as bpdb
 from cryodrgn import mrc
 from Bio.PDB import PDBIO
@@ -105,8 +106,8 @@ all_translation_per_residue = []
 all_translation_per_domain = []
 all_axis_angle_per_domain = []
 
-for i, (batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
-    print("Batch number:", i)
+for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(data_loader)):
+    #print("Batch number:", i)
     batch_images = batch_images.to(device)
     batch_poses = batch_poses.to(device)
     batch_poses_translation = batch_poses_translation.to(device)
@@ -163,7 +164,7 @@ all_translation_per_residue = np.load(f"{folder_output}all_translation_per_resid
 
 
 #for i in range(all_translation_per_residue.shape[0]):
-for i in range(0, 10000):
+for i in tqdm(range(0, 10000)):
     print("Deform structure:", i)
     parser = PDBParser(PERMISSIVE=0)
     structure = utils.read_pdb(experiment_settings["base_structure_path"])
