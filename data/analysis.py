@@ -39,7 +39,7 @@ def concat_and_save(tens, path):
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--folder_experiment', type=str, required=True)
 parser_arg.add_argument("--model", type=str, required=True)
-parser_args.add_argument("--folder_output", type=str, required=True)
+parser_arg.add_argument("--folder_output", type=str, required=True)
 parser_arg.add_argument("--type", type=str, required=True)
 parser_arg.add_argument("--batch_size", type=int, required=True)
 args = parser_arg.parse_args()
