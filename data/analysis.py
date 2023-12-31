@@ -111,6 +111,9 @@ iterable = zip(images, torch.load(experiment_settings["dataset_poses_path"])[::s
     torch.load(experiment_settings["dataset_poses_translation_path"])[::step])
 #for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(data_loader)):
 for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(iterable)):
+    batch_images = batch_images[None, :]
+    batch_poses = batch_poses[None, :, :]
+    batch_poses_translation = batch_poses_translation[None, :]
     #print("Batch number:", i)
     batch_images = batch_images.to(device)
     batch_poses = batch_poses.to(device)
