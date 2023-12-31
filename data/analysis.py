@@ -43,12 +43,14 @@ parser_arg.add_argument("--model", type=str, required=True)
 parser_arg.add_argument("--folder_output", type=str, required=True)
 parser_arg.add_argument("--type", type=str, required=True)
 parser_arg.add_argument("--batch_size", type=int, required=True)
+parser_arg.add_argument("--step", type=int, required=True)
 args = parser_arg.parse_args()
 folder_experiment = args.folder_experiment
 folder_output = args.folder_output
 output_type = args.type
 batch_size = args.batch_size
 model_path = args.model
+step = args.step
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -106,7 +108,12 @@ all_translation_per_residue = []
 all_translation_per_domain = []
 all_axis_angle_per_domain = []
 
+k = 0
 for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(data_loader)):
+    if (i+1)%step != 0 and i !=0:
+        continue 
+
+
     #print("Batch number:", i)
     batch_images = batch_images.to(device)
     batch_poses = batch_poses.to(device)
@@ -123,13 +130,13 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(da
     if output_type == "images":
         batch_predicted_images = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose,
                                             zeros_poses_translation, latent_type=experiment_settings["latent_type"])
-        np.save(f"{folder_output}predicted_images_{i}.npy", batch_predicted_images.to("cpu").detach().numpy())
+        np.save(f"{folder_output}predicted_images_{k}.npy", batch_predicted_images.to("cpu").detach().numpy())
 
     if output_type == "volumes":
         batch_predicted_volumes = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose, zeros_poses_translation, 
             latent_type=experiment_settings["latent_type"], volume=True)
 
-        mrc.write(f"{folder_output}volume_{i}.mrc", np.transpose(batch_predicted_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
+        mrc.write(f"{folder_output}volume_{k}.mrc", np.transpose(batch_predicted_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
 
     all_latent_mean.append(latent_mean.to("cpu"))
     all_latent_std.append(latent_std.to("cpu"))
@@ -139,6 +146,7 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(da
     all_rotations_per_residue.append(rotation_per_residue.to("cpu"))
     #all_axis_angle_per_domain.append(axis_angle_per_domain.to("cpu"))
     #all_translation_per_domain.append(translations_per_domain.to("cpu"))
+    k += 1
 
 
 
