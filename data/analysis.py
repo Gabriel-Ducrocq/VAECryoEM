@@ -146,7 +146,7 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(it
     all_rotations_per_residue.append(rotation_per_residue.to("cpu"))
     #all_axis_angle_per_domain.append(axis_angle_per_domain.to("cpu"))
     #all_translation_per_domain.append(translations_per_domain.to("cpu"))
-    k += 1
+
 
 
 
