@@ -28,6 +28,8 @@ for i in range(len(sorted1)):
 	if sorted(indexes1)[i] !=sorted(indexes2)[i]:
 		break
 
+print(sorted(indexes1))
+print(sorted(indexes2))
 assert sorted(indexes1) == sorted(indexes2), "incorrect matching of the volumes !"
 print(sorted(indexes2) == sorted(indexes1))
 
