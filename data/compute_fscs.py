@@ -23,7 +23,9 @@ print(f"Example indexes: indexes1 {indexes1[0]}, indexes2 {indexes2[0]}")
 sorted1 = sorted(zip(indexes1, volumes1))
 sorted2 = sorted(zip(indexes2, volumes2))
 
-
+print(sorted(indexes1))
+print("\n\n\n\n")
+print(sorted(indexes2))
 N_volumes = len(sorted1)
 
 for i in tqdm(range(0, N_volumes,10)):
