@@ -104,7 +104,7 @@ def parse_yaml(path):
                         spherical_aberration=image_settings["renderer"]["spherical_aberration"],
                         accelerating_voltage=image_settings["renderer"]["accelerating_voltage"],
                         amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
-                        device=device, use_ctf=image_settings["renderer"]["use_ctf"])
+                        device=device, use_ctf=image_settings["renderer"]["use_ctf"], std = image_settings["renderer"]["std_volume"] if "std_volume" in image_settings["renderer"] else 1)
 
     base_structure = read_pdb(experiment_settings["base_structure_path"])
     centering_structure = read_pdb(experiment_settings["centering_structure_path"])
