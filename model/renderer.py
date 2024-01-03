@@ -161,6 +161,7 @@ class Renderer():
                  accelerating_voltage=300 , amplitude_contrast_ratio = 0.06, device="cpu", use_ctf=True,
                  latent_type="continuous", latent_dim = 10, std = 1):
         self.std_blob = std
+        print("STD renderer", std)
         self.len_x = pixels_x.shape[1]
         self.len_y = pixels_y.shape[1]
         assert self.len_x == self.len_y, "Number of pixels different on x and y"
