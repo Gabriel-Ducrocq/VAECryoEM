@@ -79,7 +79,8 @@ plt.show()
 axis_angle = normalized_axis*angle_rotation
 poses = axis_angle_to_matrix(axis_angle)
 #poses = torch.repeat_interleave(torch.eye(3,3)[None, :, :], 150000, 0)
-poses_translation = torch.zeros((N_images, 3), device=device)
+poses_translation = torch.rand((N_images, 3), device=device)*20 - 10
+#poses_translation = torch.zeros((N_images, 3), device=device)
 
 
 poses_py = poses.detach().cpu().numpy()
