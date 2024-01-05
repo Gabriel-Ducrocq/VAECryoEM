@@ -133,7 +133,7 @@ def parse_yaml(path):
         milestones = experiment_settings["scheduler"]["milestones"]
         decay = experiment_settings["scheduler"]["decay"]
         print(f"Using MultiStepLR scheduler with milestones: {milestones} and decay factor {decay}.")
-        scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=decay)
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=milestones, gamma=decay)
 
     N_epochs = experiment_settings["N_epochs"]
     batch_size = experiment_settings["batch_size"]
