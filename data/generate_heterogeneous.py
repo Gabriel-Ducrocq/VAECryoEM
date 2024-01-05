@@ -114,7 +114,8 @@ print("Mean variance accross images", mean_variance)
 noise_var = 10*mean_variance
 print("Adding Gaussian noise with variance", noise_var)
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
-all_images += torch.randn((N_images, N_pix, N_pix), device=device)*torch.sqrt(noise_var)
+#all_images += torch.randn((N_images, N_pix, N_pix), device=device)*torch.sqrt(noise_var)
+all_images += torch.randn((N_images, N_pix, N_pix))*torch.sqrt(noise_var)
 
 torch.save(all_images, f"{folder_experiment}ImageDataSet")
 mrc.write(f"{folder_experiment}ImageDataSet.mrcs", np.transpose(all_images.detach().cpu().numpy(), axes=(0, 2, 1)), Apix=1.0, is_vol=False)
