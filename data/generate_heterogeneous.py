@@ -43,8 +43,6 @@ pixels_y = np.linspace(image_settings["image_lower_bounds"][1], image_settings["
                        num=image_settings["N_pixels_per_axis"][1]).reshape(1, -1)
 
 
-
-### CHANGED CTF CORRUPTION TO False !!!
 renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"] * 3,
                     dfU=image_settings["renderer"]["dfU"], dfV=image_settings["renderer"]["dfV"],
                     dfang=image_settings["renderer"]["dfang"],
@@ -108,7 +106,7 @@ for i in tqdm(range(len(sorted_structures))):
 	batch_images = renderer.compute_x_y_values_all_atoms(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
 	plt.imshow(batch_images[0].detach().cpu().numpy())
 	plt.show()
-	all_images.append(batch_images)
+	all_images.append(batch_images.detach().cpu())
 
 all_images = torch.concat(all_images, dim=0)
 mean_variance = torch.mean(torch.var(all_images, dim=(-2, -1)))
