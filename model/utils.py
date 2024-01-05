@@ -128,12 +128,19 @@ def parse_yaml(path):
     dataset = ImageDataSet(experiment_settings["dataset_images_path"], experiment_settings["dataset_poses_path"],
                            experiment_settings["dataset_poses_translation_path"])
 
+    scheduler = None
+    if "scheduler" in experiment_settings:
+        milestones = experiment_settings["scheduler"]["milestones"]
+        decay = experiment_settings["scheduler"]["decay"]
+        print(f"Using MultiStepLR scheduler with milestones: {milestones} and decay factor {decay}.")
+        scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=decay)
+
     N_epochs = experiment_settings["N_epochs"]
     batch_size = experiment_settings["batch_size"]
     latent_type = experiment_settings["latent_type"]
     assert latent_type in ["continuous", "categorical"]
 
-    return vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device
+    return vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler
 
 
 def compute_mask_prior(N_residues, N_domains, device):
@@ -165,7 +172,7 @@ def compute_mask_prior(N_residues, N_domains, device):
 
     return mask_prior
 
-def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae):
+def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, optimizer):
     """
     Monitors the training process through wandb and saving masks and models
     :param mask:
@@ -177,6 +184,7 @@ def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae):
     """
     wandb.log({key: np.mean(val) for key, val in tracking_metrics.items()})
     wandb.log({"epoch": epoch})
+    wandb.log({"lr":optimizer.param_groups[0]['lr']})
     hard_mask = np.argmax(mask.detach().cpu().numpy(), axis=-1)
     for l in range(experiment_settings["N_domains"]):
         wandb.log({f"mask_{l}": np.sum(hard_mask[0] == l)})

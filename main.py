@@ -17,7 +17,7 @@ def train(yaml_setting_path):
     :param yaml_setting_path: str, path the yaml containing all the details of the experiment
     :return:
     """
-    vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device = model.utils.parse_yaml(yaml_setting_path)
+    vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler = model.utils.parse_yaml(yaml_setting_path)
     if experiment_settings["resume_training"]["model"] != "None":
         name = f"experiment_{experiment_settings['name']}_resume"
     else:
@@ -87,7 +87,10 @@ def train(yaml_setting_path):
             end = time()
             print("Iteration duration:", end-start)
 
-        model.utils.monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae)
+        if scheduler:
+            scheduler.step()
+
+        model.utils.monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, optimizer)
 
 
 if __name__ == '__main__':
