@@ -60,9 +60,9 @@ parser = PDBParser(PERMISSIVE=0)
 
 #Generate rotations for conformations
 rotation_axis = np.array([[0, 1, 0] for _ in range(N_struct*N_pose_per_structure)])
-rotations_angle = np.zeros((N_struct*N_poses_per_struct, 1))
-rotation_angle[:int(N_struct*N_poses_per_struct/2), :] = np.random.normal(size=(N_struct*N_poses_per_struct/2))*0.1 -np.pi/3
-rotation_angle[int(N_struct*N_poses_per_struct/2):, :] = np.random.normal(size=(N_struct*N_poses_per_struct/2))*0.1 -2*np.pi/3
+rotations_angle = np.zeros((N_struct*N_pose_per_struct, 1))
+rotation_angle[:int(N_struct*N_pose_per_struct/2), :] = np.random.normal(size=(N_struct*N_pose_per_struct/2))*0.1 -np.pi/3
+rotation_angle[int(N_struct*N_pose_per_struct/2):, :] = np.random.normal(size=(N_struct*N_pose_per_struct/2))*0.1 -2*np.pi/3
 
 axis_angle = torch.tensor(rotation_angle*rotation_axis, dtype=torch.float32, device=device)
 conformation_matrix_torch = axis_angle_to_matrix(axis_angle)
@@ -120,7 +120,7 @@ for i in range(N_struct):
 	backbone_torch[residue_start*3:residue_end*3, :] = torch.transpose(torch.matmul(conformation_matrix_torch, torch.transpose(backbone_torch[residue_start*3:residue_end*3, :], dim0=0, dim1=1)), 
 																dim0=0, dim1=1)
 
-	backbone_torch = torch.concatenate([backbone[None, :, :] for _ in range(N_poses_per_struct)], dim=0)
+	backbone_torch = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_struct)], dim=0)
 	batch_images = renderer.compute_x_y_values_all_atoms(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
 	plt.imshow(batch_images[0].detach().cpu().numpy())
 	plt.show()
