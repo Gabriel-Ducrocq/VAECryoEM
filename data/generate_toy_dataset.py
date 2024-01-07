@@ -30,7 +30,7 @@ residue_start = args.residue_start
 residue_end = args.residue_end
 folder_experiment = args.folder_experiment
 N_struct = args.N_struct
-N_pose_per_struct = args.N_pose_per_struct
+N_pose_per_structure = args.N_pose_per_struct
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 with open(f"{folder_experiment}/parameters.yaml", "r") as file:
@@ -59,7 +59,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 parser = PDBParser(PERMISSIVE=0)
 
 #Generate rotations for conformations
-rotation_axis = np.array([[0, 1, 0] for _ in range(N_struct*N_pose_per_struct)])
+rotation_axis = np.array([[0, 1, 0] for _ in range(N_struct*N_pose_per_structure)])
 rotations_angle = np.zeros((N_struct*N_poses_per_struct, 1))
 rotation_angle[:int(N_struct*N_poses_per_struct/2), :] = np.random.normal(size=(N_struct*N_poses_per_struct/2))*0.1 -np.pi/3
 rotation_angle[int(N_struct*N_poses_per_struct/2):, :] = np.random.normal(size=(N_struct*N_poses_per_struct/2))*0.1 -2*np.pi/3
