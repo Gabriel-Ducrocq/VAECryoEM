@@ -111,7 +111,7 @@ for i in range(N_struct):
 	backbone_torch[residue_start*3:residue_end*3, :] = torch.transpose(torch.matmul(conformation_matrix_torch, torch.transpose(backbone_torch[residue_start*3:residue_end*3, :], dim0=0, dim1=1)), 
 																dim0=0, dim1=1)
 
-	backbone_torch = torch.concatenate([backbone[None. :, :] for _ in range(N_poses_per_struct)], dim=0)
+	backbone_torch = torch.concatenate([backbone[None, :, :] for _ in range(N_poses_per_struct)], dim=0)
 	batch_images = renderer.compute_x_y_values_all_atoms(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
 	plt.imshow(batch_images[0].detach().cpu().numpy())
 	plt.show()
