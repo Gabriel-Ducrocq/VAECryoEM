@@ -107,6 +107,7 @@ torch.save(poses_translation, f"{folder_experiment}poses_translation")
 
 all_images = []
 for i in range(N_struct):
+	print("TEST PRINT", base_structure)
 	base_structure = parser.get_structure("A", base_structure)
 	center_vector = utils.compute_center_of_mass(base_structure)
 	backbone = utils_model.get_backbone(base_structure) - center_vector
