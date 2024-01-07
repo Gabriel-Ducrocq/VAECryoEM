@@ -26,7 +26,7 @@ parser_arg.add_argument('--folder_experiment', type=str, required=True)
 parser_arg.add_argument('--N_struct', type=int, required=True)
 parser_arg.add_argument('--N_pose_per_struct', type=int, required=True)
 args = parser_arg.parse_args()
-base_structure = args.base_structure
+base_structure_path = args.base_structure
 residue_start = args.residue_start
 residue_end = args.residue_end
 folder_experiment = args.folder_experiment
@@ -107,8 +107,7 @@ torch.save(poses_translation, f"{folder_experiment}poses_translation")
 
 all_images = []
 for i in range(N_struct):
-	print("TEST PRINT", base_structure)
-	base_structure = parser.get_structure("A", base_structure)
+	base_structure = parser.get_structure("A", base_structure_path)
 	center_vector = utils.compute_center_of_mass(base_structure)
 	backbone = utils_model.get_backbone(base_structure) - center_vector
 
