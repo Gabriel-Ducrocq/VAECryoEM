@@ -61,11 +61,12 @@ N_images = N_struct*N_pose_per_structure
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 parser = PDBParser(PERMISSIVE=0)
 N_pix = image_settings["N_pixels_per_axis"][0]
+
 #Generate rotations for conformations
 rotation_axis = np.array([[0, 1, 0] for _ in range(N_struct*N_pose_per_structure)])
 rotation_angle = np.zeros((N_struct*N_pose_per_structure, 1))
-rotation_angle[:int(N_struct*N_pose_per_structure/2), :] = np.random.normal(size=(int(N_struct*N_pose_per_structure/2), 1))*0.1 +np.pi/3
-rotation_angle[int(N_struct*N_pose_per_structure/2):, :] = np.random.normal(size=(int(N_struct*N_pose_per_structure/2), 1))*0.1 +2*np.pi/3
+rotation_angle[:int(N_struct/2), :] = np.random.normal(size=(int(N_struct/2), 1))*0.1 +np.pi/3
+rotation_angle[int(N_struct/2):, :] = np.random.normal(size=(int(N_struct/2), 1))*0.1 +2*np.pi/3
 
 axis_angle = torch.tensor(rotation_angle*rotation_axis, dtype=torch.float32, device=device)
 conformation_matrix_torch = axis_angle_to_matrix(axis_angle)
