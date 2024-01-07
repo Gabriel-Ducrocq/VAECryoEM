@@ -74,3 +74,19 @@ def save_structure(structure, path):
     io = PDBIO()
     io.set_structure(structure)
     io.save(path)
+
+
+def rotate_domain_pdb_structure(pdb_structure, start_residue, end_residue, rot_mat):
+    """
+    rotates a domain of the protein only expressed in a specific frame of reference
+    :param pdb_structure: pdb structure in biopython
+    :param start_residue: integer, the (included) starting residue number of the domain
+    :param end_residue: integer, the (excluded) ending residue number of the domain
+    :param rot_mat: np.array((3,3)) rotation matrix to apply to the domain.
+    """
+    for idx, res in enumerate(pdb_structure.get_residues()):
+        if idx >= start_residue and idx < end_residue:
+            for atom in res.get_atoms():
+                rotated_coord = np.matmul(rot_mat, atom.coord.T).T
+                atom.set_coord(rotated_coord)
+
