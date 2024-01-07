@@ -116,8 +116,7 @@ for i in range(N_struct):
 	utils.save_structure(struct_centered, f"{folder_experiment}ground_truth/structures/structure_{i+1}.pdb")
 
 	backbone_torch = torch.tensor(backbone, dtype=torch.float32, device=device)
-	print("BACKBONE SHAPE", backbone_torch.shape)
-	backbone_torch[residue_start*3:residue_end*3, :] = torch.transpose(torch.matmul(conformation_matrix_torch, torch.transpose(backbone_torch[residue_start*3:residue_end*3, :], dim0=0, dim1=1)), 
+	backbone_torch[residue_start*3:residue_end*3, :] = torch.transpose(torch.matmul(conformation_matrix_torch[i], torch.transpose(backbone_torch[residue_start*3:residue_end*3, :], dim0=0, dim1=1)), 
 																dim0=0, dim1=1)
 
 	backbone_torch = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
