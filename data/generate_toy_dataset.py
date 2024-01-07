@@ -66,7 +66,7 @@ rotation_angle[int(N_struct*N_pose_per_structure/2):, :] = np.random.normal(size
 
 axis_angle = torch.tensor(rotation_angle*rotation_axis, dtype=torch.float32, device=device)
 conformation_matrix_torch = axis_angle_to_matrix(axis_angle)
-conformation_matrix_np = conformation_matrix_torch.detach().numpy()
+conformation_matrix_np = conformation_matrix_torch.detach().cpu().numpy()
 
 plt.hist(rotation_angle[:, 0])
 plt.show()
