@@ -22,8 +22,8 @@ parser_arg.add_argument('--base_structure', type=str, required=True)
 parser_arg.add_argument('--residue_start', type=str, required=True)
 parser_arg.add_argument('--residue_end', type=str, required=True)
 parser_arg.add_argument('--folder_experiment', type=str, required=True)
-parser_arg.add_argument('--N_struct', type=str, required=True)
-parser_arg.add_argument('--N_pose_per_struct', type=str, required=True)
+parser_arg.add_argument('--N_struct', type=int, required=True)
+parser_arg.add_argument('--N_pose_per_struct', type=int, required=True)
 args = parser_arg.parse_args()
 base_structure = args.base_structure
 residue_start = args.residue_start
