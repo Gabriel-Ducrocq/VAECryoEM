@@ -32,6 +32,12 @@ folder_experiment = args.folder_experiment
 N_struct = args.N_struct
 N_poses_per_struct = args.N_poses_per_struct
 
+pixels_x = np.linspace(image_settings["image_lower_bounds"][0], image_settings["image_upper_bounds"][0],
+                       num=image_settings["N_pixels_per_axis"][0]).reshape(1, -1)
+
+pixels_y = np.linspace(image_settings["image_lower_bounds"][1], image_settings["image_upper_bounds"][1],
+                       num=image_settings["N_pixels_per_axis"][1]).reshape(1, -1)
+
 renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"] * 3,
                     dfU=image_settings["renderer"]["dfU"], dfV=image_settings["renderer"]["dfV"],
                     dfang=image_settings["renderer"]["dfang"],
