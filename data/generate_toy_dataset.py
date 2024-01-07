@@ -9,6 +9,7 @@ import warnings
 import argparse
 import numpy as np
 from tqdm import tqdm
+from cryodrgn import mrc
 import utils_data as utils
 from Bio.PDB import PDBParser
 import matplotlib.pyplot as plt
