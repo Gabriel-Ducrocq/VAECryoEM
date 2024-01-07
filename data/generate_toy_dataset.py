@@ -58,7 +58,7 @@ renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"
 N_images = N_struct*N_pose_per_structure
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 parser = PDBParser(PERMISSIVE=0)
-
+N_pix = image_settings["N_pixels_per_axis"][0]
 #Generate rotations for conformations
 rotation_axis = np.array([[0, 1, 0] for _ in range(N_struct*N_pose_per_structure)])
 rotation_angle = np.zeros((N_struct*N_pose_per_structure, 1))
