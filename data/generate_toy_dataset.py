@@ -20,8 +20,8 @@ from pytorch3d.transforms import axis_angle_to_matrix
 
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--base_structure', type=str, required=True)
-parser_arg.add_argument('--residue_start', type=str, required=True)
-parser_arg.add_argument('--residue_end', type=str, required=True)
+parser_arg.add_argument('--residue_start', type=int, required=True)
+parser_arg.add_argument('--residue_end', type=int, required=True)
 parser_arg.add_argument('--folder_experiment', type=str, required=True)
 parser_arg.add_argument('--N_struct', type=int, required=True)
 parser_arg.add_argument('--N_pose_per_struct', type=int, required=True)
