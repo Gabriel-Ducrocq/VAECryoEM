@@ -1,4 +1,5 @@
 import os
+import sys
 path = os.path.abspath("model")
 sys.path.append(path)
 import yaml
