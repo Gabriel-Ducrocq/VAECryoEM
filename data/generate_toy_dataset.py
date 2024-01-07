@@ -31,6 +31,7 @@ residue_end = args.residue_end
 folder_experiment = args.folder_experiment
 N_struct = args.N_struct
 N_poses_per_struct = args.N_poses_per_struct
+device = torch.device("cuda" if torch.cuda.is_available() and config["device"] == "cuda" else "cpu")
 
 with open(f"{folder_experiment}/parameters.yaml", "r") as file:
     experiment_settings = yaml.safe_load(file)
@@ -56,14 +57,6 @@ renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"
 N_images = N_struct*N_pose_per_structure
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 parser = PDBParser(PERMISSIVE=0)
-
-with open(f"{folder_experiment}/parameters.yaml", "r") as file:
-    experiment_settings = yaml.safe_load(file)
-
-with open(f"{folder_experiment}/images.yaml", "r") as file:
-    image_settings = yaml.safe_load(file)
-
-device = torch.device("cuda" if torch.cuda.is_available() and config["device"] == "cuda" else "cpu")
 
 #Generate rotations for conformations
 rotation_axis = np.array([[0, 1, 0] for _ in range(N_struct*N_poses_per_struct)])
