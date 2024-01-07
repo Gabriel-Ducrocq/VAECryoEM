@@ -103,9 +103,9 @@ for i in range(N_struct):
 	#Saving the generated structure.
 	struct_centered = utils.center_protein(base_structure, center_vector[0])
 	folded_struct = utils.rotate_domain_pdb_structure(struct_centered, residue_start, residue_end, conformation_matrix_np[i])
-    io = PDBIO()
-    io.set_structure(folded_struct)
-    io.save(f"{folder_experiment}ground_truth/structures/structure_{i+1}.pdb")
+	io = PDBIO()
+	io.set_structure(folded_struct)
+	io.save(f"{folder_experiment}ground_truth/structures/structure_{i+1}.pdb")
 
 	backbone_torch = torch.tensor(backbone, dtype=torch.float32, device=device)
 	backbone_torch[residue_start*3:residue_end*3, :] = torch.transpose(torch.matmul(conformation_matrix_torch, torch.transpose(backbone_torch[residue_start*3:residue_end*3, :], dim0=0, dim1=1)), 
