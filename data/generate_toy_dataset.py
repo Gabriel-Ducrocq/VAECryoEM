@@ -32,6 +32,12 @@ folder_experiment = args.folder_experiment
 N_struct = args.N_struct
 N_poses_per_struct = args.N_poses_per_struct
 
+with open(f"{folder_experiment}/parameters.yaml", "r") as file:
+    experiment_settings = yaml.safe_load(file)
+
+with open(f"{folder_experiment}/images.yaml", "r") as file:
+    image_settings = yaml.safe_load(file)
+
 pixels_x = np.linspace(image_settings["image_lower_bounds"][0], image_settings["image_upper_bounds"][0],
                        num=image_settings["N_pixels_per_axis"][0]).reshape(1, -1)
 
