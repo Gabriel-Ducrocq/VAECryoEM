@@ -2,6 +2,7 @@ import os
 import sys
 path = os.path.abspath("model")
 sys.path.append(path)
+import utils as utils_model
 import yaml
 import torch
 import warnings
@@ -107,7 +108,7 @@ torch.save(poses_translation, f"{folder_experiment}poses_translation")
 for i in range(N_struct):
 	base_structure = parser.get_structure("A", base_structure)
 	center_vector = utils.compute_center_of_mass(base_structure)
-	backbone = utils.get_backbone(base_structure) - center_vector
+	backbone = utils_model.get_backbone(base_structure) - center_vector
 	#Saving the generated structure.
 	struct_centered = utils.center_protein(base_structure, center_vector[0])
 	folded_struct = utils.rotate_domain_pdb_structure(struct_centered, residue_start, residue_end, conformation_matrix_np[i])
