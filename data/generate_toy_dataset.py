@@ -110,7 +110,7 @@ for i in range(N_struct):
 	center_vector = utils.compute_center_of_mass(base_structure)
 	backbone = utils_model.get_backbone(base_structure) - center_vector
 	#Saving the generated structure.
-	struct_centered = utils.center_protein(base_structure, center_vector[0])
+	struct_centered = utils.center_protein(base_structure, center_vector)
 	folded_struct = utils.rotate_domain_pdb_structure(struct_centered, residue_start, residue_end, conformation_matrix_np[i])
 	utils.save_structure(folded_struct, f"{folder_experiment}ground_truth/structures/structure_{i+1}.pdb")
 
