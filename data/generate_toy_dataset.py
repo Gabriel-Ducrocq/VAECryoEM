@@ -31,7 +31,7 @@ residue_end = args.residue_end
 folder_experiment = args.folder_experiment
 N_struct = args.N_struct
 N_poses_per_struct = args.N_poses_per_struct
-device = torch.device("cuda" if torch.cuda.is_available() and config["device"] == "cuda" else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 with open(f"{folder_experiment}/parameters.yaml", "r") as file:
     experiment_settings = yaml.safe_load(file)
