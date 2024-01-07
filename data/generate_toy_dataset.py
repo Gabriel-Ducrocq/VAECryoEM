@@ -116,11 +116,13 @@ for i in range(N_struct):
 	utils.save_structure(struct_centered, f"{folder_experiment}ground_truth/structures/structure_{i+1}.pdb")
 
 	backbone_torch = torch.tensor(backbone, dtype=torch.float32, device=device)
+	#Deforming the structure once for 15 poses
 	backbone_torch[residue_start*3:residue_end*3, :] = torch.transpose(torch.matmul(conformation_matrix_torch[i], torch.transpose(backbone_torch[residue_start*3:residue_end*3, :], dim0=0, dim1=1)), 
 																dim0=0, dim1=1)
 
+	# Duplicating the deformed backbone and projecting it.
 	backbone_torch = torch.concatenate([backbone_torch[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
-	batch_images = renderer.compute_x_y_values_all_atoms(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
+	batch_images = renderer.compute_x_y_values_all_atoms(backbone_torch, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
 	plt.imshow(batch_images[0].detach().cpu().numpy())
 	plt.show()
 	all_images.append(batch_images.detach().cpu())
