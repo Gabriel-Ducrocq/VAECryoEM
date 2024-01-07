@@ -60,7 +60,7 @@ parser = PDBParser(PERMISSIVE=0)
 
 #Generate rotations for conformations
 rotation_axis = np.array([[0, 1, 0] for _ in range(N_struct*N_pose_per_structure)])
-rotations_angle = np.zeros((N_struct*N_pose_per_structure, 1))
+rotation_angle = np.zeros((N_struct*N_pose_per_structure, 1))
 rotation_angle[:int(N_struct*N_pose_per_structure/2), :] = np.random.normal(size=(int(N_struct*N_pose_per_structure/2)))*0.1 -np.pi/3
 rotation_angle[int(N_struct*N_pose_per_structure/2):, :] = np.random.normal(size=(int(N_struct*N_pose_per_structure/2)))*0.1 -2*np.pi/3
 
