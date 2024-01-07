@@ -109,12 +109,14 @@ for i in range(N_struct):
 	base_structure = parser.get_structure("A", base_structure)
 	center_vector = utils.compute_center_of_mass(base_structure)
 	backbone = utils_model.get_backbone(base_structure) - center_vector
+
 	#Saving the generated structure.
 	struct_centered = utils.center_protein(base_structure, center_vector[0])
 	utils.rotate_domain_pdb_structure(struct_centered, residue_start, residue_end, conformation_matrix_np[i])
 	utils.save_structure(struct_centered, f"{folder_experiment}ground_truth/structures/structure_{i+1}.pdb")
 
 	backbone_torch = torch.tensor(backbone, dtype=torch.float32, device=device)
+	print("BACKBONE SHAPE", backbone_torch.shape)
 	backbone_torch[residue_start*3:residue_end*3, :] = torch.transpose(torch.matmul(conformation_matrix_torch, torch.transpose(backbone_torch[residue_start*3:residue_end*3, :], dim0=0, dim1=1)), 
 																dim0=0, dim1=1)
 
