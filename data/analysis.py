@@ -122,21 +122,21 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(it
     mask = model.sample_mask(N_batch=batch_size)
     quaternions_per_domain, translations_per_domain = model.decode(latent_mean)
     axis_angle_per_domain = quaternion_to_axis_angle(quaternions_per_domain)
-    rotation_per_residue = utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
-    translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
-    deformed_structures = utils.deform_structure(atom_positions, translation_per_residue,
-                                                       rotation_per_residue)
+    #rotation_per_residue = utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
+    #translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
+    #deformed_structures = utils.deform_structure(atom_positions, translation_per_residue,
+    #                                                   rotation_per_residue)
 
-    if output_type == "images":
-        batch_predicted_images = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose,
-                                            zeros_poses_translation, latent_type=experiment_settings["latent_type"])
-        np.save(f"{folder_output}predicted_images_{i}.npy", batch_predicted_images.to("cpu").detach().numpy())
+    #if output_type == "images":
+    #    batch_predicted_images = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose,
+    #                                        zeros_poses_translation, latent_type=experiment_settings["latent_type"])
+    #    np.save(f"{folder_output}predicted_images_{i}.npy", batch_predicted_images.to("cpu").detach().numpy())
 
-    if output_type == "volumes":
-        batch_predicted_volumes = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose, zeros_poses_translation, 
-            latent_type=experiment_settings["latent_type"], volume=True)
+    #if output_type == "volumes":
+    #    batch_predicted_volumes = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose, zeros_poses_translation, 
+    #        latent_type=experiment_settings["latent_type"], volume=True)
 
-        mrc.write(f"{folder_output}volume_{i}.mrc", np.transpose(batch_predicted_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
+    #    mrc.write(f"{folder_output}volume_{i}.mrc", np.transpose(batch_predicted_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
 
     all_latent_mean.append(latent_mean.to("cpu"))
     all_latent_std.append(latent_std.to("cpu"))
@@ -144,8 +144,8 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(it
     #np.save(f"{folder_output}all_translation_per_residue_{i}.npy", translation_per_residue.to("cpu").detach().numpy())
     all_translation_per_residue.append(translation_per_residue.to("cpu"))
     all_rotations_per_residue.append(rotation_per_residue.to("cpu"))
-    #all_axis_angle_per_domain.append(axis_angle_per_domain.to("cpu"))
-    #all_translation_per_domain.append(translations_per_domain.to("cpu"))
+    all_axis_angle_per_domain.append(axis_angle_per_domain.to("cpu"))
+    all_translation_per_domain.append(translations_per_domain.to("cpu"))
 
 
 
@@ -155,8 +155,8 @@ all_translation_per_residue = concat_and_save(all_translation_per_residue, f"{fo
 all_latent_mean = concat_and_save(all_latent_mean, f"{folder_output}all_latent_mean.npy")
 all_latent_std = concat_and_save(all_latent_std, f"{folder_output}all_latent_std.npy")
 
-#all_rotations_per_domain = concat_and_save(all_axis_angle_per_domain, f"{folder_experiment}all_rotations_per_domain.npy")
-#all_translation_per_domain = concat_and_save(all_translation_per_domain, f"{folder_experiment}all_translation_per_domain.npy")
+all_rotations_per_domain = concat_and_save(all_axis_angle_per_domain, f"{folder_experiment}all_rotations_per_domain.npy")
+all_translation_per_domain = concat_and_save(all_translation_per_domain, f"{folder_experiment}all_translation_per_domain.npy")
 #print("REGISTERED !")
 all_rotations_per_residue = np.load(f"{folder_output}all_rotations_per_residue.npy")
 all_translation_per_residue = np.load(f"{folder_output}all_translation_per_residue.npy")

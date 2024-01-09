@@ -145,3 +145,8 @@ torch.save(all_images, f"{folder_experiment}ImageDataSet")
 mrc.write(f"{folder_experiment}ImageDataSet.mrcs", np.transpose(all_images.detach().cpu().numpy(), axes=(0, 2, 1)), Apix=1.0, is_vol=False)
 with open(f"{folder_experiment}poses.pkl", "wb") as f:
 	pickle.dump((poses_py, poses_translation_py[:, :2]), f)
+
+
+
+
+	python data/generate_toy_dataset.py --base_structure data/dataset/toy_dataset/base_structure.pdb --folder_experiment data/dataset/toy_dataset/ --N_struct 100 --N_pose_per_struct 15 --residue_start 1353 --residue_end 1510
