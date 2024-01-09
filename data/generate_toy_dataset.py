@@ -65,8 +65,8 @@ N_pix = image_settings["N_pixels_per_axis"][0]
 #Generate rotations for conformations
 rotation_axis = np.array([[0, 1, 0] for _ in range(N_struct)])
 rotation_angle = np.zeros((N_struct, 1))
-rotation_angle[:int(N_struct/2), :] = np.random.normal(size=(int(N_struct/2), 1))*0.1 +np.pi/3
-rotation_angle[int(N_struct/2):, :] = np.random.normal(size=(int(N_struct/2), 1))*0.1 +2*np.pi/3
+rotation_angle[:int(N_struct/2), :] = np.random.normal(size=(int(N_struct/2), 1))*0.2 +np.pi/3
+rotation_angle[int(N_struct/2):, :] = np.random.normal(size=(int(N_struct/2), 1))*0.2 +2*np.pi/3
 
 axis_angle = torch.tensor(rotation_angle*rotation_axis, dtype=torch.float32, device=device)
 conformation_matrix_torch = axis_angle_to_matrix(axis_angle)
@@ -146,7 +146,3 @@ mrc.write(f"{folder_experiment}ImageDataSet.mrcs", np.transpose(all_images.detac
 with open(f"{folder_experiment}poses.pkl", "wb") as f:
 	pickle.dump((poses_py, poses_translation_py[:, :2]), f)
 
-
-
-
-	python data/generate_toy_dataset.py --base_structure data/dataset/toy_dataset/base_structure.pdb --folder_experiment data/dataset/toy_dataset/ --N_struct 100 --N_pose_per_struct 15 --residue_start 1353 --residue_end 1510
