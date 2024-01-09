@@ -122,8 +122,8 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(it
     mask = model.sample_mask(N_batch=batch_size)
     quaternions_per_domain, translations_per_domain = model.decode(latent_mean)
     axis_angle_per_domain = quaternion_to_axis_angle(quaternions_per_domain)
-    #rotation_per_residue = utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
-    #translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
+    rotation_per_residue = utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
+    translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
     #deformed_structures = utils.deform_structure(atom_positions, translation_per_residue,
     #                                                   rotation_per_residue)
 
