@@ -106,7 +106,21 @@ all_translation_per_residue = []
 all_translation_per_domain = []
 all_axis_angle_per_domain = []
 
-start = step*5000
+
+
+
+
+
+### BE CAREFUL !!!! ADDED A START !!!!
+#start = step*5000
+start = 0
+
+
+
+
+
+
+
 images = torch.flatten(torch.load(experiment_settings["dataset_images_path"])[start::step],start_dim=-2, end_dim=-1)
 iterable = zip(images, torch.load(experiment_settings["dataset_poses_path"])[start::step], 
     torch.load(experiment_settings["dataset_poses_translation_path"])[start::step])
@@ -139,14 +153,14 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(it
 
         mrc.write(f"{folder_output}volume_{i+start}.mrc", np.transpose(batch_predicted_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
 
-    all_latent_mean.append(latent_mean.to("cpu"))
-    all_latent_std.append(latent_std.to("cpu"))
+    #all_latent_mean.append(latent_mean.to("cpu"))
+    #all_latent_std.append(latent_std.to("cpu"))
     #np.save(f"{folder_output}all_rotations_per_residue_{i}.npy", rotation_per_residue.to("cpu").detach().numpy())
     #np.save(f"{folder_output}all_translation_per_residue_{i}.npy", translation_per_residue.to("cpu").detach().numpy())
-    all_translation_per_residue.append(translation_per_residue.to("cpu"))
-    all_rotations_per_residue.append(rotation_per_residue.to("cpu"))
-    all_axis_angle_per_domain.append(axis_angle_per_domain.to("cpu"))
-    all_translation_per_domain.append(translations_per_domain.to("cpu"))
+    #all_translation_per_residue.append(translation_per_residue.to("cpu"))
+    #all_rotations_per_residue.append(rotation_per_residue.to("cpu"))
+    #all_axis_angle_per_domain.append(axis_angle_per_domain.to("cpu"))
+    #all_translation_per_domain.append(translations_per_domain.to("cpu"))
 
 
 
