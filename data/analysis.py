@@ -175,17 +175,17 @@ all_translation_per_domain = concat_and_save(all_translation_per_domain, f"{fold
 #print("REGISTERED !")
 """
 
-all_rotations_per_residue = np.load(f"{folder_output}all_rotations_per_residue.npy")
-all_translation_per_residue = np.load(f"{folder_output}all_translation_per_residue.npy")
+#all_rotations_per_residue = np.load(f"{folder_output}all_rotations_per_residue.npy")
+#all_translation_per_residue = np.load(f"{folder_output}all_translation_per_residue.npy")
 
-#all_rotations_per_residue = []
-#all_translation_per_residue = []
-#for i in range(10000):
-#    all_rotations_per_residue.append(np.load(f"{folder_output}all_rotations_per_residue_{i}.npy"))
-#    all_translation_per_residue.append(np.load(f"{folder_output}all_translation_per_residue_{i}.npy"))
+all_rotations_per_residue = []
+all_translation_per_residue = []
+for i in range(10000):
+    all_rotations_per_residue.append(np.load(f"{folder_output}all_rotations_per_residue_{i}.npy"))
+    all_translation_per_residue.append(np.load(f"{folder_output}all_translation_per_residue_{i}.npy"))
 
-#all_rotations_per_residue = np.concatenate(all_rotations_per_residue, axis=0)
-#all_translation_per_residue = np.concatenate(all_translation_per_residue, axis=0)
+all_rotations_per_residue = np.concatenate(all_rotations_per_residue, axis=0)
+all_translation_per_residue = np.concatenate(all_translation_per_residue, axis=0)
 
 
 #for i in range(all_translation_per_residue.shape[0]):
