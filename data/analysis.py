@@ -120,7 +120,7 @@ start = 0
 
 
 
-
+"""
 images = torch.flatten(torch.load(experiment_settings["dataset_images_path"])[start::step],start_dim=-2, end_dim=-1)
 iterable = zip(images, torch.load(experiment_settings["dataset_poses_path"])[start::step], 
     torch.load(experiment_settings["dataset_poses_translation_path"])[start::step])
@@ -173,6 +173,8 @@ all_latent_std = concat_and_save(all_latent_std, f"{folder_output}all_latent_std
 all_rotations_per_domain = concat_and_save(all_axis_angle_per_domain, f"{folder_experiment}all_rotations_per_domain.npy")
 all_translation_per_domain = concat_and_save(all_translation_per_domain, f"{folder_experiment}all_translation_per_domain.npy")
 #print("REGISTERED !")
+"""
+
 all_rotations_per_residue = np.load(f"{folder_output}all_rotations_per_residue.npy")
 all_translation_per_residue = np.load(f"{folder_output}all_translation_per_residue.npy")
 
@@ -189,6 +191,8 @@ all_translation_per_residue = np.load(f"{folder_output}all_translation_per_resid
 #for i in range(all_translation_per_residue.shape[0]):
 for i in tqdm(range(0, 10000)):
     print("Deform structure:", i)
+    a = torch.ones((4,), device=device)
+    a += torch.ones((4,), device=device)
     parser = PDBParser(PERMISSIVE=0)
     structure = utils.read_pdb(experiment_settings["base_structure_path"])
     io = PDBIO()
