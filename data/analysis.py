@@ -173,8 +173,8 @@ all_latent_std = concat_and_save(all_latent_std, f"{folder_output}all_latent_std
 all_rotations_per_domain = concat_and_save(all_axis_angle_per_domain, f"{folder_experiment}all_rotations_per_domain.npy")
 all_translation_per_domain = concat_and_save(all_translation_per_domain, f"{folder_experiment}all_translation_per_domain.npy")
 #print("REGISTERED !")
-#all_rotations_per_residue = np.load(f"{folder_output}all_rotations_per_residue.npy")
-#all_translation_per_residue = np.load(f"{folder_output}all_translation_per_residue.npy")
+all_rotations_per_residue = np.load(f"{folder_output}all_rotations_per_residue.npy")
+all_translation_per_residue = np.load(f"{folder_output}all_translation_per_residue.npy")
 
 #all_rotations_per_residue = []
 #all_translation_per_residue = []
