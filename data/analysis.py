@@ -116,7 +116,7 @@ all_axis_angle_per_domain = []
 start = 0
 
 
-"""
+
 images = torch.flatten(torch.load(experiment_settings["dataset_images_path"])[start::step],start_dim=-2, end_dim=-1)
 iterable = zip(images, torch.load(experiment_settings["dataset_poses_path"])[start::step], 
     torch.load(experiment_settings["dataset_poses_translation_path"])[start::step])
@@ -170,7 +170,7 @@ all_rotations_per_domain = concat_and_save(all_axis_angle_per_domain, f"{folder_
 all_translation_per_domain = concat_and_save(all_translation_per_domain, f"{folder_experiment}all_translation_per_domain.npy")
 #print("REGISTERED !")
 
-"""
+
 all_rotations_per_residue = np.load(f"{folder_output}all_rotations_per_residue.npy")
 all_translation_per_residue = np.load(f"{folder_output}all_translation_per_residue.npy")
 
