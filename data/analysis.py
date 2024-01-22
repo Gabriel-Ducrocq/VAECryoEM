@@ -116,7 +116,7 @@ all_axis_angle_per_domain = []
 start = 0
 
 
-
+"""
 images = torch.flatten(torch.load(experiment_settings["dataset_images_path"])[start::step],start_dim=-2, end_dim=-1)
 iterable = zip(images, torch.load(experiment_settings["dataset_poses_path"])[start::step], 
     torch.load(experiment_settings["dataset_poses_translation_path"])[start::step])
@@ -135,8 +135,8 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(it
     axis_angle_per_domain = quaternion_to_axis_angle(quaternions_per_domain)
     rotation_per_residue = utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
     translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
-    deformed_structures = utils.deform_structure(atom_positions, translation_per_residue,
-                                                       rotation_per_residue)
+    #deformed_structures = utils.deform_structure(atom_positions, translation_per_residue,
+    #                                                   rotation_per_residue)
 
     if output_type == "images":
         batch_predicted_images = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose,
@@ -158,7 +158,7 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(it
     #all_axis_angle_per_domain.append(axis_angle_per_domain.to("cpu"))
     #all_translation_per_domain.append(translations_per_domain.to("cpu"))
 
-
+"""
 
 
 #all_rotations_per_residue = concat_and_save(all_rotations_per_residue, f"{folder_output}all_rotations_per_residue.npy")
@@ -185,7 +185,7 @@ all_translation_per_residue = np.concatenate(all_translation_per_residue, axis=0
 
 
 #for i in range(all_translation_per_residue.shape[0]):
-for i in tqdm(range(0, 10000)):
+for i in tqdm(range(6397, 10000)):
     print("Deform structure:", i)
     a = torch.ones((4,), device=device)
     a += torch.ones((4,), device=device)
