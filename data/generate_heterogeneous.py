@@ -87,8 +87,8 @@ else:
     poses = torch.load(pose_rotation)
 
 if not poses_translation:
-    poses_translation = torch.rand((N_images, 3), device=device)*20 - 10
-    #poses_translation = torch.zeros((N_images, 3), device=device)
+    #poses_translation = torch.rand((N_images, 3), device=device)*20 - 10
+    poses_translation = torch.zeros((N_images, 3), device=device)
 else:
     poses_translation = torch.load(poses_translation)
 
