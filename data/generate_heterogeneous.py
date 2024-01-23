@@ -18,9 +18,14 @@ from pytorch3d.transforms import axis_angle_to_matrix
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--folder_experiment', type=str, required=True)
 parser_arg.add_argument('--folder_structures', type=str, required=True)
+parser_arg.add_aegument('--pose_rotation', type=str, required=False)
+parser_arg.add_aegument('--pose_translation', type=str, required=False)
 args = parser_arg.parse_args()
 folder_experiment = args.folder_experiment
 folder_structures = args.folder_structures
+pose_rotation = args.pose_rotation
+poses_translation = args.poses_translation
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -64,21 +69,28 @@ centering_structure = parser.get_structure("A", centering_structure_path)
 
 #Create poses:
 N_images = len(sorted_structures)*N_pose_per_structure
-axis_rotation = torch.randn((N_images, 3), device=device)
-norm_axis = torch.sqrt(torch.sum(axis_rotation**2, dim=-1))
-normalized_axis = axis_rotation/norm_axis[:, None]
-print("Min norm of rotation axis", torch.min(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
-print("Max norm of rotation axis", torch.max(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
+if not pose_rotation:
+    axis_rotation = torch.randn((N_images, 3), device=device)
+    norm_axis = torch.sqrt(torch.sum(axis_rotation**2, dim=-1))
+    normalized_axis = axis_rotation/norm_axis[:, None]
+    print("Min norm of rotation axis", torch.min(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
+    print("Max norm of rotation axis", torch.max(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
 
-angle_rotation = torch.rand((N_images,1), device=device)*torch.pi
-plt.hist(angle_rotation[:, 0].detach().cpu().numpy())
-plt.show()
+    angle_rotation = torch.rand((N_images,1), device=device)*torch.pi
+    plt.hist(angle_rotation[:, 0].detach().cpu().numpy())
+    plt.show()
 
-axis_angle = normalized_axis*angle_rotation
-poses = axis_angle_to_matrix(axis_angle)
-#poses = torch.repeat_interleave(torch.eye(3,3)[None, :, :], 150000, 0)
-poses_translation = torch.rand((N_images, 3), device=device)*20 - 10
-#poses_translation = torch.zeros((N_images, 3), device=device)
+    axis_angle = normalized_axis*angle_rotation
+    poses = axis_angle_to_matrix(axis_angle)
+    #poses = torch.repeat_interleave(torch.eye(3,3)[None, :, :], 150000, 0)
+else:
+    poses = torch.load(pose_rotation)
+
+if not poses_translation:
+    poses_translation = torch.rand((N_images, 3), device=device)*20 - 10
+    #poses_translation = torch.zeros((N_images, 3), device=device)
+else:
+    poses_translation = torch.load(poses_translation)
 
 
 poses_py = poses.detach().cpu().numpy()
