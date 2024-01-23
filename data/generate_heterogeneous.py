@@ -24,7 +24,7 @@ args = parser_arg.parse_args()
 folder_experiment = args.folder_experiment
 folder_structures = args.folder_structures
 pose_rotation = args.pose_rotation
-poses_translation = args.poses_translation
+poses_translation = args.pose_translation
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
