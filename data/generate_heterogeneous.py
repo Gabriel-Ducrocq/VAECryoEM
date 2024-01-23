@@ -18,8 +18,8 @@ from pytorch3d.transforms import axis_angle_to_matrix
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--folder_experiment', type=str, required=True)
 parser_arg.add_argument('--folder_structures', type=str, required=True)
-parser_arg.add_aegument('--pose_rotation', type=str, required=False)
-parser_arg.add_aegument('--pose_translation', type=str, required=False)
+parser_arg.add_argument('--pose_rotation', type=str, required=False)
+parser_arg.add_argument('--pose_translation', type=str, required=False)
 args = parser_arg.parse_args()
 folder_experiment = args.folder_experiment
 folder_structures = args.folder_structures
