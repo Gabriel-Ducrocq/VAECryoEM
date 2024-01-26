@@ -69,7 +69,11 @@ N = len(all_structures)
 for i in tqdm(range(0,N)):
     batch_structures = all_structures[i]
     batch_volumes = renderer.compute_x_y_values_all_atoms(batch_structures, poses, poses_translation, volume=True)
+    print("VOLUME", batch_volumes)
+    print("Writing to", f"{folder_volumes}volume_{indexes[i]}.mrc")
     mrc.write(f"{folder_volumes}volume_{indexes[i]}.mrc", np.transpose(batch_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
+
+    print("\n\n\n")
     #with mrcfile.new(f"{folder_volumes}volume_{i}.mrc", overwrite=True) as mrc:
     #	print(batch_volumes.shape)
     # 	print(np.sum(batch_volumes[0,:, :, 0].detach().numpy()))
