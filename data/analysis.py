@@ -116,7 +116,6 @@ all_axis_angle_per_domain = []
 start = 0
 
 
-"""
 images = torch.flatten(torch.load(experiment_settings["dataset_images_path"])[start::step],start_dim=-2, end_dim=-1)
 iterable = zip(images, torch.load(experiment_settings["dataset_poses_path"])[start::step], 
     torch.load(experiment_settings["dataset_poses_translation_path"])[start::step])
@@ -158,7 +157,7 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(it
     #all_axis_angle_per_domain.append(axis_angle_per_domain.to("cpu"))
     #all_translation_per_domain.append(translations_per_domain.to("cpu"))
 
-"""
+
 
 
 #all_rotations_per_residue = concat_and_save(all_rotations_per_residue, f"{folder_output}all_rotations_per_residue.npy")
