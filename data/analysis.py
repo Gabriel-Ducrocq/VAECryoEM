@@ -134,8 +134,8 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(it
     axis_angle_per_domain = quaternion_to_axis_angle(quaternions_per_domain)
     rotation_per_residue = utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
     translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
-    #deformed_structures = utils.deform_structure(atom_positions, translation_per_residue,
-    #                                                   rotation_per_residue)
+    deformed_structures = utils.deform_structure(atom_positions, translation_per_residue,
+                                                       rotation_per_residue)
 
     if output_type == "images":
         batch_predicted_images = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose,
