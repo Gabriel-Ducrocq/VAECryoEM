@@ -184,7 +184,7 @@ all_translation_per_residue = np.concatenate(all_translation_per_residue, axis=0
 
 
 #for i in range(all_translation_per_residue.shape[0]):
-for i in tqdm(range(0, 10000)):
+for i in tqdm(range(0, 6397)):
     print("Deform structure:", i)
     a = torch.ones((4,), device=device)
     a += torch.ones((4,), device=device)
