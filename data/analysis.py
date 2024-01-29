@@ -109,7 +109,7 @@ all_axis_angle_per_domain = []
 
 
 
-"""
+
 
 ### BE CAREFUL !!!! ADDED A START !!!!
 #start = step*5000
@@ -172,7 +172,7 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(it
 
 #all_rotations_per_residue = np.load(f"{folder_output}all_rotations_per_residue.npy")
 #all_translation_per_residue = np.load(f"{folder_output}all_translation_per_residue.npy")
-"""
+
 all_rotations_per_residue = []
 all_translation_per_residue = []
 for i in range(10000):
