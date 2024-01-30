@@ -63,7 +63,8 @@ centering_structure = parser.get_structure("A", centering_structure_path)
 center_vector = utils.compute_center_of_mass(centering_structure)
 indexes = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures]
 print(indexes)
-all_structures = [utils.get_backbone(utils.center_protein(parser.get_structure("A", struct),center_vector[0]))[None, :, :] for struct in tqdm(structures)]
+#all_structures = [utils.get_backbone(utils.center_protein(parser.get_structure("A", struct),center_vector[0]))[None, :, :] for struct in tqdm(structures)]
+all_structures = [utils.get_backbone(utils.center_protein(parser.get_structure("A", structures[0]),center_vector[0]))[None, :, :], utils.get_backbone(utils.center_protein(parser.get_structure("A", structures[-1]),center_vector[0]))[None, :, :]]
 all_structures
 all_structures = torch.tensor(np.concatenate(all_structures, axis=0), dtype=torch.float32, device=device)
 N = len(all_structures)
