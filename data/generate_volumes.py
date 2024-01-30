@@ -55,23 +55,29 @@ batch_size = experiment_settings["batch_size"]
 poses = torch.eye(3, 3, dtype=torch.float32, device=device)[None, :, :]
 poses_translation = torch.zeros(3, dtype=torch.float32, device=device)[None,:]
 #Get the structures to convert them into 2d images
-structures = [folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path]
+#structures = [folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path]
+structures = [folder_structures + "6zp5.pdb", folder_structures + "6zp7.pdb"]
 #Keep the backbone only. Note that there is NO NEED to recenter, since we centered the structures when generating the
 #posed structures, where the center of mass was computed using ALL the atoms.
 centering_structure_path = experiment_settings["centering_structure_path"]
 centering_structure = parser.get_structure("A", centering_structure_path)
 center_vector = utils.compute_center_of_mass(centering_structure)
-indexes = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures]
+#indexes = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures]
 print(indexes)
 #all_structures = [utils.get_backbone(utils.center_protein(parser.get_structure("A", struct),center_vector[0]))[None, :, :] for struct in tqdm(structures)]
-all_structures = [utils.get_backbone(utils.center_protein(parser.get_structure("A", structures[0]),center_vector[0]))[None, :, :], utils.get_backbone(utils.center_protein(parser.get_structure("A", structures[-1]),center_vector[0]))[None, :, :]]
-all_structures
+all_structures = [utils.get_backbone(utils.center_protein(parser.get_structure("A", structures[0]),center_vector[0]))[None, :, :], utils.get_backbone(utils.center_protein(parser.get_structure("A", structures[1]),center_vector[0]))[None, :, :]]
 all_structures = torch.tensor(np.concatenate(all_structures, axis=0), dtype=torch.float32, device=device)
 N = len(all_structures)
 for i in tqdm(range(0,N)):
     batch_structures = all_structures[i]
     batch_volumes = renderer.compute_x_y_values_all_atoms(batch_structures, poses, poses_translation, volume=True)
-    mrc.write(f"{folder_volumes}volume_{indexes[i]}.mrc", np.transpose(batch_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
+    if i == 0:
+        name = "6zp5.pdb"
+    else:
+        name = "6zp7.pdb"
+
+    #mrc.write(f"{folder_volumes}volume_{indexes[i]}.mrc", np.transpose(batch_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
+    mrc.write(f"{folder_volumes}volume_{name}.mrc", np.transpose(batch_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
 
     print("\n\n\n")
     #with mrcfile.new(f"{folder_volumes}volume_{i}.mrc", overwrite=True) as mrc:
