@@ -14,7 +14,7 @@ folder_2 = args.folder2
 output = args.output
 Apix = args.Apix
 
-volumes1 = [folder_1 + "6zp5.mrc", folder_1 + "6zp7.mrc"]
+volumes1 = [folder_1 + "volume_6zp5.mrc", folder_1 + "volume_6zp7.mrc"]
 #volumes1 = [folder_1 + path for path in os.listdir(folder_1) if ".mrc" in path]
 volumes2 = [folder_2 + path for path in os.listdir(folder_2) if ".mrc" in path]
 #indexes1 = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in volumes1]
