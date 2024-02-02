@@ -98,6 +98,7 @@ class VAE(torch.nn.Module):
 
 
     def batch_transformations(self, indexes):
+        print("Indexes", indexes)
         return torch.stack(itemgetter(*indexes)(self.rotation_per_domain)), torch.stack(itemgetter(*indexes)(self.translation_per_domain))
 
 
