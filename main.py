@@ -52,6 +52,8 @@ def train(yaml_setting_path):
             mask = vae.sample_mask(batch_size)
             indexes_py = indexes.cpu().detach().numpy()
             r6_per_domain, translations_per_domain = vae.batch_transformations(indexes_py)
+            print(r6_per_domain)
+            print("\n\n")
 
             rotation_per_residue = model.utils.compute_rotations_per_residue(r6_per_domain, mask, device)
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
