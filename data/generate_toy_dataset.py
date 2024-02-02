@@ -127,8 +127,8 @@ for i in tqdm(range(N_struct)):
 	# Duplicating the deformed backbone and projecting it.
 	backbone_torch = torch.concatenate([backbone_torch[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
 	batch_images = renderer.compute_x_y_values_all_atoms(backbone_torch, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
-	plt.imshow(batch_images[0].detach().cpu().numpy())
-	plt.show()
+	#plt.imshow(batch_images[0].detach().cpu().numpy())
+	#plt.show()
 	all_images.append(batch_images.detach().cpu())
 
 

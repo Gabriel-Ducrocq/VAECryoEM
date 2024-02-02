@@ -1,9 +1,11 @@
 import torch
 import numpy as np
+from operator import itemgetter
+from pytorch3d.transforms import matrix_to_rotation_6d
 
 
 class VAE(torch.nn.Module):
-    def __init__(self, encoder, decoder, device, mask_start_values, N_domains=6, N_residues=1006, tau_mask=0.05,
+    def __init__(self, encoder, decoder, device, mask_start_values, N_images=150000, N_domains=6, N_residues=1006, tau_mask=0.05,
                  latent_dim = None, latent_type="continuous"):
         super(VAE, self).__init__()
         assert latent_type in ["continuous", "categorical"]
@@ -63,6 +65,13 @@ class VAE(torch.nn.Module):
                                    "proportions":{"mean":self.mask_proportions_mean, "std":self.mask_proportions_std}}
 
         self.elu = torch.nn.ELU()
+
+
+        self.translation_per_domain = {i:torch.nn.Parameter(torch.zeros((N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True) 
+                                            for i in range(N_images)}
+        self.rotation_per_domain = {i: torch.nn.Parameter(torch.tensor([1., 0., 0., 0., 1., 0.], dtype=torch.float32, device=self.device).repeat(N_domains, 1), requires_grad=True)
+                                             for i in range(N_images)}
+
     def sample_mask(self, N_batch):
         """
         Samples a mask
@@ -87,28 +96,10 @@ class VAE(torch.nn.Module):
         mask = torch.softmax(log_num / self.tau_mask, dim=-1)
         return mask
 
-    def sample_latent(self, images):
-        """
-        Samples latent variables given an image
-        :param images: torch.tensor(N_batch, N_pix_x, N_pix_y)
-        :return: torch.tensor(N_batch, latent_dim) latent variables,
-                torch.tensor(N_batch, latent_dim) latent_mean,
-                torch.tensor(N_batch, latent_dim) latent std if latent_type is "continuous"
-                else
-                torch.tensor(N_batch, 1) sampled latent variable per batch
-                torch.tensor(N_batch, latent_dim) log probabilities of the multinomial.
-        """
-        if self.latent_type == "continuous":
-            latent_mean, latent_std = self.encoder(images)
-            latent_variables = latent_mean + torch.randn_like(latent_mean, dtype=torch.float32, device=self.device)\
-                                *latent_std
 
-            return latent_variables, latent_mean, latent_std
-        else:
-            log_distribution_latent = self.encoder(images)
-            distribution_latent = torch.softmax(log_distribution_latent, dim=-1)
-            latent_variable = torch.multinomial(distribution_latent, 1)
-            return latent_variable, log_distribution_latent, None
+    def batch_transformations(self, indexes):
+        return torch.stack(itemgetter(*indexes)(self.rotation_per_domain)), torch.stack(itemgetter(*indexes)(self.translation_per_domain))
+
 
     def decode(self, latent_variables):
         """
@@ -118,20 +109,11 @@ class VAE(torch.nn.Module):
                 OR torch.tensor(N_latent_dim, N_domains, 4)
         """
         N_batch = latent_variables.shape[0]
-        if self.latent_type == "continuous":
-            transformations = self.decoder(latent_variables)
-            transformations_per_domain = torch.reshape(transformations, (N_batch, self.N_domains, 6))
-            ones = torch.ones(size=(N_batch, self.N_domains, 1), device=self.device)
-            quaternions_per_domain = torch.concat([ones, transformations_per_domain[:, :, 3:]], dim=-1)
-            translations_per_domain = transformations_per_domain[:, :, :3]
-        else:
-            latent_variables = torch.tensor([latent_variable for latent_variable in range(self.latent_dim)],
-                                           dtype=torch.float32, device=self.device)[:, None]
-            transformations = self.decoder(latent_variables)
-            transformations_per_domain = torch.reshape(transformations, (self.latent_dim, self.N_domains, 6))
-            ones = torch.ones(size=(self.latent_dim, self.N_domains, 1), device=self.device)
-            quaternions_per_domain = torch.concat([ones, transformations_per_domain[:, :, 3:]], dim=-1)
-            translations_per_domain = transformations_per_domain[:, :, :3]
+        transformations = self.decoder(latent_variables)
+        transformations_per_domain = torch.reshape(transformations, (N_batch, self.N_domains, 6))
+        ones = torch.ones(size=(N_batch, self.N_domains, 1), device=self.device)
+        quaternions_per_domain = torch.concat([ones, transformations_per_domain[:, :, 3:]], dim=-1)
+        translations_per_domain = transformations_per_domain[:, :, :3]
 
         return quaternions_per_domain, translations_per_domain
 

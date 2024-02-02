@@ -11,7 +11,7 @@ from mlp import MLP
 from renderer import Renderer
 from dataset import ImageDataSet
 from Bio.PDB.PDBParser import PDBParser
-from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
+from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix, rotation_6d_to_matrix, matrix_to_axis_angle
 
 
 def compute_center_of_mass(structure):
@@ -235,19 +235,19 @@ def read_pdb(path):
     return structure
 
 
-def compute_rotations_per_residue(quaternions, mask, device):
+def compute_rotations_per_residue(r6, mask, device):
     """
     Computes the rotation matrix corresponding to each domain for each residue, where the angle of rotation has been
     weighted by the mask value of the corresponding domain.
-    :param quaternions: tensor (N_batch, N_domains, 4) of non normalized quaternions defining rotations
+    :param r6: tensor (N_batch, N_domains, 6) of r6 rotation representation
     :param mask: tensor (N_batch, N_residues, N_domains)
     :return: tensor (N_batch, N_residues, 3, 3) rotation matrix for each residue
     """
     N_residues = mask.shape[1]
-    batch_size = quaternions.shape[0]
+    batch_size = r6.shape[0]
     N_domains = mask.shape[-1]
     # NOTE: no need to normalize the quaternions, quaternion_to_axis does it already.
-    rotation_per_domains_axis_angle = quaternion_to_axis_angle(quaternions)
+    rotation_per_domains_axis_angle = matrix_to_axis_angle(rotation_6d_to_matrix(r6))
     mask_rotation_per_domains_axis_angle = mask[:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
 
     mask_rotation_matrix_per_domain_per_residue = axis_angle_to_matrix(mask_rotation_per_domains_axis_angle)

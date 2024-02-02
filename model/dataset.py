@@ -20,4 +20,4 @@ class ImageDataSet(Dataset):
         return self.images.shape[0]
 
     def __getitem__(self, idx):
-        return self.images[idx], self.poses[idx], self.poses_translation[idx]
+        return self.images[idx], self.poses[idx], self.poses_translation[idx], idx
