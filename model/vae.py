@@ -5,12 +5,10 @@ from pytorch3d.transforms import matrix_to_rotation_6d
 
 
 class VAE(torch.nn.Module):
-    def __init__(self, encoder, decoder, device, mask_start_values, N_images=150000, N_domains=6, N_residues=1006, tau_mask=0.05,
+    def __init__(self, device, mask_start_values, N_images=150000, N_domains=6, N_residues=1006, tau_mask=0.05,
                  latent_dim = None, latent_type="continuous"):
         super(VAE, self).__init__()
         assert latent_type in ["continuous", "categorical"]
-        self.encoder = encoder
-        self.decoder = decoder
         self.device = device
         self.N_domains = N_domains
         self.N_residues = N_residues
@@ -41,6 +39,8 @@ class VAE(torch.nn.Module):
                 data=torch.tensor(np.ones(N_domains), dtype=torch.float32, device=device)[None, :],
                 requires_grad=True)
 
+
+
         else:
             self.mask_means_mean = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_mean"]["mean"], dtype=torch.float32,device=device)[None, :],
                                                     requires_grad=True)
@@ -67,10 +67,10 @@ class VAE(torch.nn.Module):
         self.elu = torch.nn.ELU()
 
 
-        self.translation_per_domain = {i:torch.nn.Parameter(torch.zeros((N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True) 
-                                            for i in range(N_images)}
-        self.rotation_per_domain = {i: torch.nn.Parameter(torch.tensor([1., 0., 0., 0., 1., 0.], dtype=torch.float32, device=self.device).repeat(N_domains, 1), requires_grad=True)
-                                             for i in range(N_images)}
+        self.translation_per_domain = torch.nn.ParameterList([torch.nn.Parameter(data=torch.zeros((N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True) 
+                                            for i in range(N_images)])
+        self.rotation_per_domain = torch.nn.ParameterList([torch.nn.Parameter(data=torch.tensor([1., 0., 0., 0., 1., 0.], dtype=torch.float32, device=self.device).repeat(N_domains, 1), requires_grad=True)
+                                             for i in range(N_images)])
 
     def sample_mask(self, N_batch):
         """

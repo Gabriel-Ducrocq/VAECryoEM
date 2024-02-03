@@ -52,8 +52,8 @@ def train(yaml_setting_path):
             mask = vae.sample_mask(batch_size)
             indexes_py = indexes.cpu().detach().numpy()
             r6_per_domain, translations_per_domain = vae.batch_transformations(indexes_py)
-            print(r6_per_domain)
-            print("\n\n")
+            #print(r6_per_domain)
+            #print("\n\n")
 
             rotation_per_residue = model.utils.compute_rotations_per_residue(r6_per_domain, mask, device)
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
@@ -66,8 +66,14 @@ def train(yaml_setting_path):
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
 
             loss = compute_loss(batch_predicted_images, batch_images, tracking_metrics)
+            print("loss", loss)
             loss.backward()
             optimizer.step()
+            #print("GRADIENTS")
+            #for param in vae.parameters():
+            #    if param.grad is not None:
+            #        print(param)
+
             optimizer.zero_grad()
             end = time()
             print("Iteration duration:", end-start)

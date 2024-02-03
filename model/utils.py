@@ -65,25 +65,11 @@ def parse_yaml(path):
             experiment_settings["mask_prior"][mask_prior_key]["std"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["std"],
                                                                                      dtype=torch.float32, device=device)
 
-    if experiment_settings["latent_type"] == "continuous":
-        encoder = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
-                      experiment_settings["latent_dimension"] * 2,
-                      experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
-                      latent_type="continuous")
-        decoder = MLP(experiment_settings["latent_dimension"], experiment_settings["N_domains"]*6,
-                      experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
-    else:
-        encoder = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
-                      experiment_settings["latent_dimension"],
-                      experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
-                      latent_type="categorical")
-        decoder = MLP(1, experiment_settings["N_domains"]*6,
-                      experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
-
     if experiment_settings["resume_training"]["model"] == "None":
-        vae = VAE(encoder, decoder, device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
+        vae = VAE(device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
                   tau_mask=experiment_settings["tau_mask"], mask_start_values=experiment_settings["mask_start"],
-                  latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"])
+                  latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"],
+                   N_images =experiment_settings["N_images"] )
         vae.to(device)
     else:
         vae = torch.load(experiment_settings["resume_training"]["model"])
@@ -91,7 +77,6 @@ def parse_yaml(path):
 
     #Note that in this configuration the pixels are not really centered on "round" value, e.g
     #if we take linsapce(-10, 10, 20) the pixels won't be centered at -9, -8 and so on.
-    #This is no problem as long as we use the same convention for the CTF.
     pixels_x = np.linspace(image_settings["image_lower_bounds"][0], image_settings["image_upper_bounds"][0],
                            num=image_settings["N_pixels_per_axis"][0]).reshape(1, -1)
 
