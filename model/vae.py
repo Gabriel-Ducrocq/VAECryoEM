@@ -67,10 +67,14 @@ class VAE(torch.nn.Module):
         self.elu = torch.nn.ELU()
 
 
-        self.translation_per_domain = torch.nn.ParameterList([torch.nn.Parameter(data=torch.zeros((N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True) 
-                                            for i in range(N_images)])
-        self.rotation_per_domain = torch.nn.ParameterList([torch.nn.Parameter(data=torch.tensor([1., 0., 0., 0., 1., 0.], dtype=torch.float32, device=self.device).repeat(N_domains, 1), requires_grad=True)
-                                             for i in range(N_images)])
+        #self.translation_per_domain = torch.nn.ParameterList([torch.nn.Parameter(data=torch.zeros((N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True) 
+        #                                    for i in range(N_images)])
+
+        #self.rotation_per_domain = torch.nn.ParameterList([torch.nn.Parameter(data=torch.tensor([1., 0., 0., 0., 1., 0.], dtype=torch.float32, device=self.device).repeat(N_domains, 1), requires_grad=True)
+        #                                     for i in range(N_images)])
+
+        self.translation_per_domain = torch.nn.Parameter(data=torch.zeros((N_images, N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True) 
+        self.rotation_per_domain = torch.nn.Parameter(data=torch.tensor([1., 0., 0., 0., 1., 0.], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
 
     def sample_mask(self, N_batch):
         """
@@ -98,8 +102,7 @@ class VAE(torch.nn.Module):
 
 
     def batch_transformations(self, indexes):
-        print("Indexes", indexes)
-        return torch.stack(itemgetter(*indexes)(self.rotation_per_domain)), torch.stack(itemgetter(*indexes)(self.translation_per_domain))
+        return self.rotation_per_domain[indexes], self.translation_per_domain[indexes]
 
 
     def decode(self, latent_variables):
