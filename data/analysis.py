@@ -126,11 +126,10 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(it
     batch_images = batch_images.to(device)
     batch_poses = batch_poses.to(device)
     batch_poses_translation = batch_poses_translation.to(device)
-    r6_per_domain, translations_per_domain = vae.batch_transformations(i)
-    rotation_per_residue = model.utils.compute_rotations_per_residue(r6_per_domain, mask, device)
-    translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
-    #deformed_structures = model.utils.deform_structure(atom_positions, translation_per_residue,
-    #                                                           rotation_per_residue)
+    mask = model.sample_mask(N_batch=batch_size)
+    r6_per_domain, translations_per_domain = model.batch_transformations(i)
+    rotation_per_residue = utils.compute_rotations_per_residue(r6_per_domain, mask, device)
+    translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
     #deformed_structures = utils.deform_structure(atom_positions, translation_per_residue,
     #                                                   rotation_per_residue)
 
