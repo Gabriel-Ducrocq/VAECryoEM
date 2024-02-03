@@ -109,8 +109,6 @@ all_axis_angle_per_domain = []
 
 
 
-
-"""
 ### BE CAREFUL !!!! ADDED A START !!!!
 #start = step*5000
 start = 0
@@ -128,25 +126,24 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(it
     batch_images = batch_images.to(device)
     batch_poses = batch_poses.to(device)
     batch_poses_translation = batch_poses_translation.to(device)
-    latent_variables, latent_mean, latent_std = model.sample_latent(batch_images)
-    mask = model.sample_mask(N_batch=batch_size)
-    quaternions_per_domain, translations_per_domain = model.decode(latent_mean)
-    axis_angle_per_domain = quaternion_to_axis_angle(quaternions_per_domain)
-    rotation_per_residue = utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
-    translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
-    deformed_structures = utils.deform_structure(atom_positions, translation_per_residue,
-                                                       rotation_per_residue)
+    r6_per_domain, translations_per_domain = vae.batch_transformations(i)
+    rotation_per_residue = model.utils.compute_rotations_per_residue(r6_per_domain, mask, device)
+    translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
+    #deformed_structures = model.utils.deform_structure(atom_positions, translation_per_residue,
+    #                                                           rotation_per_residue)
+    #deformed_structures = utils.deform_structure(atom_positions, translation_per_residue,
+    #                                                   rotation_per_residue)
 
-    if output_type == "images":
-        batch_predicted_images = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose,
-                                            zeros_poses_translation, latent_type=experiment_settings["latent_type"])
-        np.save(f"{folder_output}predicted_images_{i+ start}.npy", batch_predicted_images.to("cpu").detach().numpy())
+    #if output_type == "images":
+    #    batch_predicted_images = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose,
+    #                                        zeros_poses_translation, latent_type=experiment_settings["latent_type"])
+    #    np.save(f"{folder_output}predicted_images_{i+ start}.npy", batch_predicted_images.to("cpu").detach().numpy())
 
-    if output_type == "volumes":
-        batch_predicted_volumes = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose, zeros_poses_translation, 
-            latent_type=experiment_settings["latent_type"], volume=True)
+    #if output_type == "volumes":
+    #    batch_predicted_volumes = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose, zeros_poses_translation, 
+    #        latent_type=experiment_settings["latent_type"], volume=True)
 
-        mrc.write(f"{folder_output}volume_{i+start}.mrc", np.transpose(batch_predicted_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
+    #    mrc.write(f"{folder_output}volume_{i+start}.mrc", np.transpose(batch_predicted_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
 
     #all_latent_mean.append(latent_mean.to("cpu"))
     #all_latent_std.append(latent_std.to("cpu"))
@@ -172,7 +169,7 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(it
 
 #all_rotations_per_residue = np.load(f"{folder_output}all_rotations_per_residue.npy")
 #all_translation_per_residue = np.load(f"{folder_output}all_translation_per_residue.npy")
-"""
+
 all_rotations_per_residue = []
 all_translation_per_residue = []
 for i in range(10000):
