@@ -102,13 +102,9 @@ def parse_yaml(path):
             optimizer = torch.optim.Adam(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
         else:
             list_param = []
-            for imag_n, trans in vae.translation_per_domain.items():
-                list_param.append({"params":trans, "lr":experiment_settings["optimizer"]["learning_rate"]})
-
-            for imag_n, trans in vae.rotation_per_domain.items():
-                list_param.append({"params":trans, "lr":experiment_settings["optimizer"]["learning_rate"]})
-
-            print("Running different LR for the mask")
+                list_param.append({"params":vae.translation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
+                list_param.append({"params":vae.rotation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
+                
             list_param += [{"params": param, "lr":experiment_settings["optimizer"]["learning_rate_mask"]} for name, param in
                           vae.named_parameters() if "mask" in name]
 
