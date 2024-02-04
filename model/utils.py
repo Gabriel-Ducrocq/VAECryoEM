@@ -109,6 +109,7 @@ def parse_yaml(path):
                           vae.named_parameters() if "mask" in name]
 
             optimizer = torch.optim.Adam(list_param)
+            optimizer = torch.optim.SGD(list_param)
     else:
         raise Exception("Optimizer must be Adam")
 
