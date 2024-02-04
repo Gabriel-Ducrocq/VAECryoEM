@@ -100,6 +100,7 @@ def parse_yaml(path):
     if experiment_settings["optimizer"]["name"] == "adam":
         if "learning_rate_mask" not in experiment_settings["optimizer"]:
             #optimizer = torch.optim.Adam(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
+            pass
         else:
             list_param = []
             list_param.append({"params":vae.translation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
