@@ -6,7 +6,7 @@ from pytorch3d.transforms import matrix_to_rotation_6d
 
 class VAE(torch.nn.Module):
     def __init__(self, device, mask_start_values, N_images=150000, N_domains=6, N_residues=1006, tau_mask=0.05,
-                 latent_dim = None, latent_type="continuous"):
+                 latent_dim = None, latent_type="continuous", representation="r6"):
         super(VAE, self).__init__()
         assert latent_type in ["continuous", "categorical"]
         self.device = device
@@ -15,6 +15,7 @@ class VAE(torch.nn.Module):
         self.tau_mask = tau_mask
         self.latent_type = latent_type
         self.latent_dim = latent_dim
+        self.representation = representation
 
         self.residues = torch.arange(0, self.N_residues, 1, dtype=torch.float32, device=device)[:, None]
 
@@ -74,7 +75,10 @@ class VAE(torch.nn.Module):
         #                                     for i in range(N_images)])
 
         self.translation_per_domain = torch.nn.Parameter(data=torch.zeros((N_images, N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True) 
-        self.rotation_per_domain = torch.nn.Parameter(data=torch.tensor([1., 0., 0., 0., 1., 0.], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
+        if representation == "r6":
+            self.rotation_per_domain = torch.nn.Parameter(data=torch.tensor([1., 0., 0., 0., 1., 0.], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
+        else:
+            self.rotation_per_domain = torch.nn.Parameter(data=torch.tensor([0., 0., 0.], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
 
     def sample_mask(self, N_batch):
         """

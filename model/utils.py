@@ -69,7 +69,7 @@ def parse_yaml(path):
         vae = VAE(device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
                   tau_mask=experiment_settings["tau_mask"], mask_start_values=experiment_settings["mask_start"],
                   latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"],
-                   N_images =experiment_settings["N_images"] )
+                   N_images =experiment_settings["N_images"], representation=experiment_settings["representation"])
         vae.to(device)
     else:
         vae = torch.load(experiment_settings["resume_training"]["model"])
@@ -99,7 +99,7 @@ def parse_yaml(path):
 
     if experiment_settings["optimizer"]["name"] == "adam":
         if "learning_rate_mask" not in experiment_settings["optimizer"]:
-            #optimizer = torch.optim.Adam(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
+            optimizer = torch.optim.Adam(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
             pass
         else:
             list_param = []
@@ -110,7 +110,7 @@ def parse_yaml(path):
                           vae.named_parameters() if "mask" in name]
 
             #optimizer = torch.optim.Adam(list_param)
-            optimizer = torch.optim.SGD(list_param, momentum=0.9, nesterov=True)
+            optimizer = torch.optim.Adam(list_param)
     else:
         raise Exception("Optimizer must be Adam")
 
@@ -224,7 +224,7 @@ def read_pdb(path):
     return structure
 
 
-def compute_rotations_per_residue(r6, mask, device):
+def compute_rotations_per_residue(r6, mask, device, representation = "r6"):
     """
     Computes the rotation matrix corresponding to each domain for each residue, where the angle of rotation has been
     weighted by the mask value of the corresponding domain.
@@ -236,7 +236,12 @@ def compute_rotations_per_residue(r6, mask, device):
     batch_size = r6.shape[0]
     N_domains = mask.shape[-1]
     # NOTE: no need to normalize the quaternions, quaternion_to_axis does it already.
-    rotation_per_domains_axis_angle = matrix_to_axis_angle(rotation_6d_to_matrix(r6))
+    assert representation in ["r6", "axis_angle"], print("Rotation must represented as r6 of axis angle")
+    if representation == "r6":
+        rotation_per_domains_axis_angle = matrix_to_axis_angle(rotation_6d_to_matrix(r6))
+    else:
+        rotation_per_domains_axis_angle = r6
+
     mask_rotation_per_domains_axis_angle = mask[:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
 
     mask_rotation_matrix_per_domain_per_residue = axis_angle_to_matrix(mask_rotation_per_domains_axis_angle)

@@ -51,11 +51,11 @@ def train(yaml_setting_path):
             batch_poses_translation = batch_poses_translation.to(device)
             mask = vae.sample_mask(batch_size)
             indexes_py = indexes.cpu().detach().numpy()
-            r6_per_domain, translations_per_domain = vae.batch_transformations(indexes_py)
+            rotation_per_domain, translations_per_domain = vae.batch_transformations(indexes_py)
             #print(r6_per_domain)
             #print("\n\n")
 
-            rotation_per_residue = model.utils.compute_rotations_per_residue(r6_per_domain, mask, device)
+            rotation_per_residue = model.utils.compute_rotations_per_residue(rotation_per_domain, mask, device, vae.representation)
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
             deformed_structures = model.utils.deform_structure(atom_positions, translation_per_residue,
                                                                rotation_per_residue)
