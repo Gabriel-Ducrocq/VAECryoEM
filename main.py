@@ -39,6 +39,11 @@ def train(yaml_setting_path):
             "epochs": experiment_settings["N_epochs"],
         })
 
+    if representation =="r6":
+        d = 6
+    else:
+        d = 3
+
     #non_noisy_images = torch.load("data/dataset/spike/ImageDataSetNoNoiseNoCTF")
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
@@ -73,9 +78,9 @@ def train(yaml_setting_path):
             lr = optimizer.param_groups[0]['lr']
 
             ## Adding noise to get SGLD: we can factorize the learning rate and update the gradient directly.
-            noise_rot = torch.zeros(size=(N_images, N_domains, 6), dtype=torch.float32, device=device)
+            noise_rot = torch.zeros(size=(N_images, N_domains, d), dtype=torch.float32, device=device)
             noise_trans = torch.zeros(size=(N_images, N_domains, 3), dtype=torch.float32, device=device)
-            noise_rot[indexes_py] = torch.randn(size=(batch_size, N_domains, 6), dtype=torch.float32, device=device)*np.sqrt(2/lr)
+            noise_rot[indexes_py] = torch.randn(size=(batch_size, N_domains, d), dtype=torch.float32, device=device)*np.sqrt(2/lr)
             noise_trans[indexes_py] = torch.randn(size=(batch_size, N_domains, 3), dtype=torch.float32, device=device)*np.sqrt(2/lr)
             loss.backward()
             vae.translation_per_domain.grad += noise_trans
