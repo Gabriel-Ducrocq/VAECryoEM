@@ -127,9 +127,11 @@ def parse_yaml(path):
     N_epochs = experiment_settings["N_epochs"]
     batch_size = experiment_settings["batch_size"]
     latent_type = experiment_settings["latent_type"]
+    N_domains = experiment_settings["N_domains"]
+    N_images = experiment_settings["N_images"]
     assert latent_type in ["continuous", "categorical"]
 
-    return vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler
+    return vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, N_images, N_domains
 
 
 def compute_mask_prior(N_residues, N_domains, device):

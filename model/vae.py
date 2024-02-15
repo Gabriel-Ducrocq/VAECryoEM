@@ -68,17 +68,13 @@ class VAE(torch.nn.Module):
         self.elu = torch.nn.ELU()
 
 
-        #self.translation_per_domain = torch.nn.ParameterList([torch.nn.Parameter(data=torch.zeros((N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True) 
-        #                                    for i in range(N_images)])
-
-        #self.rotation_per_domain = torch.nn.ParameterList([torch.nn.Parameter(data=torch.tensor([1., 0., 0., 0., 1., 0.], dtype=torch.float32, device=self.device).repeat(N_domains, 1), requires_grad=True)
-        #                                     for i in range(N_images)])
-
         self.translation_per_domain = torch.nn.Parameter(data=torch.zeros((N_images, N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True) 
-        if representation == "r6":
+        if representation =="r6":
             self.rotation_per_domain = torch.nn.Parameter(data=torch.tensor([1., 0., 0., 0., 1., 0.], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
-        else:
-            self.rotation_per_domain = torch.nn.Parameter(data=torch.tensor([0., 0., 0.], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
+        elif representation == "axis_angle":
+            self.rotation_per_domain = torch.nn.Parameter(data=torch.tensor([0., 0.,  0.], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
+
+
 
     def sample_mask(self, N_batch):
         """
@@ -108,22 +104,6 @@ class VAE(torch.nn.Module):
     def batch_transformations(self, indexes):
         return self.rotation_per_domain[indexes], self.translation_per_domain[indexes]
 
-
-    def decode(self, latent_variables):
-        """
-        Decode the latent variables
-        :param latent_variables: torch.tensor(N_batch, latent_dim)
-        :return: torch.tensor(N_batch, N_domains, 4) quaternions, torch.tensor(N_batch, N_domains, 3) translations
-                OR torch.tensor(N_latent_dim, N_domains, 4)
-        """
-        N_batch = latent_variables.shape[0]
-        transformations = self.decoder(latent_variables)
-        transformations_per_domain = torch.reshape(transformations, (N_batch, self.N_domains, 6))
-        ones = torch.ones(size=(N_batch, self.N_domains, 1), device=self.device)
-        quaternions_per_domain = torch.concat([ones, transformations_per_domain[:, :, 3:]], dim=-1)
-        translations_per_domain = transformations_per_domain[:, :, :3]
-
-        return quaternions_per_domain, translations_per_domain
 
 
 

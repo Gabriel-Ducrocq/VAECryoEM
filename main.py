@@ -2,6 +2,7 @@ import torch
 import wandb
 import argparse
 import model.utils
+import numpy as np
 from time import time
 from model.loss import compute_loss
 from torch.utils.data import DataLoader
@@ -17,7 +18,7 @@ def train(yaml_setting_path):
     :param yaml_setting_path: str, path the yaml containing all the details of the experiment
     :return:
     """
-    vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler = model.utils.parse_yaml(yaml_setting_path)
+    vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, N_images, N_domains = model.utils.parse_yaml(yaml_setting_path)
     if experiment_settings["resume_training"]["model"] != "None":
         name = f"experiment_{experiment_settings['name']}_resume"
     else:
@@ -67,14 +68,24 @@ def train(yaml_setting_path):
 
             loss = compute_loss(batch_predicted_images, batch_images, tracking_metrics)
             print("loss", loss)
+
+            optimizer.zero_grad()
+            lr = optimizer.param_groups[0]['lr']
+
+            ## Adding noise to get SGLD: we can factorize the learning rate and update the gradient directly.
+            noise_rot = torch.zeros(size=(N_images, N_domains, 6), dtype=torch.float32, device=device)
+            noise_trans = torch.zeros(size=(N_images, N_domains, 3), dtype=torch.float32, device=device)
+            noise_rot[indexes_py] = torch.randn(size=(batch_size, N_domains, 6))*np.sqrt(2/lr)
+            noise_trans[indexes_py] = torch.randn(size=(batch_size, N_domains, 3))*np.sqrt(2/lr)
             loss.backward()
+            vae.translation_per_domain.grad += noise_trans
+            vae.rotation_per_domain.grad += noise_rot
             optimizer.step()
             #print("GRADIENTS")
             #for param in vae.parameters():
             #    if param.grad is not None:
             #        print(param)
 
-            optimizer.zero_grad()
             end = time()
             print("Iteration duration:", end-start)
 
