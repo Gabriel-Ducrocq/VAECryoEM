@@ -98,19 +98,25 @@ def parse_yaml(path):
     atom_positions = torch.tensor(get_backbone(centered_based_structure), dtype=torch.float32, device=device)
 
     if experiment_settings["optimizer"]["name"] == "adam":
-        if "learning_rate_mask" not in experiment_settings["optimizer"]:
+    if "learning_rate_mask" not in experiment_settings["optimizer"]:
+        if experiment_settings["optimizer"]["name"] == "adam":
             optimizer = torch.optim.Adam(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
-            pass
-        else:
-            list_param = []
-            list_param.append({"params":vae.translation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
-            list_param.append({"params":vae.rotation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
+        elif experiment_settings["optimizer"]["name"] == "rmsprop":
+            optimizer = torch.optim.RMSprop(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
+    else:
+        list_param = []
+        list_param.append({"params":vae.translation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
+        list_param.append({"params":vae.rotation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
 
-            list_param += [{"params": param, "lr":experiment_settings["optimizer"]["learning_rate_mask"]} for name, param in
-                          vae.named_parameters() if "mask" in name]
+        list_param += [{"params": param, "lr":experiment_settings["optimizer"]["learning_rate_mask"]} for name, param in
+                      vae.named_parameters() if "mask" in name]
 
-            #optimizer = torch.optim.Adam(list_param)
+        #optimizer = torch.optim.Adam(list_param)
+        if experiment_settings["optimizer"]["name"] == "adam":
             optimizer = torch.optim.Adam(list_param)
+        elif experiment_settings["optimizer"]["name"] == "rmsprop":
+            optimizer = torch.optim.RMSprop(list_param)
+
     else:
         raise Exception("Optimizer must be Adam")
 
@@ -293,7 +299,7 @@ def deform_structure(atom_positions, translation_per_residue, rotations_per_resi
     return new_atom_positions
 
 
-def add_noise(vae, lr_transformation, lr_mask, N_imagesN_domains, device):
+def add_noise(vae, lr_transformation, lr_mask, batch_size, N_images, N_domains, device):
     """
     Add noise to the gradient of the parameters
     """
@@ -301,13 +307,15 @@ def add_noise(vae, lr_transformation, lr_mask, N_imagesN_domains, device):
         d = 6
     else:
         d = 3
+
     noise_rot = torch.zeros(size=(N_images, N_domains, d), dtype=torch.float32, device=device)
     noise_trans = torch.zeros(size=(N_images, N_domains, 3), dtype=torch.float32, device=device)
-    noise_rot[indexes_py] = torch.randn(size=(batch_size, N_domains, d), dtype=torch.float32, device=device)*np.sqrt(2/lr)
-    noise_trans[indexes_py] = torch.randn(size=(batch_size, N_domains, 3), dtype=torch.float32, device=device)*np.sqrt(2/lr)
-    loss.backward()
+    noise_rot[indexes_py] = torch.randn(size=(batch_size, N_domains, d), dtype=torch.float32, device=device)*np.sqrt(2/lr_transformation)
+    noise_trans[indexes_py] = torch.randn(size=(batch_size, N_domains, 3), dtype=torch.float32, device=device)*np.sqrt(2/lr_transformation)
     vae.translation_per_domain.grad += noise_trans
     vae.rotation_per_domain.grad += noise_rot
+
+
 
 
 
