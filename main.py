@@ -39,7 +39,7 @@ def train(yaml_setting_path):
             "epochs": experiment_settings["N_epochs"],
         })
 
-    if representation =="r6":
+    if vae.representation =="r6":
         d = 6
     else:
         d = 3
