@@ -291,3 +291,24 @@ def deform_structure(atom_positions, translation_per_residue, rotations_per_resi
     new_atom_positions = transformed_atom_positions + torch.repeat_interleave(translation_per_residue,
                                                                                               3, 1)
     return new_atom_positions
+
+
+def add_noise(vae, lr_transformation, lr_mask, N_imagesN_domains, device):
+    """
+    Add noise to the gradient of the parameters
+    """
+    if vae.representation =="r6":
+        d = 6
+    else:
+        d = 3
+    noise_rot = torch.zeros(size=(N_images, N_domains, d), dtype=torch.float32, device=device)
+    noise_trans = torch.zeros(size=(N_images, N_domains, 3), dtype=torch.float32, device=device)
+    noise_rot[indexes_py] = torch.randn(size=(batch_size, N_domains, d), dtype=torch.float32, device=device)*np.sqrt(2/lr)
+    noise_trans[indexes_py] = torch.randn(size=(batch_size, N_domains, 3), dtype=torch.float32, device=device)*np.sqrt(2/lr)
+    loss.backward()
+    vae.translation_per_domain.grad += noise_trans
+    vae.rotation_per_domain.grad += noise_rot
+
+
+
+

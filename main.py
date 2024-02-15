@@ -84,11 +84,13 @@ def train(yaml_setting_path):
             ## Adding noise to get SGLD: we can factorize the learning rate and update the gradient directly.
             noise_rot = torch.zeros(size=(N_images, N_domains, d), dtype=torch.float32, device=device)
             noise_trans = torch.zeros(size=(N_images, N_domains, 3), dtype=torch.float32, device=device)
-            noise_rot[indexes_py] = torch.randn(size=(batch_size, N_domains, d), dtype=torch.float32, device=device)*np.sqrt(2/lr)
-            noise_trans[indexes_py] = torch.randn(size=(batch_size, N_domains, 3), dtype=torch.float32, device=device)*np.sqrt(2/lr)
+            noise_rot[indexes_py] = torch.randn(size=(batch_size, N_domains, d), dtype=torch.float32, device=device)*0#*np.sqrt(2/lr)
+            noise_trans[indexes_py] = torch.randn(size=(batch_size, N_domains, 3), dtype=torch.float32, device=device)*0#*np.sqrt(2/lr)
             loss.backward()
             vae.translation_per_domain.grad += noise_trans
             vae.rotation_per_domain.grad += noise_rot
+            print("GRAD", vae.translation_per_domain.grad[0])
+            print("lr", lr)
             optimizer.step()
             #print("GRADIENTS")
             #for param in vae.parameters():
