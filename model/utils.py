@@ -103,6 +103,7 @@ def parse_yaml(path):
             optimizer = torch.optim.Adam(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
         elif experiment_settings["optimizer"]["name"] == "rmsprop":
             optimizer = torch.optim.RMSprop(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
+
     else:
         list_param = []
         list_param.append({"params":vae.translation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
@@ -116,9 +117,6 @@ def parse_yaml(path):
             optimizer = torch.optim.Adam(list_param)
         elif experiment_settings["optimizer"]["name"] == "rmsprop":
             optimizer = torch.optim.RMSprop(list_param)
-
-    else:
-        raise Exception("Optimizer must be Adam")
 
     dataset = ImageDataSet(experiment_settings["dataset_images_path"], experiment_settings["dataset_poses_path"],
                            experiment_settings["dataset_poses_translation_path"])
