@@ -12,7 +12,9 @@ def compute_rmsd(predicted_images, images, log_latent_distribution = None, type=
     """
     assert type in ["continuous", "categorical"]
     if type == "continuous":
-        return torch.mean(0.5*torch.sum((predicted_images - images)**2, dim=-1))
+        ## I changed for the mean
+        print("LOSS has been changed for the mean over the pixels !!")
+        return torch.mean(0.5*torch.mean((predicted_images - images)**2, dim=-1))
     else:
         rmsd_per_latent_per_batch = 0.5 * torch.sum((predicted_images - images[:, None, :]) ** 2, dim=-1)
         latent_distribution = torch.softmax(log_latent_distribution, dim=-1)

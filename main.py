@@ -79,19 +79,19 @@ def train(yaml_setting_path):
             print("loss", loss)
 
             optimizer.zero_grad()
-            lr = optimizer.param_groups[0]['lr']
+            #lr = optimizer.param_groups[0]['lr']
 
             ## Adding noise to get SGLD: we can factorize the learning rate and update the gradient directly.
-            noise_rot = torch.zeros(size=(N_images, N_domains, d), dtype=torch.float32, device=device)
-            noise_trans = torch.zeros(size=(N_images, N_domains, 3), dtype=torch.float32, device=device)
-            noise_rot[indexes_py] = torch.randn(size=(batch_size, N_domains, d), dtype=torch.float32, device=device)*np.sqrt(2/lr)
-            noise_trans[indexes_py] = torch.randn(size=(batch_size, N_domains, 3), dtype=torch.float32, device=device)*np.sqrt(2/lr)
-            print("Noise rot", noise_rot)
+            #noise_rot = torch.zeros(size=(N_images, N_domains, d), dtype=torch.float32, device=device)
+            #noise_trans = torch.zeros(size=(N_images, N_domains, 3), dtype=torch.float32, device=device)
+            #noise_rot[indexes_py] = torch.randn(size=(batch_size, N_domains, d), dtype=torch.float32, device=device)*np.sqrt(2/lr)
+            #noise_trans[indexes_py] = torch.randn(size=(batch_size, N_domains, 3), dtype=torch.float32, device=device)*np.sqrt(2/lr)
+            #print("Noise rot", noise_rot)
             loss.backward()
-            vae.translation_per_domain.grad += noise_trans
-            vae.rotation_per_domain.grad += noise_rot
-            print("GRAD", vae.translation_per_domain.grad[0])
-            print("lr", lr)
+            #vae.translation_per_domain.grad += noise_trans
+            #vae.rotation_per_domain.grad += noise_rot
+            #print("GRAD", vae.translation_per_domain.grad[0])
+            #print("lr", lr)
             optimizer.step()
             #print("GRADIENTS")
             #for param in vae.parameters():
