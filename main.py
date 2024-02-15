@@ -44,6 +44,10 @@ def train(yaml_setting_path):
     else:
         d = 3
 
+    print("PARAM GROUP:", len(optimizer.param_groups))
+    print(optimizer.param_groups)
+    lr = optimizer.param_groups[0]['lr']
+
     #non_noisy_images = torch.load("data/dataset/spike/ImageDataSetNoNoiseNoCTF")
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
