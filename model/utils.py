@@ -97,7 +97,7 @@ def parse_yaml(path):
     centered_based_structure = center_protein(base_structure, center_of_mass)
     atom_positions = torch.tensor(get_backbone(centered_based_structure), dtype=torch.float32, device=device)
 
-    if experiment_settings["optimizer"]["name"] == "adam":
+    assert experiment_settings["optimizer"]["name"] in ["adam", "rmsprop"], "optimizer must be either rmsprop or adam"
     if "learning_rate_mask" not in experiment_settings["optimizer"]:
         if experiment_settings["optimizer"]["name"] == "adam":
             optimizer = torch.optim.Adam(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
