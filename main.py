@@ -68,7 +68,8 @@ def train(yaml_setting_path):
             loss = compute_loss(batch_predicted_images, batch_images, tracking_metrics)
             print("loss", loss)
             loss.backward()
-            optimizer.step()
+            optimizer.step(noise=True)
+            print(vae.translation_per_domain[0])
             #print("GRADIENTS")
             #for param in vae.parameters():
             #    if param.grad is not None:

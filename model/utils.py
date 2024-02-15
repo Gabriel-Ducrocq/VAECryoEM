@@ -11,6 +11,7 @@ from mlp import MLP
 from renderer import Renderer
 from dataset import ImageDataSet
 from Bio.PDB.PDBParser import PDBParser
+from torch_sgld import SGLD
 from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix, rotation_6d_to_matrix, matrix_to_axis_angle
 
 
@@ -54,6 +55,12 @@ def parse_yaml(path):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     else:
         device = "cpu"
+
+    N_epochs = experiment_settings["N_epochs"]
+    batch_size = experiment_settings["batch_size"]
+    latent_type = experiment_settings["latent_type"]
+    N_images = experiment_settings["N_images"]
+    assert latent_type in ["continuous", "categorical"]
 
     if experiment_settings["mask_prior"]["type"] == "uniform":
         experiment_settings["mask_prior"] = compute_mask_prior(experiment_settings["N_residues"],
@@ -111,6 +118,12 @@ def parse_yaml(path):
 
             #optimizer = torch.optim.Adam(list_param)
             optimizer = torch.optim.Adam(list_param)
+    elif experiment_settings["optimizer"]["name"] == "sgld":
+        n_batches = N_images/batch_size
+        assert n_batches.is_integer(), "The batch size does not divide the number of images"
+        n_batches = int(n_batches)
+        print("Using SGLD !")
+        optimizer = SGLD(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
     else:
         raise Exception("Optimizer must be Adam")
 
@@ -124,10 +137,6 @@ def parse_yaml(path):
         print(f"Using MultiStepLR scheduler with milestones: {milestones} and decay factor {decay}.")
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=milestones, gamma=decay)
 
-    N_epochs = experiment_settings["N_epochs"]
-    batch_size = experiment_settings["batch_size"]
-    latent_type = experiment_settings["latent_type"]
-    assert latent_type in ["continuous", "categorical"]
 
     return vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler
 
@@ -289,3 +298,18 @@ def deform_structure(atom_positions, translation_per_residue, rotations_per_resi
     new_atom_positions = transformed_atom_positions + torch.repeat_interleave(translation_per_residue,
                                                                                               3, 1)
     return new_atom_positions
+
+
+def create_lambda_lr(b, gamma):
+    """
+    Closure to set the parameters of the lr decaying function as b and gamma where b is offset and gamma is the power to get exponential decay.
+    Returns such a function.
+    """
+    assert gamma > 0.5, "gamma must be strictly superior to 0.5 for decaying the lr."
+    assert gamma <= 1, "gamma must be inferior or equal to 1 for decaying the lr."
+    def compute_lr(t):
+        return 1/(b+t)**gamma
+
+    return compute_lr
+
+
