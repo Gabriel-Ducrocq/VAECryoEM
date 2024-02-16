@@ -91,7 +91,7 @@ class VAE(torch.nn.Module):
         self.mean_translation_per_domain = torch.nn.Parameter(data=torch.zeros((N_images, N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True)
         self.std_translation_per_domain = torch.nn.Parameter(data=torch.ones((N_images, N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True) 
         self.mean_rotation_per_domain = torch.nn.Parameter(data=torch.tensor([1., 0., 0., 0., 1., 0.], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
-        self.std_rotation_per_domain = torch.nn.Parameter(data=torch.tensor([0.1, 0.1, 0.1], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
+        self.std_rotation_per_domain = torch.nn.Parameter(data=torch.tensor([0.05, 0.05, 0.05], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
 
     def sample_mask(self, N_batch):
         """
