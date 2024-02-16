@@ -41,10 +41,10 @@ with open(f"{folder_experiment}/parameters.yaml", "r") as file:
 with open(f"{folder_experiment}/images.yaml", "r") as file:
     image_settings = yaml.safe_load(file)
 
-pixels_x = np.linspace(image_settings["image_lower_bounds"][0], image_settings["image_upper_bounds"][0],
+pixels_x = np.linspace(image_settings["image_lower_bounds"][0], image_settings["image_upper_bounds"][0]-1,
                        num=image_settings["N_pixels_per_axis"][0]).reshape(1, -1)
 
-pixels_y = np.linspace(image_settings["image_lower_bounds"][1], image_settings["image_upper_bounds"][1],
+pixels_y = np.linspace(image_settings["image_lower_bounds"][1], image_settings["image_upper_bounds"][1]-1,
                        num=image_settings["N_pixels_per_axis"][1]).reshape(1, -1)
 
 
@@ -107,6 +107,9 @@ torch.save(poses_translation, f"{folder_experiment}poses_translation")
 
 #Finding the center of mass to center the protein
 center_vector = utils.compute_center_of_mass(centering_structure)
+## !!!!!!!!!!!!!!!!!!    BE CAREFUL I AM TRANSLATING A LITTLE BIT !!!!!!!!!!!!!!!!!!
+print("Apix:", (image_settings["image_upper_bounds"][0] - image_settings["image_lower_bounds"][0])/image_settings["N_pixels_per_axis"][0])
+center_vector += 0.5*(image_settings["image_upper_bounds"][0] - image_settings["image_lower_bounds"][0])/image_settings["N_pixels_per_axis"][0]
 
 all_images = []
 from time import time
