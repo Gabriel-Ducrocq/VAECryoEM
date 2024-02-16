@@ -51,7 +51,7 @@ def train(yaml_setting_path):
             batch_poses_translation = batch_poses_translation.to(device)
             mask = vae.sample_mask(batch_size)
             indexes_py = indexes.cpu().detach().numpy()
-            rotation_per_domain, translations_per_domain = vae.batch_transformations(indexes_py)
+            translations_per_domain, rotation_per_domain = vae.sample_transformations(indexes_py)
             #print(r6_per_domain)
             #print("\n\n")
 
@@ -68,13 +68,7 @@ def train(yaml_setting_path):
             loss = compute_loss(batch_predicted_images, batch_images, tracking_metrics)
             print("loss", loss)
             loss.backward()
-            optimizer.step(noise=True)
-            print(vae.translation_per_domain[0])
-            #print("GRADIENTS")
-            #for param in vae.parameters():
-            #    if param.grad is not None:
-            #        print(param)
-
+            optimizer.step()
             optimizer.zero_grad()
             end = time()
             print("Iteration duration:", end-start)

@@ -76,7 +76,7 @@ def parse_yaml(path):
         vae = VAE(device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
                   tau_mask=experiment_settings["tau_mask"], mask_start_values=experiment_settings["mask_start"],
                   latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"],
-                   N_images =experiment_settings["N_images"], representation=experiment_settings["representation"])
+                   N_images =experiment_settings["N_images"])
         vae.to(device)
     else:
         vae = torch.load(experiment_settings["resume_training"]["model"])
@@ -110,8 +110,10 @@ def parse_yaml(path):
             pass
         else:
             list_param = []
-            list_param.append({"params":vae.translation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
-            list_param.append({"params":vae.rotation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
+            list_param.append({"params":vae.mean_translation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
+            list_param.append({"params":vae.std_translation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
+            list_param.append({"params":vae.mean_rotation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
+            list_param.append({"params":vae.std_rotation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
 
             list_param += [{"params": param, "lr":experiment_settings["optimizer"]["learning_rate_mask"]} for name, param in
                           vae.named_parameters() if "mask" in name]
@@ -233,24 +235,18 @@ def read_pdb(path):
     return structure
 
 
-def compute_rotations_per_residue(r6, mask, device, representation = "r6"):
+def compute_rotations_per_residue(rotation, mask, device):
     """
     Computes the rotation matrix corresponding to each domain for each residue, where the angle of rotation has been
     weighted by the mask value of the corresponding domain.
-    :param r6: tensor (N_batch, N_domains, 6) of r6 rotation representation
+    :param rotation: tensor (N_batch, N_domains, 3, 3) of rotation matrices.
     :param mask: tensor (N_batch, N_residues, N_domains)
     :return: tensor (N_batch, N_residues, 3, 3) rotation matrix for each residue
     """
     N_residues = mask.shape[1]
-    batch_size = r6.shape[0]
+    batch_size = rotation.shape[0]
     N_domains = mask.shape[-1]
-    # NOTE: no need to normalize the quaternions, quaternion_to_axis does it already.
-    assert representation in ["r6", "axis_angle"], print("Rotation must represented as r6 of axis angle")
-    if representation == "r6":
-        rotation_per_domains_axis_angle = matrix_to_axis_angle(rotation_6d_to_matrix(r6))
-    else:
-        rotation_per_domains_axis_angle = r6
-
+    rotation_per_domains_axis_angle = matrix_to_axis_angle(rotation)
     mask_rotation_per_domains_axis_angle = mask[:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
 
     mask_rotation_matrix_per_domain_per_residue = axis_angle_to_matrix(mask_rotation_per_domains_axis_angle)
@@ -299,17 +295,5 @@ def deform_structure(atom_positions, translation_per_residue, rotations_per_resi
                                                                                               3, 1)
     return new_atom_positions
 
-
-def create_lambda_lr(b, gamma):
-    """
-    Closure to set the parameters of the lr decaying function as b and gamma where b is offset and gamma is the power to get exponential decay.
-    Returns such a function.
-    """
-    assert gamma > 0.5, "gamma must be strictly superior to 0.5 for decaying the lr."
-    assert gamma <= 1, "gamma must be inferior or equal to 1 for decaying the lr."
-    def compute_lr(t):
-        return 1/(b+t)**gamma
-
-    return compute_lr
 
 

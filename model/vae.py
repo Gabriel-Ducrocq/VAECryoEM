@@ -1,12 +1,12 @@
 import torch
 import numpy as np
 from operator import itemgetter
-from pytorch3d.transforms import matrix_to_rotation_6d
+from pytorch3d.transforms import matrix_to_rotation_6d, rotation_6d_to_matrix
 
 
 class VAE(torch.nn.Module):
     def __init__(self, device, mask_start_values, N_images=150000, N_domains=6, N_residues=1006, tau_mask=0.05,
-                 latent_dim = None, latent_type="continuous", representation="r6"):
+                 latent_dim = None, latent_type="continuous"):
         super(VAE, self).__init__()
         assert latent_type in ["continuous", "categorical"]
         self.device = device
@@ -15,7 +15,6 @@ class VAE(torch.nn.Module):
         self.tau_mask = tau_mask
         self.latent_type = latent_type
         self.latent_dim = latent_dim
-        self.representation = representation
 
         self.residues = torch.arange(0, self.N_residues, 1, dtype=torch.float32, device=device)[:, None]
 
@@ -74,11 +73,10 @@ class VAE(torch.nn.Module):
         #self.rotation_per_domain = torch.nn.ParameterList([torch.nn.Parameter(data=torch.tensor([1., 0., 0., 0., 1., 0.], dtype=torch.float32, device=self.device).repeat(N_domains, 1), requires_grad=True)
         #                                     for i in range(N_images)])
 
-        self.translation_per_domain = torch.nn.Parameter(data=torch.zeros((N_images, N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True) 
-        if representation == "r6":
-            self.rotation_per_domain = torch.nn.Parameter(data=torch.tensor([1., 0., 0., 0., 1., 0.], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
-        else:
-            self.rotation_per_domain = torch.nn.Parameter(data=torch.tensor([0., 0., 0.], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
+        self.mean_translation_per_domain = torch.nn.Parameter(data=torch.zeros((N_images, N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True)
+        self.std_translation_per_domain = torch.nn.Parameter(data=torch.ones((N_images, N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True) 
+        self.mean_rotation_per_domain = torch.nn.Parameter(data=torch.tensor([1., 0., 0., 0., 1., 0.], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
+        self.std_rotation_per_domain = torch.nn.Parameter(data=torch.tensor([1., 1., 1.], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
 
     def sample_mask(self, N_batch):
         """
@@ -104,26 +102,25 @@ class VAE(torch.nn.Module):
         mask = torch.softmax(log_num / self.tau_mask, dim=-1)
         return mask
 
-
-    def batch_transformations(self, indexes):
-        return self.rotation_per_domain[indexes], self.translation_per_domain[indexes]
-
-
-    def decode(self, latent_variables):
+    def sample_transformations(self, indexes):
         """
-        Decode the latent variables
-        :param latent_variables: torch.tensor(N_batch, latent_dim)
-        :return: torch.tensor(N_batch, N_domains, 4) quaternions, torch.tensor(N_batch, N_domains, 3) translations
-                OR torch.tensor(N_latent_dim, N_domains, 4)
+        Sample transformations from the approximate posterior
         """
-        N_batch = latent_variables.shape[0]
-        transformations = self.decoder(latent_variables)
-        transformations_per_domain = torch.reshape(transformations, (N_batch, self.N_domains, 6))
-        ones = torch.ones(size=(N_batch, self.N_domains, 1), device=self.device)
-        quaternions_per_domain = torch.concat([ones, transformations_per_domain[:, :, 3:]], dim=-1)
-        translations_per_domain = transformations_per_domain[:, :, :3]
+        ## We first sample in R**3
+        noise_rotation = torch.randn(size=(len(indexes), self.N_domains, 3), dtype=torch.float32, device=self.device)*self.std_rotation_per_domain[indexes]
+        #Next we map this sample to so(3) and use Rodrigues formula to map to SO(3).
+        theta = torch.sqrt(torch.sum(noise_rotation**2, dim=-1))
+        noise_rotation_normalized = noise_rotation/theta
+        noise_lie_algebra = noise_rotation_normalized[:, :, 0, None, None]*self.l1 + noise_rotation_normalized[:, :, 1, None, None]*self.l2 + noise_rotation_normalized[:, :, 2, None, None]*self.l3
+        #Noise matrix is tensor (N_batch, N_domains, 3, 3)
+        noise_matrix = torch.eye(3) + torch.sin(theta)*noise_lie_algebra + (1-torch.cos(theta))*torch.einsum("bdij,bdjk->bdik", noise_lie_algebra, noise_lie_algebra)
+        #mean_rotation_matrix is (N_batch, N_domains, 3, 3)
+        mean_rotation_matrix = rotation_6d_to_matrix(self.mean_rotation_per_domain[indexes])
+        sampled_rotation_matrix = torch.einsum("bdij, bdjk->bdik", mean_rotation_matrix, noise_matrix)
 
-        return quaternions_per_domain, translations_per_domain
+        sampled_translation = torch.randn_like(self.mean_translation_per_domain[indexes], dtype=torch.float32, device=self.device)*self.std_translation_per_domain[indexes] + self.mean_translation_per_domain[indexes]
+        return sampled_translation, sampled_rotation_matrix
+
 
 
 
