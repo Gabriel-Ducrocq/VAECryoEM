@@ -130,7 +130,7 @@ class VAE(torch.nn.Module):
         #Noise matrix is tensor (N_batch, N_domains, 3, 3)
         print("THETA", theta.shape)
         print("noise", noise_lie_algebra.shape)
-        noise_matrix = torch.eye(3)[None, None, :, :] + torch.sin(theta[...,None])*noise_lie_algebra + (1-torch.cos(theta[..., None]))*torch.einsum("bdij,bdjk->bdik", noise_lie_algebra, noise_lie_algebra)
+        noise_matrix = torch.eye(3, dtype=torch.float32, device=self.device)[None, None, :, :] + torch.sin(theta[...,None])*noise_lie_algebra + (1-torch.cos(theta[..., None]))*torch.einsum("bdij,bdjk->bdik", noise_lie_algebra, noise_lie_algebra)
         #mean_rotation_matrix is (N_batch, N_domains, 3, 3)
         mean_rotation_matrix = rotation_6d_to_matrix(self.mean_rotation_per_domain[indexes])
         sampled_rotation_matrix = torch.einsum("bdij, bdjk->bdik", mean_rotation_matrix, noise_matrix)
