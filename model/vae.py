@@ -135,7 +135,7 @@ class VAE(torch.nn.Module):
         sampled_rotation_matrix = mean_rotation_matrix
 
         #sampled_translation = torch.randn_like(self.mean_translation_per_domain[indexes], dtype=torch.float32, device=self.device)*self.std_translation_per_domain[indexes] + self.mean_translation_per_domain[indexes]
-        sampled_transition = self.mean_translation_per_domain[indexes]
+        sampled_translation = self.mean_translation_per_domain[indexes]
         return sampled_translation, sampled_rotation_matrix
 
 
