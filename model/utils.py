@@ -11,7 +11,6 @@ from mlp import MLP
 from renderer import Renderer
 from dataset import ImageDataSet
 from Bio.PDB.PDBParser import PDBParser
-from torch_sgld import SGLD
 from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix, rotation_6d_to_matrix, matrix_to_axis_angle
 
 
