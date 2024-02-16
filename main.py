@@ -55,7 +55,7 @@ def train(yaml_setting_path):
             #print(r6_per_domain)
             #print("\n\n")
 
-            rotation_per_residue = model.utils.compute_rotations_per_residue(rotation_per_domain, mask, device, vae.representation)
+            rotation_per_residue = model.utils.compute_rotations_per_residue(rotation_per_domain, mask, device)
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
             deformed_structures = model.utils.deform_structure(atom_positions, translation_per_residue,
                                                                rotation_per_residue)

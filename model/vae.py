@@ -18,6 +18,21 @@ class VAE(torch.nn.Module):
 
         self.residues = torch.arange(0, self.N_residues, 1, dtype=torch.float32, device=device)[:, None]
 
+        self.lie_alg_l1 = torch.zeros((3, 3), device=self.device)
+        self.lie_alg_l1[2, 1] = 1
+        self.lie_alg_l1[1, 2] = -1
+
+        self.lie_alg_l2 = torch.zeros((3, 3), device=self.device)
+        self.lie_alg_l2[0, 2] = 1
+        self.lie_alg_l2[2, 0] = -1
+
+        self.lie_alg_l3 = torch.zeros((3, 3), device=self.device)
+        self.lie_alg_l3[1, 0] = 1
+        self.lie_alg_l3[0, 1] = -1
+
+        self.elu = torch.nn.ELU()
+
+
         if mask_start_values["type"] == "uniform":
             bound_0 = self.N_residues/N_domains
             self.mask_means_mean = torch.nn.Parameter(data=torch.tensor(np.array([bound_0/2 + i*bound_0 for i in range(N_domains)]), dtype=torch.float32, device=device)[None, :],
@@ -107,13 +122,15 @@ class VAE(torch.nn.Module):
         Sample transformations from the approximate posterior
         """
         ## We first sample in R**3
-        noise_rotation = torch.randn(size=(len(indexes), self.N_domains, 3), dtype=torch.float32, device=self.device)*self.std_rotation_per_domain[indexes]
+        noise_rotation = torch.randn(size=(len(indexes), self.N_domains, 3), dtype=torch.float32, device=self.device)*self.elu(self.std_rotation_per_domain[indexes])+1
         #Next we map this sample to so(3) and use Rodrigues formula to map to SO(3).
-        theta = torch.sqrt(torch.sum(noise_rotation**2, dim=-1))
+        theta = torch.sqrt(torch.sum(noise_rotation**2, dim=-1))[:, :, None]
         noise_rotation_normalized = noise_rotation/theta
-        noise_lie_algebra = noise_rotation_normalized[:, :, 0, None, None]*self.l1 + noise_rotation_normalized[:, :, 1, None, None]*self.l2 + noise_rotation_normalized[:, :, 2, None, None]*self.l3
+        noise_lie_algebra = noise_rotation_normalized[:, :, 0, None, None]*self.lie_alg_l1 + noise_rotation_normalized[:, :, 1, None, None]*self.lie_alg_l2 + noise_rotation_normalized[:, :, 2, None, None]*self.lie_alg_l3
         #Noise matrix is tensor (N_batch, N_domains, 3, 3)
-        noise_matrix = torch.eye(3) + torch.sin(theta)*noise_lie_algebra + (1-torch.cos(theta))*torch.einsum("bdij,bdjk->bdik", noise_lie_algebra, noise_lie_algebra)
+        print("THETA", theta.shape)
+        print("noise", noise_lie_algebra.shape)
+        noise_matrix = torch.eye(3)[None, None, :, :] + torch.sin(theta[...,None])*noise_lie_algebra + (1-torch.cos(theta[..., None]))*torch.einsum("bdij,bdjk->bdik", noise_lie_algebra, noise_lie_algebra)
         #mean_rotation_matrix is (N_batch, N_domains, 3, 3)
         mean_rotation_matrix = rotation_6d_to_matrix(self.mean_rotation_per_domain[indexes])
         sampled_rotation_matrix = torch.einsum("bdij, bdjk->bdik", mean_rotation_matrix, noise_matrix)
