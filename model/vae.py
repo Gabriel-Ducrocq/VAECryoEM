@@ -91,7 +91,7 @@ class VAE(torch.nn.Module):
         self.mean_translation_per_domain = torch.nn.Parameter(data=torch.zeros((N_images, N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True)
         self.std_translation_per_domain = torch.nn.Parameter(data=torch.ones((N_images, N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True) 
         self.mean_rotation_per_domain = torch.nn.Parameter(data=torch.tensor([1., 0., 0., 0., 1., 0.], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
-        self.std_rotation_per_domain = torch.nn.Parameter(data=torch.tensor([1., 1., 1.], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
+        self.std_rotation_per_domain = torch.nn.Parameter(data=torch.tensor([0.1, 0.1, 0.1], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
 
     def sample_mask(self, N_batch):
         """
@@ -124,12 +124,10 @@ class VAE(torch.nn.Module):
         ## We first sample in R**3
         noise_rotation = torch.randn(size=(len(indexes), self.N_domains, 3), dtype=torch.float32, device=self.device)*self.elu(self.std_rotation_per_domain[indexes])+1
         #Next we map this sample to so(3) and use Rodrigues formula to map to SO(3).
-        theta = torch.sqrt(torch.sum(noise_rotation**2, dim=-1))[:, :, None]
+        theta = noise_rotation.norm(p=2, dim=-1, keepdim=True)
         noise_rotation_normalized = noise_rotation/theta
         noise_lie_algebra = noise_rotation_normalized[:, :, 0, None, None]*self.lie_alg_l1 + noise_rotation_normalized[:, :, 1, None, None]*self.lie_alg_l2 + noise_rotation_normalized[:, :, 2, None, None]*self.lie_alg_l3
         #Noise matrix is tensor (N_batch, N_domains, 3, 3)
-        print("THETA", theta.shape)
-        print("noise", noise_lie_algebra.shape)
         noise_matrix = torch.eye(3, dtype=torch.float32, device=self.device)[None, None, :, :] + torch.sin(theta[...,None])*noise_lie_algebra + (1-torch.cos(theta[..., None]))*torch.einsum("bdij,bdjk->bdik", noise_lie_algebra, noise_lie_algebra)
         #mean_rotation_matrix is (N_batch, N_domains, 3, 3)
         mean_rotation_matrix = rotation_6d_to_matrix(self.mean_rotation_per_domain[indexes])
