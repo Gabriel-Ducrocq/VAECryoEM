@@ -91,7 +91,7 @@ class VAE(torch.nn.Module):
         self.mean_translation_per_domain = torch.nn.Parameter(data=torch.zeros((N_images, N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True)
         self.std_translation_per_domain = torch.nn.Parameter(data=torch.ones((N_images, N_domains, 3), dtype=torch.float32, device=self.device), requires_grad=True) 
         self.mean_rotation_per_domain = torch.nn.Parameter(data=torch.tensor([1., 0., 0., 0., 1., 0.], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
-        self.std_rotation_per_domain = torch.nn.Parameter(data=torch.tensor([0.05, 0.05, 0.05], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
+        self.std_rotation_per_domain = torch.nn.Parameter(data=torch.tensor([0.005, 0.005, 0.005], dtype=torch.float32, device=self.device).repeat(N_images, N_domains, 1), requires_grad=True)
 
     def sample_mask(self, N_batch):
         """
@@ -122,7 +122,7 @@ class VAE(torch.nn.Module):
         Sample transformations from the approximate posterior
         """
         ## We first sample in R**3
-        noise_rotation = torch.randn(size=(len(indexes), self.N_domains, 3), dtype=torch.float32, device=self.device)*self.elu(self.std_rotation_per_domain[indexes])+1
+        noise_rotation = torch.randn(size=(len(indexes), self.N_domains, 3), dtype=torch.float32, device=self.device)*self.std_rotation_per_domain[indexes]
         #Next we map this sample to so(3) and use Rodrigues formula to map to SO(3).
         theta = noise_rotation.norm(p=2, dim=-1, keepdim=True)
         noise_rotation_normalized = noise_rotation/theta
