@@ -127,8 +127,13 @@ if is_homogeneous:
     structure = parser.get_structure("A", sorted_structures[i])
     backbone = utils.get_backbone(structure) - center_vector
     backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
+
+if not is_homogeneous:
+    n_iter = len(sorted_structures)
+else:
+    n_iter = int(N_images/N_pose_per_structure)
     
-for i in tqdm(range(len(sorted_structures))):
+for i in tqdm(range(n_iter)):
     if not is_homogeneous:
 	   structure = parser.get_structure("A", sorted_structures[i])
 	   backbone = utils.get_backbone(structure) - center_vector
