@@ -62,7 +62,6 @@ renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"
                     amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
                     device=device, use_ctf=image_settings["renderer"]["use_ctf"], std = image_settings["renderer"]["std_volume"] if "std_volume" in image_settings["renderer"] else 1)
 
-
 rendererFourier = RendererFourier(190, device=device)
 
 N_pose_per_structure = experiment_settings["N_pose_per_structure"]
