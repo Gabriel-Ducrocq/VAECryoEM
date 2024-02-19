@@ -145,15 +145,18 @@ for i in tqdm(range(n_iter)):
     all_images.append(batch_images.detach().cpu())
 
 all_images = torch.concat(all_images, dim=0)
+print("Images shape", all_images.shape)
 mean_variance = torch.mean(torch.var(all_images, dim=(-2, -1)))
 print("Mean variance accross images", mean_variance)
 noise_var = 10*mean_variance
 print("Adding Gaussian noise with variance", noise_var)
-torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
+print("Saving non noisy images")
+#torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
 #all_images += torch.randn((N_images, N_pix, N_pix))*torch.sqrt(noise_var)
-
 torch.save(all_images, f"{folder_experiment}ImageDataSet")
+print("Saving images in MRC format")
 mrc.write(f"{folder_experiment}ImageDataSet.mrcs", np.transpose(all_images.detach().cpu().numpy(), axes=(0, 2, 1)), Apix=1.0, is_vol=False)
+print("Saving poses")
 with open(f"{folder_experiment}poses.pkl", "wb") as f:
 	pickle.dump((poses_py, poses_translation_py[:, :2]), f)
 
