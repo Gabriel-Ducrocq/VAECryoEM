@@ -43,7 +43,7 @@ renderer_no_ctf = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_re
                     spherical_aberration=image_settings["renderer"]["spherical_aberration"],
                     accelerating_voltage=image_settings["renderer"]["accelerating_voltage"],
                     amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
-                    device=device, use_ctf=image_settings["renderer"]["use_ctf"])
+                    device=device, use_ctf=False)
 
 
 rendererFourier = RendererFourier(190, device=device)

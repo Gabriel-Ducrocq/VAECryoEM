@@ -20,20 +20,26 @@ parser_arg.add_argument('--folder_experiment', type=str, required=True)
 parser_arg.add_argument('--folder_structures', type=str, required=True)
 parser_arg.add_argument('--pose_rotation', type=str, required=False)
 parser_arg.add_argument('--pose_translation', type=str, required=False)
+parser_arg.add_argument('--homogeneous', type=bool, required=True)
+parser_arg.add_argument('--structure_path', type=str, required=False)
 args = parser_arg.parse_args()
 folder_experiment = args.folder_experiment
 folder_structures = args.folder_structures
 pose_rotation = args.pose_rotation
 poses_translation = args.pose_translation
+is_homogeneous = args.is_homogeneous
+if is_homogeneous:
+    structure_path = args.structure_path
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 #Get all the structure and sort their names to have them in the right order.
-structures = [folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path]
-indexes = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures]
-sorted_structures = [struct for _, struct in sorted(zip(indexes, structures))]
+if not is_homogeneous:
+    structures = [folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path]
+    indexes = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures]
+    sorted_structures = [struct for _, struct in sorted(zip(indexes, structures))]
 
 with open(f"{folder_experiment}/parameters.yaml", "r") as file:
     experiment_settings = yaml.safe_load(file)
@@ -59,7 +65,6 @@ renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"
 
 rendererFourier = RendererFourier(190, device=device)
 
-
 N_pose_per_structure = experiment_settings["N_pose_per_structure"]
 N_pix = image_settings["N_pixels_per_axis"][0]
 noise_var = image_settings["noise_var"]
@@ -68,7 +73,11 @@ parser = PDBParser(PERMISSIVE=0)
 centering_structure = parser.get_structure("A", centering_structure_path)
 
 #Create poses:
-N_images = len(sorted_structures)*N_pose_per_structure
+if not is_homogeneous:
+    N_images = len(sorted_structures)*N_pose_per_structure
+else:
+    N_images = experiment_settings["N_images"]
+
 if not pose_rotation:
     axis_rotation = torch.randn((N_images, 3), device=device)
     norm_axis = torch.sqrt(torch.sum(axis_rotation**2, dim=-1))
@@ -113,11 +122,19 @@ center_vector += 0.5*(image_settings["image_upper_bounds"][0] - image_settings["
 
 all_images = []
 from time import time
+
+if is_homogeneous:
+    structure = parser.get_structure("A", sorted_structures[i])
+    backbone = utils.get_backbone(structure) - center_vector
+    backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
+    
 for i in tqdm(range(len(sorted_structures))):
-	structure = parser.get_structure("A", sorted_structures[i])
-	backbone = utils.get_backbone(structure) - center_vector
-	backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
-	backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
+    if not is_homogeneous:
+	   structure = parser.get_structure("A", sorted_structures[i])
+	   backbone = utils.get_backbone(structure) - center_vector
+	   backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
+	   backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
+
 	batch_images = renderer.compute_x_y_values_all_atoms(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
 	plt.imshow(batch_images[0].detach().cpu().numpy())
 	plt.show()
@@ -129,8 +146,7 @@ print("Mean variance accross images", mean_variance)
 noise_var = 10*mean_variance
 print("Adding Gaussian noise with variance", noise_var)
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
-#all_images += torch.randn((N_images, N_pix, N_pix), device=device)*torch.sqrt(noise_var)
-all_images += torch.randn((N_images, N_pix, N_pix))*torch.sqrt(noise_var)
+#all_images += torch.randn((N_images, N_pix, N_pix))*torch.sqrt(noise_var)
 
 torch.save(all_images, f"{folder_experiment}ImageDataSet")
 mrc.write(f"{folder_experiment}ImageDataSet.mrcs", np.transpose(all_images.detach().cpu().numpy(), axes=(0, 2, 1)), Apix=1.0, is_vol=False)
