@@ -124,7 +124,7 @@ all_images = []
 from time import time
 
 if is_homogeneous:
-    backbone = utils.get_backbone(centering_structure) - center_vector
+    backbone = torch.tensor(utils.get_backbone(centering_structure) - center_vector, dtype=torch.float32, device=device)
     backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
 
 if not is_homogeneous:
