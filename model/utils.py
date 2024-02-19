@@ -119,6 +119,24 @@ def parse_yaml(path):
 
             #optimizer = torch.optim.Adam(list_param)
             optimizer = torch.optim.Adam(list_param)
+
+    elif experiment_settings["optimizer"]["name"] == "sgd":
+        if "learning_rate_mask" not in experiment_settings["optimizer"]:
+            optimizer = torch.optim.SGD(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
+        else:
+            list_param = []
+            list_param.append({"params":vae.mean_translation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
+            list_param.append({"params":vae.std_translation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
+            list_param.append({"params":vae.mean_rotation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
+            list_param.append({"params":vae.std_rotation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
+
+            list_param += [{"params": param, "lr":experiment_settings["optimizer"]["learning_rate_mask"]} for name, param in
+                            vae.named_parameters() if "mask" in name]
+
+            #optimizer = torch.optim.Adam(list_param)
+            optimizer = torch.optim.SGD(list_param)
+
+
     elif experiment_settings["optimizer"]["name"] == "sgld":
         n_batches = N_images/batch_size
         assert n_batches.is_integer(), "The batch size does not divide the number of images"
