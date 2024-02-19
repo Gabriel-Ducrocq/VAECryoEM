@@ -132,13 +132,13 @@ if not is_homogeneous:
     n_iter = len(sorted_structures)
 else:
     n_iter = int(N_images/N_pose_per_structure)
-    
+
 for i in tqdm(range(n_iter)):
     if not is_homogeneous:
-	   structure = parser.get_structure("A", sorted_structures[i])
-	   backbone = utils.get_backbone(structure) - center_vector
-	   backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
-	   backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
+        structure = parser.get_structure("A", sorted_structures[i])
+        backbone = utils.get_backbone(structure) - center_vector
+        backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
+        backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
 
 	batch_images = renderer.compute_x_y_values_all_atoms(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
 	plt.imshow(batch_images[0].detach().cpu().numpy())
