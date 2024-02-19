@@ -124,8 +124,7 @@ all_images = []
 from time import time
 
 if is_homogeneous:
-    structure = parser.get_structure("A", sorted_structures[i])
-    backbone = utils.get_backbone(structure) - center_vector
+    backbone = utils.get_backbone(centering_structure) - center_vector
     backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
 
 if not is_homogeneous:
