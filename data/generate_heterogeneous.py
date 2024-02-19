@@ -27,7 +27,7 @@ folder_experiment = args.folder_experiment
 folder_structures = args.folder_structures
 pose_rotation = args.pose_rotation
 poses_translation = args.pose_translation
-is_homogeneous = args.is_homogeneous
+is_homogeneous = args.homogeneous
 if is_homogeneous:
     structure_path = args.structure_path
 
