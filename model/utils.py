@@ -122,7 +122,7 @@ def parse_yaml(path):
 
     elif experiment_settings["optimizer"]["name"] == "sgd":
         if "learning_rate_mask" not in experiment_settings["optimizer"]:
-            optimizer = torch.optim.SGD(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
+            optimizer = torch.optim.SGD(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"],momentum=0.9, nesterov=True)
         else:
             list_param = []
             list_param.append({"params":vae.mean_translation_per_domain, "lr":experiment_settings["optimizer"]["learning_rate"]})
@@ -134,7 +134,7 @@ def parse_yaml(path):
                             vae.named_parameters() if "mask" in name]
 
             #optimizer = torch.optim.Adam(list_param)
-            optimizer = torch.optim.SGD(list_param)
+            optimizer = torch.optim.SGD(list_param, momentum=0.9, nesterov=True)
 
 
     elif experiment_settings["optimizer"]["name"] == "sgld":
