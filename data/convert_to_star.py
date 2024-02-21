@@ -51,8 +51,8 @@ if poses_pkl:
 	poses_rotations = Rotation.from_matrix(poses_rotations)
 	poses_rotations_euler = poses_rotations.as_euler("ZYZ", degrees=True)
 
-	poses_dict = {"_rlnOriginX":poses_translation[:, 0], "_rlnOriginY":poses_translation[:, 1], "_rlnAngleRot":poses_rotations_euler[:, 0], 
-	"_rlnAngleTilt":poses_rotations_euler[:, 1], "_rlnAnglePsi":poses_rotations_euler[:, 2]}
+	poses_dict = {"rlnOriginX":poses_translation[:, 0], "rlnOriginY":poses_translation[:, 1], "rlnAngleRot":poses_rotations_euler[:, 0], 
+	"rlnAngleTilt":poses_rotations_euler[:, 1], "rlnAnglePsi":poses_rotations_euler[:, 2]}
 
 	particle_dict.update(poses_dict)
 
