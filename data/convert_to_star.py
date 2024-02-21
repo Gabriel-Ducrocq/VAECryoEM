@@ -45,7 +45,7 @@ if poses_pkl:
 	with open(poes_pkl, "rb") as f:
 		poses_rotations, poses_translation = pickle.load(f)
 
-	assert np.sum(poses_translation) = 0, "Translations must be 0 for now !"
+	assert np.sum(poses_translation) == 0, "Translations must be 0 for now !"
 	poses_rotations = poses_rotations.transpose((0, 2, 1))
 	poses_rotations = Rotation.from_matrix(poses_rotations)
 	poses_rotations_euler = poses_rotations.as_euler("ZYZ", degrees=True)
