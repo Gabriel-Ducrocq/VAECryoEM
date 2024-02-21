@@ -2,6 +2,7 @@ import yaml
 import pickle
 import argparse
 import starfile
+import numpy as np
 import pandas as pd
 from scipy.spatial.transform import Rotation
 
