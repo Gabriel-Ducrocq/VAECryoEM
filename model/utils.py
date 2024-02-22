@@ -5,12 +5,14 @@ sys.path.append(path)
 import yaml
 import wandb
 import torch
+import warnings
 import numpy as np
 from vae import VAE
 from mlp import MLP
 from renderer import Renderer
 from dataset import ImageDataSet
 from Bio.PDB.PDBParser import PDBParser
+from biotite.structure.io.pdb import PDBFile
 from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
 
 
@@ -234,6 +236,21 @@ def read_pdb(path):
     structure = parser.get_structure("A", path)
     return structure
 
+def read_pdb(path):
+    """
+    Reads a pdb file in a structure object of biopdb
+    :param path: str, path to the pdb file.
+    :return: a biotite AtomArray or AtomArrayStack
+    """
+    _, extension = os.path.splitext(path)
+    assert extension == "pdb", "The code currently supports only pdb files."
+    f = PDBFile.read(path)
+    atom_array_stack = f.get_structure()
+    if len(atom_array_stack) > 1:
+        warnings.warn("More than one structure in the initial pdb file. Using the first one")
+
+    return atom_array_stack[0]
+
 
 def compute_rotations_per_residue(quaternions, mask, device):
     """
@@ -295,3 +312,6 @@ def deform_structure(atom_positions, translation_per_residue, rotations_per_resi
     new_atom_positions = transformed_atom_positions + torch.repeat_interleave(translation_per_residue,
                                                                                               3, 1)
     return new_atom_positions
+
+
+
