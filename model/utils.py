@@ -9,7 +9,6 @@ import warnings
 import numpy as np
 from vae import VAE
 from mlp import MLP
-from renderer import Renderer
 from dataset import ImageDataSet
 from Bio.PDB.PDBParser import PDBParser
 from biotite.structure.io.pdb import PDBFile

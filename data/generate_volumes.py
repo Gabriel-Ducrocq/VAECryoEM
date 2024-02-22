@@ -9,75 +9,50 @@ import argparse
 import mrcfile
 import numpy as np
 from tqdm import tqdm
+from gmm import Gaussian, EMAN2Grid
 from cryodrgn import mrc
+from polymer import Polymer
 from Bio.PDB import PDBParser
-from renderer import Renderer
+from renderer import structure_to_volume
 from Bio import BiopythonWarning
 
 parser_arg = argparse.ArgumentParser()
-parser_arg.add_argument('--folder_experiment', type=str, required=True)
+parser_arg.add_argument('--apix', type=float, required=True)
+parser_arg.add_argument('--Npix', type=float, required=True)
 parser_arg.add_argument('--folder_volumes', type=str, required=True)
 parser_arg.add_argument('--folder_structures', type=str, required=True)
+parser_arg.add_argument('--centering_structure', type=str, required=True)
 parser_arg.add_argument('--batch_size', type=str, required=True)
 args = parser_arg.parse_args()
-folder_experiment = args.folder_experiment
+apix = args.apix
 folder_volumes = args.folder_volumes
 folder_structures = args.folder_structures
 batch_size = args.batch_size
+centering_structure = args.centering_structure
+Npix = args.Npix
 
 
-with open(f"{folder_experiment}/parameters.yaml", "r") as file:
-    experiment_settings = yaml.safe_load(file)
-
-with open(f"{folder_experiment}/images.yaml", "r") as file:
-    image_settings = yaml.safe_load(file)
-
-pixels_x = np.linspace(image_settings["image_lower_bounds"][0], image_settings["image_upper_bounds"][0],
-                       num=image_settings["N_pixels_per_axis"][0]).reshape(1, -1)
-
-pixels_y = np.linspace(image_settings["image_lower_bounds"][1], image_settings["image_upper_bounds"][1],
-                       num=image_settings["N_pixels_per_axis"][1]).reshape(1, -1)
-
+grid = EMAN2Grid(Npix, apix)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"] * 3,
-                    dfU=image_settings["renderer"]["dfU"], dfV=image_settings["renderer"]["dfV"],
-                    dfang=image_settings["renderer"]["dfang"],
-                    spherical_aberration=image_settings["renderer"]["spherical_aberration"],
-                    accelerating_voltage=image_settings["renderer"]["accelerating_voltage"],
-                    amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
-                    device=device, use_ctf=False)
+centering_structure = Polymer.from_pdb(centering_structure)
+centering_vector = np.mean(centering_structure.coord, axis=0)
+structures_poly = [Polymer.from_pdb(folder_structures + path) for path in os.listdir(folder_structures) if ".pdb" in path]
+structures = [Gaussian(torch.tensor(poly.coord - centering_vector - apix/2), torch.tensor([[2]*centering_vector.shape[0]]), poly.num_electron)
+                for poly in structures_poly]
 
-
-parser = PDBParser(PERMISSIVE=0)
-batch_size = experiment_settings["batch_size"]
-## We don't use any pose since we are using structure that are already posed
-poses = torch.eye(3, 3, dtype=torch.float32, device=device)[None, :, :]
-poses_translation = torch.zeros(3, dtype=torch.float32, device=device)[None,:]
-#Get the structures to convert them into 2d images
-#structures = [folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path]
-structures = [folder_structures + "6zp5.pdb", folder_structures + "6zp7.pdb"]
-#Keep the backbone only. Note that there is NO NEED to recenter, since we centered the structures when generating the
-#posed structures, where the center of mass was computed using ALL the atoms.
-centering_structure_path = experiment_settings["centering_structure_path"]
-centering_structure = parser.get_structure("A", centering_structure_path)
-center_vector = utils.compute_center_of_mass(centering_structure)
-#indexes = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures]
-#print(indexes)
-#all_structures = [utils.get_backbone(utils.center_protein(parser.get_structure("A", struct),center_vector[0]))[None, :, :] for struct in tqdm(structures)]
-all_structures = [utils.get_backbone(utils.center_protein(parser.get_structure("A", structures[0]),center_vector[0]))[None, :, :], utils.get_backbone(utils.center_protein(parser.get_structure("A", structures[1]),center_vector[0]))[None, :, :]]
-all_structures = torch.tensor(np.concatenate(all_structures, axis=0), dtype=torch.float32, device=device)
-N = len(all_structures)
+print("center", np.mean(structures_poly[0].coord - centering_vector, axis=0))
+print("min coord, max_coord", torch.min(grid.line_coords), torch.max(grid.line_coords))
+name = "test"
+N = len(structures)
 for i in tqdm(range(0,N)):
-    batch_structures = all_structures[i]
-    batch_volumes = renderer.compute_x_y_values_all_atoms(batch_structures, poses, poses_translation, volume=True)
-    if i == 0:
-        name = "6zp5.pdb"
-    else:
-        name = "6zp7.pdb"
+    batch_struct = structures[i]
+    batch_volumes = structure_to_volume(torch.tensor(batch_struct.mus)[None, :, :], torch.tensor(batch_struct.sigmas), torch.tensor(batch_struct.amplitudes)[:, None], grid.line_coords)
 
     #mrc.write(f"{folder_volumes}volume_{indexes[i]}.mrc", np.transpose(batch_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
-    mrc.write(f"{folder_volumes}volume_{name}.mrc", np.transpose(batch_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
+    print(batch_volumes.shape)
+    mrc.write(f"{folder_volumes}volume_{name}13.mrc", np.transpose(batch_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
+    #mrc.write(f"{folder_volumes}volume_{name}4.mrc", batch_volumes[0].detach().cpu().numpy(), Apix=1.0, is_vol=True)
 
     print("\n\n\n")
     #with mrcfile.new(f"{folder_volumes}volume_{i}.mrc", overwrite=True) as mrc:

@@ -3,8 +3,7 @@ import dataclasses
 import gemmi
 import numpy as np
 import biotite.structure as struc
-
-from cryostar.utils.pdb_tools import bt_read_pdb
+from biotite.structure.io.pdb import PDBFile
 
 # careful about the order
 AA_ATOMS = ("CA", )
@@ -120,10 +119,11 @@ class Polymer:
 
     @classmethod
     def from_pdb(cls, file_path):
-        atom_arr = bt_read_pdb(file_path)
-        if atom_arr.stack_depth() > 1:
+        f = PDBFile.read(file_path)
+        atom_arr_stack = f.get_structure()
+        if atom_arr_stack.stack_depth() > 1:
             print("PDB file contains more than 1 models, select the 1st model")
-        atom_arr = atom_arr[0]
+        atom_arr = atom_arr_stack[0]
         return Polymer.from_atom_arr(atom_arr)
 
     def to_atom_arr(self):
