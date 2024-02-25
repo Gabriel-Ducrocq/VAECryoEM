@@ -17,7 +17,8 @@ from Bio.PDB import PDBParser
 import matplotlib.pyplot as plt
 from Bio import BiopythonWarning
 from gmm import Gaussian, EMAN2Grid
-from renderer import project, get_posed_structure, apply_ctf
+from convert_to_star import create_star_file
+from renderer import project, get_posed_structure, apply_ctf, apply_ctf_bis
 
 from pytorch3d.transforms import axis_angle_to_matrix
 
@@ -134,8 +135,15 @@ for i in tqdm(range(n_iter)):
     posed_backbones = get_posed_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
     batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1))*sigma_gmm, torch.tensor(poly.num_electron)[:, None], grid)
     batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)]))
+    #batch_ctf_corrupted_images_bis = apply_ctf_bis(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)]))
     all_images.append(batch_ctf_corrupted_images.detach().cpu())
     #plt.imshow(batch_ctf_corrupted_images.detach().numpy()[0])
+    #plt.show()
+    #plt.imshow(batch_ctf_corrupted_images_bis.detach().numpy()[0])
+    #plt.show()
+    #rel_err = torch.abs((batch_ctf_corrupted_images - batch_ctf_corrupted_images_bis)/batch_ctf_corrupted_images)[0]
+    #caped = torch.minimum(rel_err, torch.ones_like(rel_err))
+    #plt.imshow(caped.detach().numpy())
     #plt.show()
 
 
@@ -145,15 +153,15 @@ print("Images shape", all_images.shape)
 mean_variance = torch.mean(torch.var(all_images, dim=(-2, -1)))
 print("Mean variance accross images", mean_variance)
 noise_var = mean_variance/image_settings["SNR"]
+print("Mean variance accross images", mean_variance)
 print("Adding Gaussian noise with variance", noise_var)
-print("Saving non noisy images")
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
 all_images += torch.randn((N_images, Npix, Npix))*torch.sqrt(noise_var)
-print("Saving noisy images")
-torch.save(all_images, f"{folder_experiment}ImageDataSet")
 print("Saving images in MRC format")
-mrc.write(f"{folder_experiment}ImageDataSet.mrcs", np.transpose(all_images.detach().cpu().numpy(), axes=(0, 2, 1)), Apix=1.0, is_vol=False)
-print("Saving poses")
+mrc.write(f"{folder_experiment}particles.mrcs", all_images.detach().cpu().numpy(), Apix=apix, is_vol=False)
+print("Saving poses and ctf in star format.")
+output_path = f"{folder_experiment}particles.star"
+create_star_file(poses.detach().numpy(), poses_translation[:, :2].detach().numpy(), "particles.mrcs", N_images, Npix, apix, image_settings["ctf"], output_path)
 #with open(f"{folder_experiment}poses.pkl", "wb") as f:
 #	pickle.dump((poses_py, poses_translation_py[:, :2]), f)
 
