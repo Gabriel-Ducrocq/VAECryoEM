@@ -162,8 +162,7 @@ mrc.write(f"{folder_experiment}particles.mrcs", all_images.detach().cpu().numpy(
 print("Saving poses and ctf in star format.")
 output_path = f"{folder_experiment}particles.star"
 create_star_file(poses.detach().numpy(), poses_translation[:, :2].detach().numpy(), "particles.mrcs", N_images, Npix, apix, image_settings["ctf"], output_path)
-#with open(f"{folder_experiment}poses.pkl", "wb") as f:
-#	pickle.dump((poses_py, poses_translation_py[:, :2]), f)
+
 
 
 

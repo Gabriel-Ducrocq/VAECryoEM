@@ -51,11 +51,9 @@ def structure_to_volume(Gauss_means, Gauss_sigmas, Gauss_amplitudes, grid):
     N_pix = torch.pow(grid.shape[0], torch.ones(1)*1/3)
     cubic_root_amp = torch.pow(Gauss_amplitudes, torch.ones(1)*1/3)
     sigmas = 2*Gauss_sigmas**2
-    print(Gauss_amplitudes.shape)
     proj_x = torch.exp(-(Gauss_means[:, :, None, 0] - grid[None, None, :])**2/sigmas[None, :, None, 0])*cubic_root_amp[None, :, :]
     proj_y = torch.exp(-(Gauss_means[:, :, None, 1] - grid[None, None, :])**2/sigmas[None, :, None, 0])*cubic_root_amp[None, :, :]
     proj_z = torch.exp(-(Gauss_means[:, :, None, 2] - grid[None, None, :])**2/sigmas[None, :, None, 0])*cubic_root_amp[None, :, :]
-    print("Proj_x shape", proj_x.shape)
     volumes = torch.einsum("b a p, b a q, b a r -> b p q r", proj_x, proj_y, proj_z)    
     #denity = torch.sum(torch.exp(torch.sum(-(Gauss_means[:, :, None, :] - grid[None, None, :, :])**2/sigmas[None, :, None, :], dim=-1))*Gauss_amplitudes[None, :, None, :], dim=1)
     return volumes
