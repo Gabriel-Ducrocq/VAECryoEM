@@ -12,6 +12,9 @@ import numpy as np
 from ctf import CTF
 from vae import VAE
 from mlp import MLP
+from gmm import Gaussian
+from grid import EMAN2Grid
+from polymer import Polymer
 from dataset import ImageDataSet
 from Bio.PDB.PDBParser import PDBParser
 from biotite.structure.io.pdb import PDBFile
@@ -95,28 +98,18 @@ def parse_yaml(path):
         vae = torch.load(experiment_settings["resume_training"]["model"])
         vae.to(device)
 
-    #Note that in this configuration the pixels are not really centered on "round" value, e.g
-    #if we take linsapce(-10, 10, 20) the pixels won't be centered at -9, -8 and so on.
-    #This is no problem as long as we use the same convention for the CTF.
-    pixels_x = np.linspace(image_settings["image_lower_bounds"][0], image_settings["image_upper_bounds"][0],
-                           num=image_settings["N_pixels_per_axis"][0]).reshape(1, -1)
 
-    pixels_y = np.linspace(image_settings["image_lower_bounds"][1], image_settings["image_upper_bounds"][1],
-                           num=image_settings["N_pixels_per_axis"][1]).reshape(1, -1)
-
-    renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"] * 3,
-                        dfU=image_settings["renderer"]["dfU"], dfV=image_settings["renderer"]["dfV"],
-                        dfang=image_settings["renderer"]["dfang"],
-                        spherical_aberration=image_settings["renderer"]["spherical_aberration"],
-                        accelerating_voltage=image_settings["renderer"]["accelerating_voltage"],
-                        amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
-                        device=device, use_ctf=image_settings["renderer"]["use_ctf"], std = image_settings["renderer"]["std_volume"] if "std_volume" in image_settings["renderer"] else 1)
-
-    base_structure = read_pdb(experiment_settings["base_structure_path"])
-    centering_structure = read_pdb(experiment_settings["centering_structure_path"])
+    apix = image_settings["apix"]
+    Npix = image_settings["Npix"]
+    grid = EMAN2Grid(Npix, apix)
+    base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"])
+    centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"])
     center_of_mass = compute_center_of_mass(centering_structure)
-    centered_based_structure = center_protein(base_structure, center_of_mass)
-    atom_positions = torch.tensor(get_backbone(centered_based_structure), dtype=torch.float32, device=device)
+    # Since we operate on an EMAN2 grid, we need to translate the structure by -apix/2 to get it at the center of the image.
+    base_structure.translate_structure(-centering_structure - apix/2)
+    gmm_repr = Gaussian(torch.tensor(base_structure.coord, dtype=torch.float32), 
+                torch.ones((base_structure.shape[0], 1)*image_settings["sigma_gmm"], dtype=torch.float32), 
+                torch.tensor(base_structure.num_electron, dtype=torch.float32)[None, :])      
 
     if experiment_settings["optimizer"]["name"] == "adam":
         if "learning_rate_mask" not in experiment_settings["optimizer"]:
@@ -154,7 +147,7 @@ def parse_yaml(path):
     latent_type = experiment_settings["latent_type"]
     assert latent_type in ["continuous", "categorical"]
 
-    return vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler
+    return vae, ctf_experiment, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler
 
 
 def compute_mask_prior(N_residues, N_domains, device):

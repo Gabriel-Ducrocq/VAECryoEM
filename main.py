@@ -1,5 +1,6 @@
 import torch
 import wandb
+import renderer
 import argparse
 import model.utils
 from time import time
@@ -10,34 +11,36 @@ import matplotlib.pyplot as plt
 
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--experiment_yaml', type=str, required=True)
+parser_arg.add_argument('--debug', type=bool, required=False)
 
 
-def train(yaml_setting_path):
+def train(yaml_setting_path, debug_mode):
     """
     train a VAE network
     :param yaml_setting_path: str, path the yaml containing all the details of the experiment
     :return:
     """
-    vae, renderer, atom_positions, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler = model.utils.parse_yaml(yaml_setting_path)
+    vae, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler = model.utils.parse_yaml(yaml_setting_path)
     if experiment_settings["resume_training"]["model"] != "None":
         name = f"experiment_{experiment_settings['name']}_resume"
     else:
         name = f"experiment_{experiment_settings['name']}"
 
-    wandb.init(
-        # Set the project where this run will be logged
-        project="VAECryoEM",
-        # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
-            name=name,
+    if debug_mode:
+        wandb.init(
+            # Set the project where this run will be logged
+            project="VAECryoEM",
+            # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
+                name=name,
 
 
-        # Track hyperparameters and run metadata
-        config={
-            "learning_rate": experiment_settings["optimizer"]["learning_rate"],
-            "architecture": "VAE",
-            "dataset": experiment_settings["dataset_images_path"],
-            "epochs": experiment_settings["N_epochs"],
-        })
+            # Track hyperparameters and run metadata
+            config={
+                "learning_rate": experiment_settings["optimizer"]["learning_rate"],
+                "architecture": "VAE",
+                "dataset": experiment_settings["dataset_images_path"],
+                "epochs": experiment_settings["N_epochs"],
+            })
 
     #non_noisy_images = torch.load("data/dataset/spike/ImageDataSetNoNoiseNoCTF")
     for epoch in range(N_epochs):
@@ -46,32 +49,25 @@ def train(yaml_setting_path):
                             "kl_prior_mask_proportions":[], "l2_pen":[]}
 
         data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True))
-        for batch_images, batch_poses, batch_poses_translation in data_loader:
+        for indexes, batch_images, batch_poses, batch_poses_translation in data_loader:
             start = time()
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
             batch_poses_translation = batch_poses_translation.to(device)
-            if latent_type == "continuous":
-                latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
-                log_latent_distrib = None
-            else:
-                latent_variables, log_latent_distrib, _ = vae.sample_latent(batch_images)
-                latent_mean = None
-                latent_std = None
+            latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
 
             mask = vae.sample_mask(batch_size)
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
             rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
-            deformed_structures = model.utils.deform_structure(atom_positions, translation_per_residue,
+            predicted_structures = model.utils.deform_structure(gmm_repr.mus, translation_per_residue,
                                                                rotation_per_residue)
 
-            if latent_type == "categorical":
-                deformed_structures = torch.broadcast_to(deformed_structures, (batch_size, experiment_settings["latent_dimension"],
-                                                                           experiment_settings["N_residues"]*3, 3))
+            posed_predicted_structures = renderer.get_posed_structure(predicted_structures, batch_poses, batch_poses_translation)
 
-            batch_predicted_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_poses,
-                                                                batch_poses_translation,latent_type=latent_type)
+            ### I need to get the GAUSS SIGMAS AND GAUSS AMPLITUDES AND GRID SOMEWHERE !!!!!
+            renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
+            batch_predicted_images = renderer.apply_ctf(images, ctf, indexes)
 
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
 
@@ -91,12 +87,15 @@ def train(yaml_setting_path):
         if scheduler:
             scheduler.step()
 
-        model.utils.monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, optimizer)
+        if debug_mode:
+            model.utils.monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, optimizer)
 
 
 if __name__ == '__main__':
     wandb.login()
 
     args = parser_arg.parse_args()
-    train(path, mrcs)
+    path = args.experiment_yaml
+    debug_mode = args.debug
+    train(path, debug_mode)
 

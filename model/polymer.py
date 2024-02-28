@@ -136,3 +136,21 @@ class Polymer:
                 atom_arr.set_annotation(f.name, getattr(self, f.name))
         # atom_arr.atom_name[atom_arr.atom_name == "R"] = "CB"
         return atom_arr
+
+    def center_structure(self, apix):
+        """
+        Centers the structure to -apix/2 so that the structure is centered on images following the EMAN2 grid convention.
+        apix: float
+        """
+        center_of_mass = np.mean(self.coord, axis=0)[None, :]
+        self.coord -= center_of_mass
+        self.coord -= apix/2
+
+    def translate_structure(self, translation_vector):
+        """
+        Translate the structure by the translation vector
+        translation_vector: np.array(None, 3)
+        """
+        self.coord += translation_vector
+
+
