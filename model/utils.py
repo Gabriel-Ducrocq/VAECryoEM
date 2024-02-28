@@ -6,7 +6,10 @@ import yaml
 import wandb
 import torch
 import warnings
+import starfile
+import cryoDRGN
 import numpy as np
+from ctf import CTF
 from vae import VAE
 from mlp import MLP
 from dataset import ImageDataSet
@@ -65,6 +68,8 @@ def parse_yaml(path):
                                                                                      dtype=torch.float32, device=device)
             experiment_settings["mask_prior"][mask_prior_key]["std"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["std"],
                                                                                      dtype=torch.float32, device=device)
+
+
 
     if experiment_settings["latent_type"] == "continuous":
         encoder = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
@@ -126,8 +131,16 @@ def parse_yaml(path):
     else:
         raise Exception("Optimizer must be Adam")
 
-    dataset = ImageDataSet(experiment_settings["dataset_images_path"], experiment_settings["dataset_poses_path"],
-                           experiment_settings["dataset_poses_translation_path"])
+    particles_star = starfile.read(experiment_settings["star_file"])
+    particles_mrcs = experiment_settings["mrcs_file"]
+    with mrcfile.open(particles_mrcs) as f:
+        images = f.data
+
+
+    images = torch.tensor(np.stack(images, axis = 0), dtype=torch.float32)
+    ctf_experiment = CTF.from_starfile(experiment_settings["star_file"])
+
+    dataset = ImageDataSet(images, particles_star["particles"])
 
     scheduler = None
     if "scheduler" in experiment_settings:

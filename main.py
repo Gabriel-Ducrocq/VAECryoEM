@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--experiment_yaml', type=str, required=True)
 
+
 def train(yaml_setting_path):
     """
     train a VAE network
@@ -97,6 +98,5 @@ if __name__ == '__main__':
     wandb.login()
 
     args = parser_arg.parse_args()
-    path = args.experiment_yaml
-    train(path)
+    train(path, mrcs)
 
