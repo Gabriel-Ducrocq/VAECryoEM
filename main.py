@@ -1,9 +1,9 @@
 import torch
 import wandb
-import renderer
 import argparse
 import model.utils
 from time import time
+from model import renderer
 from model.loss import compute_loss
 from torch.utils.data import DataLoader
 
@@ -65,9 +65,8 @@ def train(yaml_setting_path, debug_mode):
 
             posed_predicted_structures = renderer.get_posed_structure(predicted_structures, batch_poses, batch_poses_translation)
 
-            ### I need to get the GAUSS SIGMAS AND GAUSS AMPLITUDES AND GRID SOMEWHERE !!!!!
-            renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
-            batch_predicted_images = renderer.apply_ctf(images, ctf, indexes)
+            predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
+            batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
 
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
 
@@ -76,8 +75,7 @@ def train(yaml_setting_path, debug_mode):
 
             loss = compute_loss(batch_predicted_images, batch_images, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics,
-                                predicted_structures=deformed_structures, type=latent_type,
-                                log_latent_distribution=log_latent_distrib)
+                                predicted_structures=deformed_structures, type=latent_type)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()

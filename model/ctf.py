@@ -24,37 +24,44 @@ class CTF(torch.nn.Module):
 		"""
 		super().__init__()
 		if phaseShift is None:
-			phaseShift = torch.zeros_like(defocusU)
+			phaseShift = torch.zeros_like(defocusU, dtype=torch.float32)
+		else:
+			phaseShift = torch.tensor(phaseShift, dtype=torch.float32)
 
 		if scalefactor is None:
-			scalefactor = torch.ones_like(defocusU)
+			scalefactor = torch.ones_like(defocusU, dtype=torch.float32)
+		else:
+			scalefactor = torch.tensor(scalefactor, dtype=torch.float32)
 
 		if bfactor is None:
-			bfactor = torch.zeros_like(defocusU)
+			bfactor = torch.zeros_like(defocusU, dtype=torch.float32)
+		else:
+			bfactor = torch.tensor(bfactor, dtype=torch.float32)
 
 
 		saved_args = locals()
 		assert len(set({len(val) for arg_name,val in saved_args.items() if arg_name not in ["self", "__class__", "side_shape", "apix"]})) == 1, "CTF values do not have the same shape."
 
-		self.register_buffer("Npix", torch.ones(1)*side_shape)
-		self.register_buffer("Apix", torch.ones(1)*apix)
-		self.register_buffer("dfU", defocusU[:, None])
-		self.register_buffer("dfV", defocusV[:, None])
-		self.register_buffer("dfang", defocusAngle[:, None])
-		self.register_buffer("volt", voltage[:, None])
-		self.register_buffer("cs", sphericalAberration[:, None])
-		self.register_buffer("w", amplitudeContrastRatio[:, None])
+		self.register_buffer("Npix", torch.ones((1, ))*side_shape)
+		self.register_buffer("Apix", torch.ones((1, ))*apix)
+		self.register_buffer("dfU", torch.tensor(defocusU[:, None], dtype=torch.float32))
+		self.register_buffer("dfV", torch.tensor(defocusV[:, None], dtype=torch.float32))
+		self.register_buffer("dfang", torch.tensor(defocusAngle[:, None], dtype=torch.float32))
+		self.register_buffer("volt", torch.tensor(voltage[:, None], dtype=torch.float32))
+		self.register_buffer("cs", torch.tensor(sphericalAberration[:, None], dtype=torch.float32))
+		self.register_buffer("w", torch.tensor(amplitudeContrastRatio[:, None], dtype=torch.float32))
 		self.register_buffer("phaseShift", phaseShift[:, None])
 		self.register_buffer("scalefactor", scalefactor[:, None])
 		self.register_buffer("bfactor", bfactor[:, None])
 		self.npix = side_shape
+		self.apix = apix
 		#In this stack, freqs[0, :] corresponds to constant x values, freqs[:, 0] corresponds to contant y values.
 		freqs = (
 		    torch.stack(
-		        self.meshgrid_2d(-0.5, 0.5, int(self.Npix[0].detach().numpy()), endpoint=False),
+		        self.meshgrid_2d(-0.5, 0.5, int(self.npix), endpoint=False),
 		        -1,
 		    )
-		    / self.Apix[0])
+		    / self.apix)
 
 		self.freqs = freqs.reshape(-1, 2)
 		#In freqs, x is the first coordinate, y is the second and we are in x major
@@ -63,17 +70,17 @@ class CTF(torch.nn.Module):
 
 	@classmethod
 	def from_starfile(cls, file, **kwargs):
-		ctf_df = starfile.read(file)
+		df = starfile.read(file)
 
 		overrides = {}
 
 		#First we find the values of the CTF im the optics block of the star file.
 		try:
-			side_n_pix = int(ctf_df["optics"].loc[0, "rlnImageSize"])
+			side_n_pix = int(df["optics"].loc[0, "rlnImageSize"])
 			apix = df["optics"].loc[0, "rlnImagePixelSize"]
 		except Exception:
 		    assert "side_shape" in kwargs and "apix" in kwargs, "side_shape, apix must be provided."
-		    side_shape = kwargs["side_shape"]
+		    side_n_pix = kwargs["side_shape"]
 		    apix = kwargs["apix"]
 
 		if "optics" in df:
@@ -91,7 +98,7 @@ class CTF(torch.nn.Module):
 
 		num = len(df)
 		ctf_params = np.zeros((num, 9))
-		ctf_params[:, 0] = side_shape
+		ctf_params[:, 0] = side_n_pix
 		ctf_params[:, 1] = apix
 		for i, header in enumerate([
 		"rlnDefocusU",
@@ -107,10 +114,7 @@ class CTF(torch.nn.Module):
 			else:
 				ctf_params[:, i + 2] = df[header].values if header in df else None
 
-		side_shape = [side_n_pix]*num
-		apix = [apix]*num
-
-		return cls(side_shape, apix, *ctf_params.T)
+		return cls(side_n_pix, apix, *ctf_params.T)
 
 	def meshgrid_2d(self, lo, hi, n, endpoint=False):
 		"""

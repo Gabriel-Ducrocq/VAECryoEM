@@ -5,15 +5,14 @@ sys.path.append(path)
 import yaml
 import wandb
 import torch
+import mrcfile
 import warnings
 import starfile
-import cryoDRGN
 import numpy as np
 from ctf import CTF
 from vae import VAE
 from mlp import MLP
-from gmm import Gaussian
-from grid import EMAN2Grid
+from gmm import Gaussian, EMAN2Grid
 from polymer import Polymer
 from dataset import ImageDataSet
 from Bio.PDB.PDBParser import PDBParser
@@ -27,8 +26,7 @@ def compute_center_of_mass(structure):
     :param structure: PDB structure
     :return: np.array(1,3)
     """
-    all_coords = np.concatenate([atom.coord[:, None] for atom in structure.get_atoms()], axis=1)
-    center_mass = np.mean(all_coords, axis=1)
+    center_mass = np.mean(structure.coord, axis=0)
     return center_mass[None, :]
 
 def center_protein(structure, center_vector):
@@ -62,20 +60,12 @@ def parse_yaml(path):
     else:
         device = "cpu"
 
-    if experiment_settings["mask_prior"]["type"] == "uniform":
-        experiment_settings["mask_prior"] = compute_mask_prior(experiment_settings["N_residues"],
-                                                               experiment_settings["N_domains"], device)
-    else:
-        for mask_prior_key in experiment_settings["mask_prior"].keys():
-            experiment_settings["mask_prior"][mask_prior_key]["mean"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["mean"],
-                                                                                     dtype=torch.float32, device=device)
-            experiment_settings["mask_prior"][mask_prior_key]["std"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["std"],
-                                                                                     dtype=torch.float32, device=device)
 
-
+    apix = image_settings["apix"]
+    Npix = image_settings["Npix"]
 
     if experiment_settings["latent_type"] == "continuous":
-        encoder = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
+        encoder = MLP(Npix**2,
                       experiment_settings["latent_dimension"] * 2,
                       experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
                       latent_type="continuous")
@@ -99,17 +89,26 @@ def parse_yaml(path):
         vae.to(device)
 
 
-    apix = image_settings["apix"]
-    Npix = image_settings["Npix"]
     grid = EMAN2Grid(Npix, apix)
     base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"])
     centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"])
     center_of_mass = compute_center_of_mass(centering_structure)
     # Since we operate on an EMAN2 grid, we need to translate the structure by -apix/2 to get it at the center of the image.
-    base_structure.translate_structure(-centering_structure - apix/2)
+    base_structure.translate_structure(-center_of_mass - apix/2)
     gmm_repr = Gaussian(torch.tensor(base_structure.coord, dtype=torch.float32), 
-                torch.ones((base_structure.shape[0], 1)*image_settings["sigma_gmm"], dtype=torch.float32), 
-                torch.tensor(base_structure.num_electron, dtype=torch.float32)[None, :])      
+                torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32)*image_settings["sigma_gmm"], 
+                torch.tensor(base_structure.num_electron, dtype=torch.float32)[:, None])  
+
+
+    if experiment_settings["mask_prior"]["type"] == "uniform":
+        experiment_settings["mask_prior"] = compute_mask_prior(experiment_settings["N_residues"],
+                                                               experiment_settings["N_domains"], device)
+    else:
+        for mask_prior_key in experiment_settings["mask_prior"].keys():
+            experiment_settings["mask_prior"][mask_prior_key]["mean"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["mean"],
+                                                                                     dtype=torch.float32, device=device)
+            experiment_settings["mask_prior"][mask_prior_key]["std"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["std"],
+                                                                                     dtype=torch.float32, device=device)    
 
     if experiment_settings["optimizer"]["name"] == "adam":
         if "learning_rate_mask" not in experiment_settings["optimizer"]:
@@ -123,6 +122,7 @@ def parse_yaml(path):
             optimizer = torch.optim.Adam(list_param)
     else:
         raise Exception("Optimizer must be Adam")
+
 
     particles_star = starfile.read(experiment_settings["star_file"])
     particles_mrcs = experiment_settings["mrcs_file"]
@@ -301,7 +301,7 @@ def deform_structure(atom_positions, translation_per_residue, rotations_per_resi
     """
     Note that the reference frame absolutely needs to be the SAME for all the residues (placed in the same spot),
      otherwise the rotation will NOT be approximately rigid !!!
-    :param positions: torch.tensor(N_residues*3, 3)
+    :param positions: torch.tensor(N_residues, 3)
     :param translation_vectors: translations vectors:
             tensor (Batch_size, N_residues, 3)
     :param rotations_per_residue: tensor (N_batch, N_residues, 3, 3) of rotation matrices per residue
@@ -311,11 +311,9 @@ def deform_structure(atom_positions, translation_per_residue, rotations_per_resi
     ## We displace the structure, using an interleave because there are 3 consecutive atoms belonging to one
     ## residue.
     ##We compute the rotated residues, where this axis of rotation is at the origin.
-    rotation_per_atom = torch.repeat_interleave(rotations_per_residue, 3, dim=1)
-    transformed_atom_positions = torch.einsum("lbjk, bk->lbj", rotation_per_atom, atom_positions)
+    transformed_atom_positions = torch.einsum("lbjk, bk->lbj", rotations_per_residue, atom_positions)
     #transformed_atom_positions = torch.matmul(rotation_per_atom, atom_positions[None, :, :, None])
-    new_atom_positions = transformed_atom_positions + torch.repeat_interleave(translation_per_residue,
-                                                                                              3, 1)
+    new_atom_positions = transformed_atom_positions + translation_per_residue
     return new_atom_positions
 
 

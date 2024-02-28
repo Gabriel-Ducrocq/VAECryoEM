@@ -18,7 +18,6 @@ def project(Gauss_mean, Gauss_sigmas, Gauss_amplitudes, grid):
     sigmas = 2*Gauss_sigmas**2
     sqrt_amp = torch.sqrt(Gauss_amplitudes)
     #Both proj_x and proj_y are (batch_size, N_atoms, N_pix)
-
     proj_x = torch.exp(-(Gauss_mean[:, :, None, 0] - grid.line_coords[None, None, :])**2/sigmas[None, :, None,  0])*sqrt_amp[None, :, :]
     proj_y = torch.exp(-(Gauss_mean[:, :, None, 1] - grid.line_coords[None, None, :])**2/sigmas[None, :, None, 0])*sqrt_amp[None, :, :]
     images = torch.einsum("b a p, b a q -> b q p", proj_x, proj_y)
