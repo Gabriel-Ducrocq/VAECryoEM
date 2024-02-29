@@ -24,8 +24,8 @@ class ImageDataSet(Dataset):
         self.poses = poses
         self.poses_translation = poses_translation
 
-    def standardize(self, images):
-        return (images - self.avg_image)/self.std_image
+    def standardize(self, images, device="cpu"):
+        return (images - self.avg_image.to(device))/self.std_image.to(device)
 
 
     def __len__(self):

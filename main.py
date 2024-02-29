@@ -69,7 +69,7 @@ def train(yaml_setting_path, debug_mode):
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
-            batch_predicted_images = dataset.standardize(batch_predicted_images)
+            batch_predicted_images = dataset.standardize(batch_predicted_images, device=device)
 
 
             if not experiment_settings["clashing_loss"]:
