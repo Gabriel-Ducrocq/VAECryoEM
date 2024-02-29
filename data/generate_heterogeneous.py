@@ -162,7 +162,7 @@ print("Saving images in MRC format")
 mrc.write(f"{folder_experiment}particles.mrcs", all_images.detach().cpu().numpy(), Apix=apix, is_vol=False)
 print("Saving poses and ctf in star format.")
 output_path = f"{folder_experiment}particles.star"
-create_star_file(poses.detach().cpu().numpy(), poses_translation[:, :2].detach().numpy(), "particles.mrcs", N_images, Npix, apix, image_settings["ctf"], output_path)
+create_star_file(poses.detach().cpu().numpy(), poses_translation[:, :2].detach().cpu().numpy(), "particles.mrcs", N_images, Npix, apix, image_settings["ctf"], output_path)
 
 
 
