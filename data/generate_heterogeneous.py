@@ -69,9 +69,8 @@ headers = ["dfU", "dfV", "dfang", "accelerating_voltage", "spherical_aberration"
 ctf_vals = [torch.tensor([ctf_yaml[header]]*N_images) for header in headers]
 ctf_vals = [Npix]*N_images + [apix]*N_images + ctf_vals
 
-
 print("CTF VALS", ctf_vals)
-ctf = CTF(*ctf_vals, phaseShift=None)
+ctf = CTF(*ctf_vals)
 
 #Creating the grid:
 grid = EMAN2Grid(Npix, apix)
