@@ -66,10 +66,10 @@ centering_structure = Polymer.from_pdb(centering_structure_path)
 
 #Creating the CTF:
 headers = ["dfU", "dfV", "dfang", "accelerating_voltage", "spherical_aberration", "amplitude_contrast_ratio"]
-ctf_vals = [torch.tensor([ctf_yaml[header]]*N_images) for header in headers]
-ctf_vals = [Npix]*N_images + [apix]*N_images + ctf_vals
+ctf_vals = [[ctf_yaml[header]]*N_images for header in headers]
+ctf_vals = np.array([Npix]*N_images + [apix]*N_images + ctf_vals)
 
-print("CTF VALS", ctf_vals)
+print("CTF VALS", ctf_vals.shape)
 ctf = CTF(*ctf_vals)
 
 #Creating the grid:
