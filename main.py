@@ -38,7 +38,7 @@ def train(yaml_setting_path, debug_mode):
             config={
                 "learning_rate": experiment_settings["optimizer"]["learning_rate"],
                 "architecture": "VAE",
-                "dataset": experiment_settings["dataset_images_path"],
+                "dataset": experiment_settings["star_file"],
                 "epochs": experiment_settings["N_epochs"],
             })
 
