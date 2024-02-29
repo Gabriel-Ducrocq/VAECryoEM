@@ -73,7 +73,7 @@ print("CTF VALS", ctf_vals.shape)
 ctf = CTF(*ctf_vals)
 
 #Creating the grid:
-grid = EMAN2Grid(Npix, apix)
+grid = EMAN2Grid(Npix, apix, device)
 
 #Create poses:
 if not is_homogeneous:

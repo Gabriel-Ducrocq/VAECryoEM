@@ -17,7 +17,7 @@ class BaseGrid(torch.nn.Module):
 	"""
 	Grid spanning origin, to origin + (side_shape - 1) * voxel_size
 	"""
-	def __init__(self, side_n_pixels, voxel_size, origin=None):
+	def __init__(self, side_n_pixels, voxel_size, origin=None, device="cpu"):
 		super().__init__()
 		self.side_n_pixels = side_n_pixels
 		self.voxel_size = voxel_size
@@ -26,7 +26,7 @@ class BaseGrid(torch.nn.Module):
 
 		self.origin = origin
 
-		line_coords = torch.linspace(origin, (side_n_pixels - 1) * voxel_size + origin, side_n_pixels)
+		line_coords = torch.linspace(origin, (side_n_pixels - 1) * voxel_size + origin, side_n_pixels, device=device)
 		self.register_buffer("line_coords", line_coords)
 		[xx, yy] = torch.meshgrid([self.line_coords, self.line_coords], indexing="ij")
 		plane_coords = torch.stack([xx, yy], dim=-1).reshape(-1, 2)
@@ -46,9 +46,9 @@ class EMAN2Grid(BaseGrid):
 
     """
 
-    def __init__(self, side_shape, voxel_size):
+    def __init__(self, side_shape, voxel_size, device="cpu"):
         origin = -side_shape // 2 * voxel_size
-        super().__init__(side_n_pixels=int(side_shape), voxel_size=voxel_size, origin=origin)
+        super().__init__(side_n_pixels=int(side_shape), voxel_size=voxel_size, origin=origin, device=device)
 
 
 
