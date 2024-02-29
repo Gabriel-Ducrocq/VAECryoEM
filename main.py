@@ -54,6 +54,7 @@ def train(yaml_setting_path, debug_mode):
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
             batch_poses_translation = batch_poses_translation.to(device)
+            indexes = indexes.to(device)
             latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
 
             mask = vae.sample_mask(batch_size)

@@ -9,7 +9,7 @@ class CTF(torch.nn.Module):
 	Class describing the ctf, built from starfile
 	"""
 	def __init__(self, side_shape, apix, defocusU, defocusV, defocusAngle, voltage, sphericalAberration, amplitudeContrastRatio, phaseShift=None ,scalefactor = None,
-		bfactor= None):
+		bfactor= None, device="cpu"):
 		"""
 		device: str, device to use.
 		side shape: number of pixels on a side.
@@ -24,33 +24,33 @@ class CTF(torch.nn.Module):
 		"""
 		super().__init__()
 		if phaseShift is None:
-			phaseShift = torch.zeros(defocusU.shape, dtype=torch.float32)
+			phaseShift = torch.zeros(defocusU.shape, dtype=torch.float32, device=device)
 		else:
-			phaseShift = torch.tensor(phaseShift, dtype=torch.float32)
+			phaseShift = torch.tensor(phaseShift, dtype=torch.float32, device=device)
 
 		if scalefactor is None:
-			scalefactor = torch.ones(defocusU.shape, dtype=torch.float32)
+			scalefactor = torch.ones(defocusU.shape, dtype=torch.float32, device=device)
 		else:
-			scalefactor = torch.tensor(scalefactor, dtype=torch.float32)
+			scalefactor = torch.tensor(scalefactor, dtype=torch.float32, device=device)
 
 		if bfactor is None:
-			bfactor = torch.zeros(defocusU.shape, dtype=torch.float32)
+			bfactor = torch.zeros(defocusU.shape, dtype=torch.float32, device=device)
 		else:
-			bfactor = torch.tensor(bfactor, dtype=torch.float32)
+			bfactor = torch.tensor(bfactor, dtype=torch.float32, device=device)
 
 
 		saved_args = locals()
 		assert len(set({len(val) for arg_name,val in saved_args.items() if arg_name not in ["self", "__class__", "side_shape", "apix"]})) == 1, "CTF values do not have the same shape."
 		assert len(set(side_shape)) == 1, "All images must have the same number of pixels"
 		assert len(set(apix)) == 1, "All images must have the same apix"
-		self.register_buffer("Npix", torch.tensor(side_shape, dtype=torch.float32)[:, None])
-		self.register_buffer("Apix", torch.tensor(apix, dtype=torch.float32)[:, None])
-		self.register_buffer("dfU", torch.tensor(defocusU[:, None], dtype=torch.float32))
-		self.register_buffer("dfV", torch.tensor(defocusV[:, None], dtype=torch.float32))
-		self.register_buffer("dfang", torch.tensor(defocusAngle[:, None], dtype=torch.float32))
-		self.register_buffer("volt", torch.tensor(voltage[:, None], dtype=torch.float32))
-		self.register_buffer("cs", torch.tensor(sphericalAberration[:, None], dtype=torch.float32))
-		self.register_buffer("w", torch.tensor(amplitudeContrastRatio[:, None], dtype=torch.float32))
+		self.register_buffer("Npix", torch.tensor(side_shape, dtype=torch.float32, device=device)[:, None])
+		self.register_buffer("Apix", torch.tensor(apix, dtype=torch.float32, device=device)[:, None])
+		self.register_buffer("dfU", torch.tensor(defocusU[:, None], dtype=torch.float32, device=device))
+		self.register_buffer("dfV", torch.tensor(defocusV[:, None], dtype=torch.float32, device=device))
+		self.register_buffer("dfang", torch.tensor(defocusAngle[:, None], dtype=torch.float32, device=device))
+		self.register_buffer("volt", torch.tensor(voltage[:, None], dtype=torch.float32, device=device))
+		self.register_buffer("cs", torch.tensor(sphericalAberration[:, None], dtype=torch.float32, device=device))
+		self.register_buffer("w", torch.tensor(amplitudeContrastRatio[:, None], dtype=torch.float32, device=device))
 		self.register_buffer("phaseShift", phaseShift[:, None])
 		self.register_buffer("scalefactor", scalefactor[:, None])
 		self.register_buffer("bfactor", bfactor[:, None])
