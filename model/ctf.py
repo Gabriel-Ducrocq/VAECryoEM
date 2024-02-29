@@ -24,26 +24,27 @@ class CTF(torch.nn.Module):
 		"""
 		super().__init__()
 		if phaseShift is None:
-			phaseShift = torch.zeros_like(defocusU, dtype=torch.float32)
+			phaseShift = torch.zeros(defocusU.shape, dtype=torch.float32)
 		else:
 			phaseShift = torch.tensor(phaseShift, dtype=torch.float32)
 
 		if scalefactor is None:
-			scalefactor = torch.ones_like(defocusU, dtype=torch.float32)
+			scalefactor = torch.ones(defocusU.shape, dtype=torch.float32)
 		else:
 			scalefactor = torch.tensor(scalefactor, dtype=torch.float32)
 
 		if bfactor is None:
-			bfactor = torch.zeros_like(defocusU, dtype=torch.float32)
+			bfactor = torch.zeros(defocusU.shape, dtype=torch.float32)
 		else:
 			bfactor = torch.tensor(bfactor, dtype=torch.float32)
 
 
 		saved_args = locals()
 		assert len(set({len(val) for arg_name,val in saved_args.items() if arg_name not in ["self", "__class__", "side_shape", "apix"]})) == 1, "CTF values do not have the same shape."
-
-		self.register_buffer("Npix", torch.ones((1, ))*side_shape)
-		self.register_buffer("Apix", torch.ones((1, ))*apix)
+		assert len(set(side_shape)) == 1, "All images must have the same number of pixels"
+		assert len(set(apix)) == 1, "All images must have the same apix"
+		self.register_buffer("Npix", torch.tensor(side_shape, dtype=torch.float32)[:, None])
+		self.register_buffer("Apix", torch.tensor(apix, dtype=torch.float32)[:, None])
 		self.register_buffer("dfU", torch.tensor(defocusU[:, None], dtype=torch.float32))
 		self.register_buffer("dfV", torch.tensor(defocusV[:, None], dtype=torch.float32))
 		self.register_buffer("dfang", torch.tensor(defocusAngle[:, None], dtype=torch.float32))
@@ -53,12 +54,12 @@ class CTF(torch.nn.Module):
 		self.register_buffer("phaseShift", phaseShift[:, None])
 		self.register_buffer("scalefactor", scalefactor[:, None])
 		self.register_buffer("bfactor", bfactor[:, None])
-		self.npix = side_shape
-		self.apix = apix
+		self.npix = int(side_shape[0])
+		self.apix = apix[0]
 		#In this stack, freqs[0, :] corresponds to constant x values, freqs[:, 0] corresponds to contant y values.
 		freqs = (
 		    torch.stack(
-		        self.meshgrid_2d(-0.5, 0.5, int(self.npix), endpoint=False),
+		        self.meshgrid_2d(-0.5, 0.5, self.npix, endpoint=False),
 		        -1,
 		    )
 		    / self.apix)
@@ -114,7 +115,7 @@ class CTF(torch.nn.Module):
 			else:
 				ctf_params[:, i + 2] = df[header].values if header in df else None
 
-		return cls(side_n_pix, apix, *ctf_params.T)
+		return cls(*ctf_params[:, :8].T, None)
 
 	def meshgrid_2d(self, lo, hi, n, endpoint=False):
 		"""
@@ -153,7 +154,6 @@ class CTF(torch.nn.Module):
 		phase_shift = self.phaseShift[indexes]
 		bfactor = self.bfactor[indexes]
 		scalefactor = self.scalefactor[indexes]
-
 
 		volt = volt * 1000
 		cs = cs * 10 ** 7

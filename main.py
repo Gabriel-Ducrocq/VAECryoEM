@@ -67,8 +67,9 @@ def train(yaml_setting_path, debug_mode):
 
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
-
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
+            batch_predicted_images = dataset.standardize(batch_predicted_images)
+
 
             if not experiment_settings["clashing_loss"]:
                 deformed_structures = None
@@ -76,11 +77,13 @@ def train(yaml_setting_path, debug_mode):
             loss = compute_loss(batch_predicted_images, batch_images, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics,
                                 predicted_structures=deformed_structures, type=latent_type)
+            print("Loss:", loss)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
             end = time()
             print("Iteration duration:", end-start)
+            break
 
         if scheduler:
             scheduler.step()
