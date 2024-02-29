@@ -84,7 +84,6 @@ def train(yaml_setting_path, debug_mode):
             optimizer.zero_grad()
             end = time()
             print("Iteration duration:", end-start)
-            break
 
         if scheduler:
             scheduler.step()
