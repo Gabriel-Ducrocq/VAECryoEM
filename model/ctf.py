@@ -65,7 +65,7 @@ class CTF(torch.nn.Module):
 		    / self.apix)
 
 		self.freqs = freqs.reshape(-1, 2)
-		self.freqs.to(device)
+		self.freqs = self.freqs.to(device)
 		#In freqs, x is the first coordinate, y is the second and we are in x major
 		#ctf = self.compute_ctf(freqs, self.dfU, self.dfV, self.dfang, self.volt, self.cs, self.w, self.phaseShift, None, None)
 
