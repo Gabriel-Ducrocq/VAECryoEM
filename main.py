@@ -61,7 +61,6 @@ def train(yaml_setting_path, debug_mode):
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
             rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
-            print("NUMBER OF RES", gmm_repr.mus.shape)
             predicted_structures = model.utils.deform_structure(gmm_repr.mus, translation_per_residue,
                                                                rotation_per_residue)
 
