@@ -167,7 +167,8 @@ class CTF(torch.nn.Module):
 		#Since we take arctan between y and x and not x and y, we are still in x ordering but x is the second coordinate now !
 		ang = torch.arctan2(y, x)
 		s2 = x ** 2 + y ** 2
-
+		print(dfu + dfv + (dfu - dfv))
+		print(torch.cos(2 * (ang - dfang)))
 		df = 0.5 * (dfu + dfv + (dfu - dfv) * torch.cos(2 * (ang - dfang)))
 		gamma = (
 		        2 * torch.pi * (-0.5 * df * lam * s2 + 0.25 * cs * lam ** 3 * s2 ** 2)
@@ -184,68 +185,6 @@ class CTF(torch.nn.Module):
 
 		#But in this project, the images are (y_coords, x_coords), see renderer.project so we transpose:
 		ctf = ctf.reshape((len(indexes), self.npix, self.npix))
-		return torch.transpose(ctf, dim0=-2, dim1=-1)
-
-	def compute_ctf_inefficient(self,
-		freqs: torch.Tensor,
-		dfu: torch.Tensor,
-		dfv: torch.Tensor,
-		dfang: torch.Tensor,
-		volt: torch.Tensor,
-		cs: torch.Tensor,
-		w: torch.Tensor,
-		phase_shift = None,
-		scalefactor = None,
-		bfactor= None,
-		) -> torch.Tensor:
-		"""
-
-		This code is based on the cryoDRGN code.
-		Compute the 2D CTF
-
-		Input:
-		    freqs: Nx2 array of 2D spatial frequencies
-		    dfu: DefocusU (Angstrom)
-		    dfv: DefocusV (Angstrom)
-		    dfang: DefocusAngle (degrees)
-		    volt: accelerating voltage (kV)
-		    cs: spherical aberration (mm)
-		    w: amplitude contrast ratio
-		    phase_shift: degrees
-		    scalefactor : scale factor
-		    bfactor: envelope fcn B-factor (Angstrom^2)
-		"""
-		# convert units
-		volt = volt * 1000
-		cs = cs * 10 ** 7
-		dfang = dfang * np.pi / 180
-		if phase_shift is None:
-		    phase_shift = torch.tensor(0)
-
-		phase_shift = phase_shift * np.pi / 180
-
-		# lam = sqrt(h^2/(2*m*e*Vr)); Vr = V + (e/(2*m*c^2))*V^2
-		lam = 12.2639 / torch.sqrt(volt + 0.97845e-6 * volt ** 2)
-		x = freqs[..., 0]
-		y = freqs[..., 1]
-		#Since we take arctan between y and x and not x and y, we are still in x ordering but x is the second coordinate now !
-		ang = torch.arctan2(y, x)
-		s2 = x ** 2 + y ** 2
-
-		df = 0.5 * (dfu + dfv + (dfu - dfv) * torch.cos(2 * (ang - dfang)))
-		gamma = (
-		        2 * torch.pi * (-0.5 * df * lam * s2 + 0.25 * cs * lam ** 3 * s2 ** 2)
-		        - phase_shift
-		)
-		ctf = torch.sqrt(1 - w ** 2) * torch.sin(gamma) - w * torch.cos(gamma)
-		if scalefactor is not None:
-		    ctf *= scalefactor
-		if bfactor is not None:
-		    ctf *= torch.exp(-bfactor / 4 * s2)
-
-
-		#But in this project, the images are (y_coords, x_coords), see renderer.project so we transpose:
-		ctf = ctf.reshape((N_images, Npix, Npix))
 		return torch.transpose(ctf, dim0=-2, dim1=-1)
   
 
