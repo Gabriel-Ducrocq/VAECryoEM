@@ -26,7 +26,7 @@ def train(yaml_setting_path, debug_mode):
     else:
         name = f"experiment_{experiment_settings['name']}"
 
-    if debug_mode:
+    if not debug_mode:
         wandb.init(
             # Set the project where this run will be logged
             project="VAECryoEM",
@@ -88,7 +88,7 @@ def train(yaml_setting_path, debug_mode):
         if scheduler:
             scheduler.step()
 
-        if debug_mode:
+        if not debug_mode:
             model.utils.monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, optimizer)
 
 
