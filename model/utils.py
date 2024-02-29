@@ -89,7 +89,7 @@ def parse_yaml(path):
         vae.to(device)
 
 
-    grid = EMAN2Grid(Npix, apix)
+    grid = EMAN2Grid(Npix, apix, device=device)
     base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"])
     centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"])
     center_of_mass = compute_center_of_mass(centering_structure)
