@@ -6,7 +6,6 @@ from collections import OrderedDict
 from typing import Any, Optional, Tuple, Union
 import numpy as np
 import torch
-from cryodrgn.source import ImageSource
 
 logger = logging.getLogger(__name__)
 
@@ -242,7 +241,7 @@ class MRCFile:
     @staticmethod
     def write(
         filename: str,
-        array: Union[np.ndarray, torch.Tensor, ImageSource],
+        array: Union[np.ndarray, torch.Tensor],
         header: Optional[MRCHeader] = None,
         Apix: float = 1.0,
         xorg: float = 0.0,
@@ -286,18 +285,10 @@ class MRCFile:
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(filename, "wb") as f:
             header.write(f)
-            if isinstance(array, ImageSource):
-                for i, (indices, chunk) in enumerate(array.chunks(chunksize=chunksize)):
-                    logger.debug(f"Processing chunk {i}")
-                    chunk = transform_fn(chunk, indices)
-                    if isinstance(chunk, torch.Tensor):
-                        chunk = np.array(chunk.cpu()).astype(new_dtype)
-                    f.write(chunk.tobytes())
-            else:
-                indices = np.arange(array.shape[0])
-                array = transform_fn(array, indices)
-                if isinstance(array, torch.Tensor):
-                    array = np.array(array.cpu()).astype(new_dtype)
+            indices = np.arange(array.shape[0])
+            array = transform_fn(array, indices)
+            if isinstance(array, torch.Tensor):
+                array = np.array(array.cpu()).astype(new_dtype)
 
-                assert isinstance(array, np.ndarray)
-                f.write(array.tobytes())
+            assert isinstance(array, np.ndarray)
+            f.write(array.tobytes())
