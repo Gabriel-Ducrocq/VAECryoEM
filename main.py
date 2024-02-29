@@ -49,7 +49,7 @@ def train(yaml_setting_path, debug_mode):
                             "kl_prior_mask_proportions":[], "l2_pen":[]}
 
         data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True))
-        for indexes, batch_images, batch_poses, batch_poses_translation in data_loader:
+        for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
             start = time()
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
@@ -78,7 +78,7 @@ def train(yaml_setting_path, debug_mode):
             loss = compute_loss(batch_predicted_images, batch_images, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics,
                                 predicted_structures=deformed_structures, type=latent_type)
-            print("Loss:", loss)
+            print("Epoch:",  epoch, "Batch number:", batch_num, "Loss:", loss)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
