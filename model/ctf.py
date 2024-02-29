@@ -65,6 +65,7 @@ class CTF(torch.nn.Module):
 		    / self.apix)
 
 		self.freqs = freqs.reshape(-1, 2)
+		self.freqs.to(device)
 		#In freqs, x is the first coordinate, y is the second and we are in x major
 		#ctf = self.compute_ctf(freqs, self.dfU, self.dfV, self.dfang, self.volt, self.cs, self.w, self.phaseShift, None, None)
 
@@ -167,8 +168,6 @@ class CTF(torch.nn.Module):
 		#Since we take arctan between y and x and not x and y, we are still in x ordering but x is the second coordinate now !
 		ang = torch.arctan2(y, x)
 		s2 = x ** 2 + y ** 2
-		print(dfu + dfv + (dfu - dfv))
-		print(torch.cos(2 * (ang - dfang)))
 		df = 0.5 * (dfu + dfv + (dfu - dfv) * torch.cos(2 * (ang - dfang)))
 		gamma = (
 		        2 * torch.pi * (-0.5 * df * lam * s2 + 0.25 * cs * lam ** 3 * s2 ** 2)
