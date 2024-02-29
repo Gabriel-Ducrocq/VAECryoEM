@@ -309,6 +309,8 @@ def deform_structure(atom_positions, translation_per_residue, rotations_per_resi
     ## We displace the structure, using an interleave because there are 3 consecutive atoms belonging to one
     ## residue.
     ##We compute the rotated residues, where this axis of rotation is at the origin.
+    print("ROT TEST", rotations_per_residue.shape)
+    print("atom_pos shape", atom_positions.shape)
     transformed_atom_positions = torch.einsum("lbjk, bk->lbj", rotations_per_residue, atom_positions)
     #transformed_atom_positions = torch.matmul(rotation_per_atom, atom_positions[None, :, :, None])
     new_atom_positions = transformed_atom_positions + translation_per_residue
