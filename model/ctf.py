@@ -40,7 +40,7 @@ class CTF(torch.nn.Module):
 
 
 		saved_args = locals()
-		assert len(set({len(val) for arg_name,val in saved_args.items() if arg_name not in ["self", "__class__", "side_shape", "apix"]})) == 1, "CTF values do not have the same shape."
+		assert len(set({len(val) for arg_name,val in saved_args.items() if arg_name not in ["self", "__class__", "device"]})) == 1, "CTF values do not have the same shape."
 		assert len(set(side_shape)) == 1, "All images must have the same number of pixels"
 		assert len(set(apix)) == 1, "All images must have the same apix"
 		self.register_buffer("Npix", torch.tensor(side_shape, dtype=torch.float32, device=device)[:, None])
