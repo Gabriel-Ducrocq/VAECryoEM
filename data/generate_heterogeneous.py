@@ -1,17 +1,16 @@
-import sys
 import os
+import mrc
+import sys
 path = os.path.abspath("model")
 sys.path.append(path)
 import yaml
 import torch
 import utils
 import pickle
-import mrcfile
 import argparse
 from ctf import CTF
 import numpy as np
 from tqdm import tqdm
-from cryodrgn import mrc
 from polymer import Polymer
 from Bio.PDB import PDBParser
 import matplotlib.pyplot as plt
