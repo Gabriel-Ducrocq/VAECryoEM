@@ -70,7 +70,7 @@ ctf_vals = [[ctf_yaml[header]]*N_images for header in headers]
 ctf_vals = np.array([[Npix]*N_images] + [[apix]*N_images] + ctf_vals)
 
 print("CTF VALS", ctf_vals.shape)
-ctf = CTF(*ctf_vals)
+ctf = CTF(*ctf_vals, device=device)
 
 #Creating the grid:
 grid = EMAN2Grid(Npix, apix, device)
