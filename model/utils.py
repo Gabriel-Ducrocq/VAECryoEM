@@ -233,16 +233,6 @@ def read_pdb(path):
     """
     Reads a pdb file in a structure object of biopdb
     :param path: str, path to the pdb file.
-    :return: structure object from BioPython
-    """
-    parser = PDBParser(PERMISSIVE=0)
-    structure = parser.get_structure("A", path)
-    return structure
-
-def read_pdb(path):
-    """
-    Reads a pdb file in a structure object of biopdb
-    :param path: str, path to the pdb file.
     :return: a biotite AtomArray or AtomArrayStack
     """
     _, extension = os.path.splitext(path)
