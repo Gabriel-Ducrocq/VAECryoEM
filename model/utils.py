@@ -131,7 +131,7 @@ def parse_yaml(path):
 
 
     images = torch.tensor(np.stack(images, axis = 0), dtype=torch.float32)
-    ctf_experiment = CTF.from_starfile(experiment_settings["star_file"])
+    ctf_experiment = CTF.from_starfile(experiment_settings["star_file"], device=device)
 
     dataset = ImageDataSet(images, particles_star["particles"])
 

@@ -70,7 +70,7 @@ class CTF(torch.nn.Module):
 
 
 	@classmethod
-	def from_starfile(cls, file, **kwargs):
+	def from_starfile(cls, file, device="cpu", **kwargs):
 		df = starfile.read(file)
 
 		overrides = {}
@@ -115,7 +115,7 @@ class CTF(torch.nn.Module):
 			else:
 				ctf_params[:, i + 2] = df[header].values if header in df else None
 
-		return cls(*ctf_params[:, :8].T, None)
+		return cls(*ctf_params[:, :8].T, phaseShift=None, device=device)
 
 	def meshgrid_2d(self, lo, hi, n, endpoint=False):
 		"""
