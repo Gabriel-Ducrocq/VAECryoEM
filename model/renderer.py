@@ -1,7 +1,6 @@
 import torch
 import numpy as np
 from time import time
-from cryodrgn import mrc
 import matplotlib.pyplot as plt
 
 
