@@ -193,7 +193,7 @@ for i in tqdm(range(6397, 10000)):
     translation_per_residue = all_translation_per_residue[i][None, :, :]
     rotation_per_residue = all_rotations_per_residue[i][None, :, :, :]
     deformed_coord = utils.deform_structure(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), translation_per_residue, rotation_per_residue)
-    base_structure.coord = deformed_coord.detach().cpu().numpy()
+    base_structure.coord = deformed_coord[0].detach().cpu().numpy()
     base_structure.to_pdb(f"{folder_output}predicted_structure_{i}")
 
 
