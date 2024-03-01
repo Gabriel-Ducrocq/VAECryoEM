@@ -10,7 +10,6 @@ import argparse
 import numpy as np
 from tqdm import tqdm
 import Bio.PDB as bpdb
-from cryodrgn import mrc
 from Bio.PDB import PDBIO
 from protein.main import rotate_residues, translate_residues
 from Bio.PDB import PDBParser
