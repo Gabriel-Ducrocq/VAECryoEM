@@ -110,11 +110,9 @@ all_axis_angle_per_domain = []
 start = 0
 
 
-images = torch.flatten(torch.load(experiment_settings["dataset_images_path"])[start::step],start_dim=-2, end_dim=-1)
-iterable = zip(images, torch.load(experiment_settings["dataset_poses_path"])[start::step], 
-    torch.load(experiment_settings["dataset_poses_translation_path"])[start::step])
+images = data_loader.images[start::step]
 #for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(data_loader)):
-for i, batch_images in tqdm(enumerate(data_loader.images)):
+for i, batch_images in tqdm(enumerate(images)):
     batch_images = batch_images[None, :]
     batch_poses = batch_poses[None, :, :]
     batch_poses_translation = batch_poses_translation[None, :]
