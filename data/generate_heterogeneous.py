@@ -124,6 +124,7 @@ else:
 
 poly = centering_structure
 for i in tqdm(range(n_iter)):
+    print("IS HOMO", is_homogeneous)
     if not is_homogeneous:
         print("NOT HOMOGENEOUS !")
         poly = Polymer.from_pdb(sorted_structures[i]) 
