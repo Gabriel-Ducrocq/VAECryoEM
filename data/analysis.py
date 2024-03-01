@@ -12,11 +12,12 @@ import numpy as np
 from tqdm import tqdm
 import Bio.PDB as bpdb
 from Bio.PDB import PDBIO
-from protein.main import rotate_residues, translate_residues
+from polymer import Polymer
 from Bio.PDB import PDBParser
 from dataset import ImageDataSet
 from torch.utils.data import DataLoader
 from pytorch3d.transforms import quaternion_to_axis_angle
+from protein.main import rotate_residues, translate_residues
 
 class ResSelect(bpdb.Select):
     def accept_residue(self, res):
