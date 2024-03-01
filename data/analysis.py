@@ -114,7 +114,7 @@ all_axis_angle_per_domain = []
 ### BE CAREFUL !!!! ADDED A START !!!!
 #start = step*5000
 start = 0
-
+"""
 
 images = dataset.images[start::step]
 #for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(data_loader)):
@@ -130,7 +130,7 @@ for i, batch_images in tqdm(enumerate(images)):
     quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
     rotation_per_residue = utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
     translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
-    """
+    
     predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
                                                        rotation_per_residue)
 
@@ -148,8 +148,8 @@ for i, batch_images in tqdm(enumerate(images)):
             latent_type=experiment_settings["latent_type"], volume=True)
 
         mrc.write(f"{folder_output}volume_{i+start}.mrc", np.transpose(batch_predicted_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
-    """
-    
+
+
     all_latent_mean.append(latent_mean.to("cpu"))
     all_latent_std.append(latent_std.to("cpu"))
     np.save(f"{folder_output}all_rotations_per_residue_{i}.npy", rotation_per_residue.to("cpu").detach().numpy())
@@ -169,7 +169,7 @@ all_latent_std = concat_and_save(all_latent_std, f"{folder_output}all_latent_std
 #all_rotations_per_domain = concat_and_save(all_axis_angle_per_domain, f"{folder_experiment}all_rotations_per_domain.npy")
 #all_translation_per_domain = concat_and_save(all_translation_per_domain, f"{folder_experiment}all_translation_per_domain.npy")
 #print("REGISTERED !")
-
+"""
 
 #all_rotations_per_residue = np.load(f"{folder_output}all_rotations_per_residue.npy")
 #all_translation_per_residue = np.load(f"{folder_output}all_translation_per_residue.npy")
@@ -186,7 +186,7 @@ all_translation_per_residue = torch.tensor(np.concatenate(all_translation_per_re
 centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"])
 center_of_mass = utils.compute_center_of_mass(centering_structure)
 #for i in range(all_translation_per_residue.shape[0]):
-for i in tqdm(range(6397, 10000)):
+for i in tqdm(range(9000, 10000)):
     print("Deform structure:", i)
     base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"])
     base_structure.translate_structure(-center_of_mass - apix/2)
