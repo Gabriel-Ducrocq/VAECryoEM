@@ -6,6 +6,7 @@ import torch
 import yaml
 import utils
 import mrcfile
+import renderer
 import argparse
 import numpy as np
 from tqdm import tqdm
@@ -13,7 +14,6 @@ import Bio.PDB as bpdb
 from Bio.PDB import PDBIO
 from protein.main import rotate_residues, translate_residues
 from Bio.PDB import PDBParser
-from renderer import Renderer
 from dataset import ImageDataSet
 from torch.utils.data import DataLoader
 from pytorch3d.transforms import quaternion_to_axis_angle
