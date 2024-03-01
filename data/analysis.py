@@ -95,7 +95,7 @@ else:
 
 model.eval()
 
-data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=False))
+data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
 parser = PDBParser(PERMISSIVE=0)
 
