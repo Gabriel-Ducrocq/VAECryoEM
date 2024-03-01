@@ -8,6 +8,7 @@ import utils
 import mrcfile
 import renderer
 import argparse
+import starfile
 import numpy as np
 from tqdm import tqdm
 import Bio.PDB as bpdb
