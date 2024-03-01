@@ -125,6 +125,7 @@ else:
 poly = centering_structure
 for i in tqdm(range(n_iter)):
     if not is_homogeneous:
+        print("SORTED", sorted_structures[i])
         poly = Polymer.from_pdb(sorted_structures[i]) 
         backbone = poly.coord - center_vector
         backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
