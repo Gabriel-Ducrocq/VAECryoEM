@@ -2,14 +2,15 @@ import sys
 import os
 path = os.path.abspath("model")
 sys.path.append(path)
-import torch
 import yaml
+import torch
 import utils
 import mrcfile
 import renderer
 import argparse
 import starfile
 import numpy as np
+from ctf import CTF
 from tqdm import tqdm
 import Bio.PDB as bpdb
 from Bio.PDB import PDBIO
