@@ -75,6 +75,8 @@ def train(yaml_setting_path, debug_mode):
             if not experiment_settings["clashing_loss"]:
                 deformed_structures = None
 
+            print("True images mean", torch.mean(batch_images), "True images std", torch.std(batch_images))
+            print("Pred images mean", torch.mean(batch_predicted_images), "Pred images std", torch.std(batch_predicted_images))
             loss = compute_loss(batch_predicted_images, batch_images, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics,
                                 predicted_structures=deformed_structures)

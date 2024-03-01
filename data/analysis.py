@@ -5,6 +5,7 @@ sys.path.append(path)
 import torch
 import yaml
 import utils
+import mrcfile
 import argparse
 import numpy as np
 from tqdm import tqdm
@@ -59,19 +60,25 @@ with open(f"{folder_experiment}/parameters.yaml", "r") as file:
 with open(f"{folder_experiment}/images.yaml", "r") as file:
     image_settings = yaml.safe_load(file)
 
-pixels_x = np.linspace(image_settings["image_lower_bounds"][0], image_settings["image_upper_bounds"][0],
-                       num=image_settings["N_pixels_per_axis"][0]).reshape(1, -1)
+base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"])
+centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"])
+center_of_mass = compute_center_of_mass(centering_structure)
+# Since we operate on an EMAN2 grid, we need to translate the structure by -apix/2 to get it at the center of the image.
+base_structure.translate_structure(-center_of_mass - apix/2)
+gmm_repr = Gaussian(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), 
+            torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device)*image_settings["sigma_gmm"], 
+            torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None]) 
 
-pixels_y = np.linspace(image_settings["image_lower_bounds"][1], image_settings["image_upper_bounds"][1],
-                       num=image_settings["N_pixels_per_axis"][1]).reshape(1, -1)
+particles_star = starfile.read(experiment_settings["star_file"])
+particles_mrcs = experiment_settings["mrcs_file"]
+with mrcfile.open(particles_mrcs) as f:
+    images = f.data
 
-renderer_no_ctf = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"] * 3,
-                    dfU=image_settings["renderer"]["dfU"], dfV=image_settings["renderer"]["dfV"],
-                    dfang=image_settings["renderer"]["dfang"],
-                    spherical_aberration=image_settings["renderer"]["spherical_aberration"],
-                    accelerating_voltage=image_settings["renderer"]["accelerating_voltage"],
-                    amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
-                    device=device, use_ctf=image_settings["renderer"]["use_ctf"])
+
+images = torch.tensor(np.stack(images, axis = 0), dtype=torch.float32)
+ctf_experiment = CTF.from_starfile(experiment_settings["star_file"], device=device)
+
+dataset = ImageDataSet(images, particles_star["particles"]) 
 
 if device == "cpu":
     model = torch.load(model_path, map_location=torch.device('cpu'))
@@ -82,20 +89,10 @@ else:
 
 model.eval()
 
-
-images_path = torch.load(f"{folder_experiment}ImageDataSet")
-poses = torch.load(f"{folder_experiment}poses")
-poses_translations = torch.load(f"{folder_experiment}poses_translation")
-dataset = ImageDataSet(experiment_settings["dataset_images_path"], experiment_settings["dataset_poses_path"],
-                       experiment_settings["dataset_poses_translation_path"])
 data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=False))
 
 parser = PDBParser(PERMISSIVE=0)
-base_structure = utils.read_pdb(experiment_settings["base_structure_path"])
-centering_structure = utils.read_pdb(experiment_settings["centering_structure_path"])
-center_of_mass = utils.compute_center_of_mass(centering_structure)
-centered_based_structure = utils.center_protein(base_structure, center_of_mass)
-atom_positions = torch.tensor(utils.get_backbone(centered_based_structure), dtype=torch.float32, device=device)
+
 identity_pose = torch.broadcast_to(torch.eye(3,3, device=device)[None, :, :], (batch_size, 3, 3))
 zeros_poses_translation = torch.broadcast_to(torch.zeros((3,), device=device)[None, :], (batch_size, 3))
 
@@ -108,9 +105,6 @@ all_axis_angle_per_domain = []
 
 
 
-
-
-"""
 ### BE CAREFUL !!!! ADDED A START !!!!
 #start = step*5000
 start = 0
@@ -120,36 +114,38 @@ images = torch.flatten(torch.load(experiment_settings["dataset_images_path"])[st
 iterable = zip(images, torch.load(experiment_settings["dataset_poses_path"])[start::step], 
     torch.load(experiment_settings["dataset_poses_translation_path"])[start::step])
 #for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(data_loader)):
-for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(iterable)):
+for i, batch_images in tqdm(enumerate(data_loader.images)):
     batch_images = batch_images[None, :]
     batch_poses = batch_poses[None, :, :]
     batch_poses_translation = batch_poses_translation[None, :]
     #print("Batch number:", i)
     batch_images = batch_images.to(device)
-    batch_poses = batch_poses.to(device)
-    batch_poses_translation = batch_poses_translation.to(device)
     latent_variables, latent_mean, latent_std = model.sample_latent(batch_images)
-    mask = model.sample_mask(N_batch=batch_size)
-    quaternions_per_domain, translations_per_domain = model.decode(latent_mean)
-    axis_angle_per_domain = quaternion_to_axis_angle(quaternions_per_domain)
-    rotation_per_residue = utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
-    translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
-    deformed_structures = utils.deform_structure(atom_positions, translation_per_residue,
+    """
+    mask = vae.sample_mask(batch_size)
+    quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
+    rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
+    translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
+    predicted_structures = model.utils.deform_structure(gmm_repr.mus, translation_per_residue,
                                                        rotation_per_residue)
 
     if output_type == "images":
-        batch_predicted_images = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose,
-                                            zeros_poses_translation, latent_type=experiment_settings["latent_type"])
+            predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
+            batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
+            batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
+            batch_predicted_images = dataset.standardize(batch_predicted_images, device=device)
+
         np.save(f"{folder_output}predicted_images_{i+ start}.npy", batch_predicted_images.to("cpu").detach().numpy())
 
+    ### THE VOLUMES CREATION IS WRONG !!!!! ########
     if output_type == "volumes":
         batch_predicted_volumes = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose, zeros_poses_translation, 
             latent_type=experiment_settings["latent_type"], volume=True)
 
         mrc.write(f"{folder_output}volume_{i+start}.mrc", np.transpose(batch_predicted_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
-
-    #all_latent_mean.append(latent_mean.to("cpu"))
-    #all_latent_std.append(latent_std.to("cpu"))
+    """
+    all_latent_mean.append(latent_mean.to("cpu"))
+    all_latent_std.append(latent_std.to("cpu"))
     np.save(f"{folder_output}all_rotations_per_residue_{i}.npy", rotation_per_residue.to("cpu").detach().numpy())
     np.save(f"{folder_output}all_translation_per_residue_{i}.npy", translation_per_residue.to("cpu").detach().numpy())
     #all_translation_per_residue.append(translation_per_residue.to("cpu"))
@@ -162,8 +158,8 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(it
 
 #all_rotations_per_residue = concat_and_save(all_rotations_per_residue, f"{folder_output}all_rotations_per_residue.npy")
 #all_translation_per_residue = concat_and_save(all_translation_per_residue, f"{folder_output}all_translation_per_residue.npy")
-#all_latent_mean = concat_and_save(all_latent_mean, f"{folder_output}all_latent_mean.npy")
-#all_latent_std = concat_and_save(all_latent_std, f"{folder_output}all_latent_std.npy")
+all_latent_mean = concat_and_save(all_latent_mean, f"{folder_output}all_latent_mean.npy")
+all_latent_std = concat_and_save(all_latent_std, f"{folder_output}all_latent_std.npy")
 
 #all_rotations_per_domain = concat_and_save(all_axis_angle_per_domain, f"{folder_experiment}all_rotations_per_domain.npy")
 #all_translation_per_domain = concat_and_save(all_translation_per_domain, f"{folder_experiment}all_translation_per_domain.npy")
@@ -172,7 +168,7 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(it
 
 #all_rotations_per_residue = np.load(f"{folder_output}all_rotations_per_residue.npy")
 #all_translation_per_residue = np.load(f"{folder_output}all_translation_per_residue.npy")
-"""
+
 all_rotations_per_residue = []
 all_translation_per_residue = []
 for i in range(10000):
