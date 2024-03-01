@@ -180,8 +180,8 @@ for i in range(10000):
     all_rotations_per_residue.append(np.load(f"{folder_output}all_rotations_per_residue_{i}.npy"))
     all_translation_per_residue.append(np.load(f"{folder_output}all_translation_per_residue_{i}.npy"))
 
-all_rotations_per_residue = np.concatenate(all_rotations_per_residue, axis=0)
-all_translation_per_residue = np.concatenate(all_translation_per_residue, axis=0)
+all_rotations_per_residue = torch.tensor(np.concatenate(all_rotations_per_residue, axis=0), dtype=torch.float32, device=device)
+all_translation_per_residue = torch.tensor(np.concatenate(all_translation_per_residue, axis=0), dtype=torch.float32, device=device)
 
 centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"])
 center_of_mass = utils.compute_center_of_mass(centering_structure)
@@ -192,8 +192,8 @@ for i in tqdm(range(6397, 10000)):
     base_structure.translate_structure(-center_of_mass - apix/2)
     translation_per_residue = all_translation_per_residue[i]
     rotation_per_residue = all_rotations_per_residue[i]
-    deformed_coord = utils.deform_structure(base_structure.coord, translation_per_residue, rotation_per_residue)
-    base_structure.coord = deformed_coord
+    deformed_coord = utils.deform_structure(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), translation_per_residue, rotation_per_residue)
+    base_structure.coord = deformed_coord.detach().cpu().numpy()
     base_structure.to_pdb(f"{folder_output}predicted_structure_{i}")
 
 
