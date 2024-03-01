@@ -26,7 +26,7 @@ parser_arg.add_argument('--folder_experiment', type=str, required=True)
 parser_arg.add_argument('--folder_structures', type=str, required=True)
 parser_arg.add_argument('--pose_rotation', type=str, required=False)
 parser_arg.add_argument('--pose_translation', type=str, required=False)
-parser_arg.add_argument('--homogeneous', type=bool, required=True)
+parser_arg.add_argument('--homogeneous', type=bool, required=False)
 parser_arg.add_argument('--structure_path', type=str, required=False)
 args = parser_arg.parse_args()
 folder_experiment = args.folder_experiment
