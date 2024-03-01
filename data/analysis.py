@@ -87,13 +87,13 @@ ctf_experiment = CTF.from_starfile(experiment_settings["star_file"], device=devi
 dataset = ImageDataSet(images, particles_star["particles"]) 
 
 if device == "cpu":
-    model = torch.load(model_path, map_location=torch.device('cpu'))
-    model.device = "cpu"
+    vae = torch.load(model_path, map_location=torch.device('cpu'))
+    vae.device = "cpu"
 else:
-    model = torch.load(model_path, map_location=torch.device(device))
-    model.device = device
+    vae = torch.load(model_path, map_location=torch.device(device))
+    vae.device = device
 
-model.eval()
+vae.eval()
 
 data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
