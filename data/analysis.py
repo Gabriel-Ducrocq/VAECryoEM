@@ -124,7 +124,7 @@ for i, batch_images in tqdm(enumerate(images)):
     #batch_poses_translation = batch_poses_translation[None, :]
     #print("Batch number:", i)
     batch_images = batch_images.to(device)
-    latent_variables, latent_mean, latent_std = model.sample_latent(batch_images)
+    latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
 
     mask = vae.sample_mask(batch_size)
     quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
