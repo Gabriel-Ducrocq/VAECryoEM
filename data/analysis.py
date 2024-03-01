@@ -184,7 +184,7 @@ all_rotations_per_residue = np.concatenate(all_rotations_per_residue, axis=0)
 all_translation_per_residue = np.concatenate(all_translation_per_residue, axis=0)
 
 centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"])
-center_of_mass = compute_center_of_mass(centering_structure)
+center_of_mass = utils.compute_center_of_mass(centering_structure)
 #for i in range(all_translation_per_residue.shape[0]):
 for i in tqdm(range(6397, 10000)):
     print("Deform structure:", i)
