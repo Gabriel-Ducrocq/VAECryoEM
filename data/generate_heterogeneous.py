@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from Bio import BiopythonWarning
 from gmm import Gaussian, EMAN2Grid
 from convert_to_star import create_star_file
-from renderer import project, get_posed_structure, apply_ctf, apply_ctf_bis
+from renderer import project, get_posed_structure, apply_ctf
 
 from pytorch3d.transforms import axis_angle_to_matrix
 
