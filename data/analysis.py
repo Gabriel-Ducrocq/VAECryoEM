@@ -120,8 +120,8 @@ images = dataset.images[start::step]
 #for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(data_loader)):
 for i, batch_images in tqdm(enumerate(images)):
     batch_images = batch_images[None, :]
-    batch_poses = batch_poses[None, :, :]
-    batch_poses_translation = batch_poses_translation[None, :]
+    #batch_poses = batch_poses[None, :, :]
+    #batch_poses_translation = batch_poses_translation[None, :]
     #print("Batch number:", i)
     batch_images = batch_images.to(device)
     latent_variables, latent_mean, latent_std = model.sample_latent(batch_images)
