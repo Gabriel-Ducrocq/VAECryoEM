@@ -34,7 +34,7 @@ folder_structures = args.folder_structures
 pose_rotation = args.pose_rotation
 poses_translation = args.pose_translation
 is_homogeneous = args.homogeneous
-PRINT("HHHHHHHHHHHHHHHHHHHHHHHH", is_homogeneous)
+print("HHHHHHHHHHHHHHHHHHHHHHHH", is_homogeneous)
 if is_homogeneous:
     structure_path = args.structure_path
 
