@@ -126,6 +126,15 @@ class Polymer:
         atom_arr = atom_arr_stack[0]
         return Polymer.from_atom_arr(atom_arr)
 
+    def to_pdb(self, file_path):
+        """
+        Save the Polymer structure to pdb
+        file_path: str, path to save the pdb file
+        """
+        file = PDBFile()
+        file.set_structure(self.to_atom_arr())
+        file.write(file_path)
+
     def to_atom_arr(self):
         num = len(self)
         atom_arr = struc.AtomArray(num)

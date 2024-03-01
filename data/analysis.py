@@ -183,25 +183,18 @@ for i in range(10000):
 all_rotations_per_residue = np.concatenate(all_rotations_per_residue, axis=0)
 all_translation_per_residue = np.concatenate(all_translation_per_residue, axis=0)
 
-
+centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"])
+center_of_mass = compute_center_of_mass(centering_structure)
 #for i in range(all_translation_per_residue.shape[0]):
 for i in tqdm(range(6397, 10000)):
     print("Deform structure:", i)
-    a = torch.ones((4,), device=device)
-    a += torch.ones((4,), device=device)
-    parser = PDBParser(PERMISSIVE=0)
-    structure = utils.read_pdb(experiment_settings["base_structure_path"])
-    io = PDBIO()
-    io.set_structure(structure)
-    io.save(f"{folder_output}predicted_structures/predicted_structure_{i+1}.pdb", ResSelect())
-    structure = utils.read_pdb(f"{folder_output}predicted_structures/predicted_structure_{i+1}.pdb")
-    structure = utils.center_protein(structure, center_of_mass[0])
-    rotate_residues(structure, all_rotations_per_residue[i], np.eye(3,3))
-    translate_residues(structure, all_translation_per_residue[i])
-    structure = utils.center_protein(structure, -center_of_mass[0])
-    io = PDBIO()
-    io.set_structure(structure)
-    io.save(f"{folder_output}predicted_structures/predicted_structure_{i+1}.pdb")
+    base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"])
+    centered_base_structure = base_structure.translate_structure(-center_of_mass - apix/2)
+    translation_per_residue = all_translation_per_residue[i]
+    rotation_per_residue = all_rotations_per_residue[i]
+    deformed_coord = utils.deform_structure(centered_base_structure.coord, translation_per_residue, rotations_per_residue)
+    centered_base_structure.coord = deformed_coord
+    centered_base_structure.to_pdb(f"{folder_output}predicted_structure_{i}")
 
 
 

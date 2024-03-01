@@ -229,6 +229,7 @@ def get_backbone(structure):
     return np.vstack(absolute_positions)
 
 
+
 def read_pdb(path):
     """
     Reads a pdb file in a structure object of biopdb

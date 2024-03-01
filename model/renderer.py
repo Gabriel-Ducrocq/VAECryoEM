@@ -119,19 +119,6 @@ def apply_ctf(images, ctf, indexes):
     return ctf_corrupted
 
 
-def apply_ctf_bis(images, ctf, indexes):
-    """
-    apply ctf to images.
-    images: torch.tensor(batch_size, N_pix, N_pix)
-    ctf: CTF object
-    indexes: torch.tensor(batch_size, type=int)
-    return ctf corrupted images
-    """
-    fourier_images = torch.fft.fft2(torch.fft.fftshift(images, dim=(-2, -1)), dim=(-2, -1))
-    fourier_images *= torch.fft.ifftshift(ctf.compute_ctf(indexes), dim=(-2, -1))
-    ctf_corrupted = torch.fft.ifftshift(torch.fft.ifft2(fourier_images, dim=(-2, -1)), dim=(-2, -1)).real
-    return ctf_corrupted
-
 
 
 
