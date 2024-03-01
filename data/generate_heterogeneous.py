@@ -34,7 +34,6 @@ folder_structures = args.folder_structures
 pose_rotation = args.pose_rotation
 poses_translation = args.pose_translation
 is_homogeneous = args.homogeneous
-print("HHHHHHHHHHHHHHHHHHHHHHHH", is_homogeneous)
 if is_homogeneous:
     structure_path = args.structure_path
 
@@ -125,11 +124,9 @@ else:
 
 poly = centering_structure
 for i in tqdm(range(n_iter)):
-    print("IS HOMO", is_homogeneous)
     if not is_homogeneous:
-        print("NOT HOMOGENEOUS !")
         poly = Polymer.from_pdb(sorted_structures[i]) 
-        backbone = poly - center_vector
+        backbone = poly.coord - center_vector
         backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
         backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
 
