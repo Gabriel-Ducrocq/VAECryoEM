@@ -15,6 +15,7 @@ from Bio.PDB import PDBIO
 from polymer import Polymer
 from Bio.PDB import PDBParser
 from dataset import ImageDataSet
+from gmm import Gaussian, EMAN2Grid
 from torch.utils.data import DataLoader
 from pytorch3d.transforms import quaternion_to_axis_angle
 from protein.main import rotate_residues, translate_residues
@@ -62,7 +63,7 @@ with open(f"{folder_experiment}/images.yaml", "r") as file:
 
 base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"])
 centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"])
-center_of_mass = compute_center_of_mass(centering_structure)
+center_of_mass = utils.compute_center_of_mass(centering_structure)
 # Since we operate on an EMAN2 grid, we need to translate the structure by -apix/2 to get it at the center of the image.
 base_structure.translate_structure(-center_of_mass - apix/2)
 gmm_repr = Gaussian(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), 
