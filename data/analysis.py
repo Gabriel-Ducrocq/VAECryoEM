@@ -61,6 +61,9 @@ with open(f"{folder_experiment}/parameters.yaml", "r") as file:
 with open(f"{folder_experiment}/images.yaml", "r") as file:
     image_settings = yaml.safe_load(file)
 
+
+apix = image_settings["apix"]
+Npix = image_settings["Npix"]
 base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"])
 centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"])
 center_of_mass = utils.compute_center_of_mass(centering_structure)
