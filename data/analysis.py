@@ -190,8 +190,8 @@ for i in tqdm(range(6397, 10000)):
     print("Deform structure:", i)
     base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"])
     base_structure.translate_structure(-center_of_mass - apix/2)
-    translation_per_residue = all_translation_per_residue[i]
-    rotation_per_residue = all_rotations_per_residue[i]
+    translation_per_residue = all_translation_per_residue[i][None, :, :]
+    rotation_per_residue = all_rotations_per_residue[i][None, :, :, :]
     deformed_coord = utils.deform_structure(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), translation_per_residue, rotation_per_residue)
     base_structure.coord = deformed_coord.detach().cpu().numpy()
     base_structure.to_pdb(f"{folder_output}predicted_structure_{i}")
