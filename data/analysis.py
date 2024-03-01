@@ -128,10 +128,10 @@ for i, batch_images in tqdm(enumerate(images)):
 
     mask = vae.sample_mask(batch_size)
     quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
-    rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
-    translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
+    rotation_per_residue = utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
+    translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
     """
-    predicted_structures = model.utils.deform_structure(gmm_repr.mus, translation_per_residue,
+    predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
                                                        rotation_per_residue)
 
     if output_type == "images":
