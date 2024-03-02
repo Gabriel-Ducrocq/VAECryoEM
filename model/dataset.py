@@ -20,12 +20,13 @@ class ImageDataSet(Dataset):
         self.avg_image = torch.mean(self.images, dim=0, keepdim=True)
         self.std_image = torch.std(self.images, dim=0, keepdim=True)
         print("Normalizing training data")
-        self.images = (self.images - self.avg_image)/self.std_image
+        #self.images = (self.images - self.avg_image)/self.std_image
         self.poses = poses
         self.poses_translation = poses_translation
 
     def standardize(self, images, device="cpu"):
-        return (images - self.avg_image.to(device))/self.std_image.to(device)
+        return images
+        #return (images - self.avg_image.to(device))/self.std_image.to(device)
 
 
     def __len__(self):

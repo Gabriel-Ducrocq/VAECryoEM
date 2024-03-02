@@ -25,7 +25,6 @@ def train(yaml_setting_path, debug_mode):
         name = f"experiment_{experiment_settings['name']}_resume"
     else:
         name = f"experiment_{experiment_settings['name']}"
-
     if not debug_mode:
         wandb.init(
             # Set the project where this run will be logged
@@ -55,6 +54,8 @@ def train(yaml_setting_path, debug_mode):
             batch_poses = batch_poses.to(device)
             batch_poses_translation = batch_poses_translation.to(device)
             indexes = indexes.to(device)
+            plt.imshow(batch_images[0].detach().cpu())
+            plt.show()
             latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
 
             mask = vae.sample_mask(batch_size)
