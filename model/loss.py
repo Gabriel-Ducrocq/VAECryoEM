@@ -10,7 +10,7 @@ def compute_rmsd(predicted_images, images):
             the latent variable is categorical. Otherwise None.
     :return: torch.float32, average of rmsd over images
     """
-    return torch.mean(0.5*torch.mean((predicted_images - images)**2, dim=-1))
+    return torch.mean(0.5*torch.sum((predicted_images - images)**2, dim=-1))
 
 def compute_KL_prior_latent(latent_mean, latent_std, epsilon_loss):
     """
