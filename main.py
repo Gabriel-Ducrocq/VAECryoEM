@@ -51,7 +51,7 @@ def train(yaml_setting_path, debug_mode):
         data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True))
         for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
             start = time()
-            np.save(batch_images[0].detach().numpy(), "data/dataset/cryoStar_test/image.npy")
+            np.save("data/dataset/cryoStar_test/image.npy", batch_images[0].detach().numpy())
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
             batch_poses_translation = batch_poses_translation.to(device)
