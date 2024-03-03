@@ -95,9 +95,13 @@ def parse_yaml(path):
     center_of_mass = compute_center_of_mass(centering_structure)
     # Since we operate on an EMAN2 grid, we need to translate the structure by -apix/2 to get it at the center of the image.
     base_structure.translate_structure(-center_of_mass - apix/2)
+    #gmm_repr = Gaussian(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), 
+    #            torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device)*image_settings["sigma_gmm"], 
+    #            torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None]) 
+
     gmm_repr = Gaussian(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), 
-                torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device)*image_settings["sigma_gmm"], 
-                torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None])  
+                torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device), 
+                torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device))  
 
 
     if experiment_settings["mask_prior"]["type"] == "uniform":
