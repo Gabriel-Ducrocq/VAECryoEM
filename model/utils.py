@@ -100,8 +100,8 @@ def parse_yaml(path):
     #            torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None]) 
 
     gmm_repr = Gaussian(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), 
-                torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device), 
-                torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device))  
+                torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device)*image_settings["sigma_gmm"], 
+                torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device))
 
 
     if experiment_settings["mask_prior"]["type"] == "uniform":
