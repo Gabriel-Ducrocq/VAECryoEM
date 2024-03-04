@@ -114,6 +114,7 @@ all_images = []
 from time import time
 
 if is_homogeneous:
+    print("Using the target structure:", target_structure_path)
     backbone = torch.tensor(target_structure.coord - center_vector, dtype=torch.float32, device=device)
     backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
 
