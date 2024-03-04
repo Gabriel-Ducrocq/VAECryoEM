@@ -35,7 +35,7 @@ poses_translation = args.pose_translation
 is_homogeneous = args.homogeneous
 if is_homogeneous:
     target_structure_path = args.structure_path
-    target_structure = Polymer.from_pdb(target_structure_path)
+    target_structure = Polymer.from_pdb(target_structure_path, False)
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -61,7 +61,7 @@ sigma_gmm = image_settings["sigma_gmm"]
 snr = image_settings["SNR"]
 N_pose_per_structure = experiment_settings["N_pose_per_structure"]
 centering_structure_path = experiment_settings["centering_structure_path"]
-centering_structure = Polymer.from_pdb(centering_structure_path)
+centering_structure = Polymer.from_pdb(centering_structure_path, False)
 
 
 #Creating the CTF:
@@ -127,7 +127,7 @@ else:
 poly = centering_structure
 for i in tqdm(range(n_iter)):
     if not is_homogeneous:
-        poly = Polymer.from_pdb(sorted_structures[i]) 
+        poly = Polymer.from_pdb(sorted_structures[i], False) 
         backbone = poly.coord - center_vector
         backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
         backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)

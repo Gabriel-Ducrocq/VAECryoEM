@@ -90,8 +90,8 @@ def parse_yaml(path):
 
 
     grid = EMAN2Grid(Npix, apix, device=device)
-    base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"])
-    centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"])
+    base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"], False)
+    centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"], False)
     center_of_mass = compute_center_of_mass(centering_structure)
     # Since we operate on an EMAN2 grid, we need to translate the structure by -apix/2 to get it at the center of the image.
     base_structure.translate_structure(-center_of_mass - apix/2)
