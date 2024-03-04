@@ -144,9 +144,7 @@ for i, batch_images in tqdm(enumerate(images)):
 
     ### THE VOLUMES CREATION IS WRONG !!!!! ########
     if output_type == "volumes":
-        batch_predicted_volumes = renderer_no_ctf.compute_x_y_values_all_atoms(deformed_structures, identity_pose, zeros_poses_translation, 
-            latent_type=experiment_settings["latent_type"], volume=True)
-
+        batch_predicted_volumes = structure_to_volume(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
         mrc.write(f"{folder_output}volume_{i+start}.mrc", np.transpose(batch_predicted_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
 
 
