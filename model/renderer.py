@@ -35,7 +35,7 @@ def ctf_corrupt(images, ctf, device):
     return corrupted_images
 
 
-def structure_to_volume(Gauss_means, Gauss_sigmas, Gauss_amplitudes, grid):
+def structure_to_volume(Gauss_means, Gauss_sigmas, Gauss_amplitudes, grid, device):
     """
     Project a volumes represented by a GMM into a 2D images, by integrating along the z axis
     Gauss_mean: torch.tensor(batch_size, N_atoms, 3)
@@ -46,8 +46,8 @@ def structure_to_volume(Gauss_means, Gauss_sigmas, Gauss_amplitudes, grid):
     return images: torch.tensor(batch_size, N_pix, N_pix)
     """
     batch_size = Gauss_means.shape[0]
-    N_pix = torch.pow(grid.line_coords.shape[0], torch.ones(1)*1/3)
-    cubic_root_amp = torch.pow(Gauss_amplitudes, torch.ones(1)*1/3)
+    N_pix = torch.pow(grid.line_coords.shape[0], torch.ones(1, device=device)*1/3)
+    cubic_root_amp = torch.pow(Gauss_amplitudes, torch.ones(1, device=device)*1/3)
     sigmas = 2*Gauss_sigmas**2
     proj_x = torch.exp(-(Gauss_means[:, :, None, 0] - grid.line_coords[None, None, :])**2/sigmas[None, :, None, 0])*cubic_root_amp[None, :, :]
     proj_y = torch.exp(-(Gauss_means[:, :, None, 1] - grid.line_coords[None, None, :])**2/sigmas[None, :, None, 0])*cubic_root_amp[None, :, :]
