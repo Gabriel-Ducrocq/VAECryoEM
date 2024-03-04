@@ -135,21 +135,20 @@ for i, batch_images in tqdm(enumerate(images)):
     rotation_per_residue = utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
     translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
     
-    predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
-                                                       rotation_per_residue)
+    #predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
+    #                                                   rotation_per_residue)
 
-    if output_type == "images":
-        predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
-        batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
-        batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
-        batch_predicted_images = dataset.standardize(batch_predicted_images, device=device)
+    #if output_type == "images":
+    #    predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
+    #    batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
+    #    batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
+    #    batch_predicted_images = dataset.standardize(batch_predicted_images, device=device)
 
-        np.save(f"{folder_output}predicted_images_{i+ start}.npy", batch_predicted_images.to("cpu").detach().numpy())
+    #    np.save(f"{folder_output}predicted_images_{i+ start}.npy", batch_predicted_images.to("cpu").detach().numpy())
 
-    ### THE VOLUMES CREATION IS WRONG !!!!! ########
-    if output_type == "volumes":
-        batch_predicted_volumes = renderer.structure_to_volume(predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid, device=device)
-        mrc.MRCFile.write(f"{folder_output}volume_{i+start}.mrc", np.transpose(batch_predicted_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
+    #if output_type == "volumes":
+    #    batch_predicted_volumes = renderer.structure_to_volume(predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid, device=device)
+    #    mrc.MRCFile.write(f"{folder_output}volume_{i+start}.mrc", np.transpose(batch_predicted_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
 
 
     all_latent_mean.append(latent_mean.to("cpu"))
