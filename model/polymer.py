@@ -57,11 +57,14 @@ class Polymer:
         return len(np.unique(self.chain_id))
 
     @classmethod
-    def from_atom_arr(cls, atom_arr):
+    def from_atom_arr(cls, atom_arr, filter_aa=True):
         assert isinstance(atom_arr, struc.AtomArray)
 
         nt_arr = atom_arr[struc.filter_nucleotides(atom_arr)]
-        aa_arr = atom_arr[struc.filter_amino_acids(atom_arr)]
+        aa_arr = atom_arr
+        if filter_aa:
+            aa_arr = atom_arr[struc.filter_amino_acids(atom_arr)]
+
 
         num = 0
         if len(aa_arr) > 0:
@@ -81,6 +84,8 @@ class Polymer:
             if kind == "aa":
                 using_atom_names = AA_ATOMS
                 filtered_res = tmp_res[struc.filter_peptide_backbone(tmp_res)]
+                ##### REMOVING THE FILTER HERE !!!
+                filtered_res = tmp_res
             elif kind == "nt":
                 using_atom_names = NT_ATOMS
                 filtered_res = tmp_res
@@ -88,8 +93,11 @@ class Polymer:
                 raise NotImplemented
 
             valid_atom_names = set(tmp_res.atom_name).intersection(using_atom_names)
-
+            print("TMP RES", tmp_res.atom_name)
+            print("TMP RES", filtered_res.atom_name)
             for select_atom_name in valid_atom_names:
+                print(valid_atom_names)
+                print(filtered_res[filtered_res.atom_name == select_atom_name].element)
                 meta[pos] = {
                     "chain_id": tmp_res.chain_id[0],
                     "res_id": tmp_res.res_id[0],
@@ -114,17 +122,18 @@ class Polymer:
         if len(nt_arr) > 0:
             _update(nt_arr, kind="nt")
 
-        assert pos == num
+        ## REMOVING ASSERT HERE !
+        #assert pos == num
         return meta
 
     @classmethod
-    def from_pdb(cls, file_path):
+    def from_pdb(cls, file_path, filter_aa=True):
         f = PDBFile.read(file_path)
         atom_arr_stack = f.get_structure()
         if atom_arr_stack.stack_depth() > 1:
             print("PDB file contains more than 1 models, select the 1st model")
         atom_arr = atom_arr_stack[0]
-        return Polymer.from_atom_arr(atom_arr)
+        return Polymer.from_atom_arr(atom_arr, filter_aa)
 
     def to_pdb(self, file_path):
         """
