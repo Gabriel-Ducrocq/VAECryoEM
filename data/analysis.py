@@ -67,8 +67,8 @@ with open(f"{folder_experiment}/images.yaml", "r") as file:
 
 apix = image_settings["apix"]
 Npix = image_settings["Npix"]
-base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"])
-centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"])
+base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"], False)
+centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"], False)
 center_of_mass = utils.compute_center_of_mass(centering_structure)
 # Since we operate on an EMAN2 grid, we need to translate the structure by -apix/2 to get it at the center of the image.
 base_structure.translate_structure(-center_of_mass - apix/2)
@@ -184,12 +184,12 @@ for i in range(10000):
 all_rotations_per_residue = torch.tensor(np.concatenate(all_rotations_per_residue, axis=0), dtype=torch.float32, device=device)
 all_translation_per_residue = torch.tensor(np.concatenate(all_translation_per_residue, axis=0), dtype=torch.float32, device=device)
 
-centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"])
+centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"], False)
 center_of_mass = utils.compute_center_of_mass(centering_structure)
 #for i in range(all_translation_per_residue.shape[0]):
 for i in tqdm(range(9000, 10000)):
     print("Deform structure:", i)
-    base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"])
+    base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"], False)
     base_structure.translate_structure(-center_of_mass - apix/2)
     translation_per_residue = all_translation_per_residue[i][None, :, :]
     rotation_per_residue = all_rotations_per_residue[i][None, :, :, :]
