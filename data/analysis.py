@@ -135,10 +135,10 @@ for i, batch_images in tqdm(enumerate(images)):
                                                        rotation_per_residue)
 
     if output_type == "images":
-            predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
-            batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
-            batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
-            batch_predicted_images = dataset.standardize(batch_predicted_images, device=device)
+        predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
+        batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
+        batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
+        batch_predicted_images = dataset.standardize(batch_predicted_images, device=device)
 
         np.save(f"{folder_output}predicted_images_{i+ start}.npy", batch_predicted_images.to("cpu").detach().numpy())
 
