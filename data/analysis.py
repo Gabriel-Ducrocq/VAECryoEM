@@ -85,6 +85,9 @@ images = torch.tensor(np.stack(images, axis = 0), dtype=torch.float32)
 ctf_experiment = CTF.from_starfile(experiment_settings["star_file"], device=device)
 
 dataset = ImageDataSet(images, particles_star["particles"]) 
+Npix = image_settings["Npix"]
+apix = image_settings["apix"]
+grid = EMAN2Grid(Npix, apix, device=device)
 
 if device == "cpu":
     vae = torch.load(model_path, map_location=torch.device('cpu'))
