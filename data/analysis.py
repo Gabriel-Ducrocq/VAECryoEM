@@ -5,7 +5,7 @@ sys.path.append(path)
 import yaml
 import torch
 import utils
-import mrcfile
+import mrc
 import renderer
 import argparse
 import starfile
