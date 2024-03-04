@@ -2,10 +2,11 @@ import sys
 import os
 path = os.path.abspath("model")
 sys.path.append(path)
+import mrc
 import yaml
 import torch
 import utils
-import mrc
+import mrcfile
 import renderer
 import argparse
 import starfile
