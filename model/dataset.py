@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from torch.utils.data import Dataset
 from pytorch3d.transforms import euler_angles_to_matrix
 
@@ -9,7 +10,9 @@ class ImageDataSet(Dataset):
         :param images: torch.tensor(N_images, N_pix_x, N_pix_y) of images
         :param poses: pandas dataframe (N_images, undefined) of innformation regarding each particles, in Relion star format.
         """
-        poses = euler_angles_to_matrix(torch.tensor(particles_df[["rlnAngleRot", "rlnAngleTilt", "rlnAnglePsi"]].values, dtype=torch.float32), convention="ZYZ")
+        euler_angles_degrees = particles_df[["rlnAngleRot", "rlnAngleTilt", "rlnAnglePsi"]].values
+        euler_angles_radians = euler_angles_degrees*np.pi/180
+        poses = euler_angles_to_matrix(torch.tensor(euler_angles_radians, dtype=torch.float32), convention="ZYZ")
         poses = torch.transpose(poses, dim0=-2, dim1=-1)
         poses_translation = torch.zeros((particles_df.shape[0], 3), dtype=torch.float32)
         poses_translation[:, :2] = torch.tensor(particles_df[["rlnOriginX", "rlnOriginY"]].values, dtype=torch.float32)
