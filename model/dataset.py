@@ -20,16 +20,15 @@ class ImageDataSet(Dataset):
         assert torch.max(torch.abs(poses_translation)) == 0, "Only 0 translation supported as poses"
         print("Dataset size:", images.shape)
         self.images = torch.flatten(images, start_dim=-2, end_dim=-1)
-        #self.avg_image = torch.mean(self.images, dim=0, keepdim=True)
-        #self.std_image = torch.std(self.images, dim=0, keepdim=True)
+        self.avg_image = torch.mean(self.images, dim=0, keepdim=True)
+        self.std_image = torch.std(self.images, dim=0, keepdim=True)
         print("Normalizing training data")
-        #self.images = (self.images - self.avg_image)/self.std_image
+        self.images = (self.images - self.avg_image)/self.std_image
         self.poses = poses
         self.poses_translation = poses_translation
 
     def standardize(self, images, device="cpu"):
-        return images
-        #return (images - self.avg_image.to(device))/self.std_image.to(device)
+        return (images - self.avg_image.to(device))/self.std_image.to(device)
 
 
     def __len__(self):
