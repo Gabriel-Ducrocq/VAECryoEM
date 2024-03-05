@@ -126,7 +126,6 @@ else:
 
 poly = centering_structure
 #amplitudes = torch.tensor(poly.num_electron, device=device)[:, None]/(2*torch.pi*sigma_gmm)
-amplitudes = torch.ones((backbone.shape[1], 1), device=device)/(2*torch.pi*sigma_gmm)
 size_prot = []
 faulty_indexes = []
 for i in tqdm(range(n_iter)):
@@ -139,7 +138,7 @@ for i in tqdm(range(n_iter)):
             size_prot.append(len(size_prot))
             faulty_indexes.append(i)
 
-
+    amplitudes = torch.ones((backbone.shape[1], 1), device=device)/(2*torch.pi*sigma_gmm)
     posed_backbones = get_posed_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
     batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
     #batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, torch.ones((backbone.shape[1], 1), device=device), grid)
