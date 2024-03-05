@@ -134,6 +134,7 @@ for i in tqdm(range(n_iter)):
         backbone = poly.coord - center_vector
         backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
         backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
+        print(size_prot)
         if len(size_prot) not in size_prot:
             size_prot.append(len(size_prot))
             faulty_indexes.append(i)
