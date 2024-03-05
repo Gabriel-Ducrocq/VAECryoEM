@@ -134,9 +134,8 @@ for i in tqdm(range(n_iter)):
         backbone = poly.coord - center_vector
         backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
         backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
-        print(size_prot)
         if len(size_prot) not in size_prot:
-            size_prot.append(len(size_prot))
+            size_prot.append(len(poly))
             faulty_indexes.append(i)
 
     amplitudes = torch.ones((backbone.shape[1], 1), device=device)/(2*torch.pi*sigma_gmm)
@@ -170,6 +169,7 @@ print("Adding Gaussian noise with variance", noise_var)
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
 all_images += torch.randn((N_images, Npix, Npix))*torch.sqrt(noise_var)
 print("Saving images in MRC format")
+print(size_prot)
 if len(size_prot) > 1:
     print("Some proteins have different residue numbers :", faulty_indexes)
 
