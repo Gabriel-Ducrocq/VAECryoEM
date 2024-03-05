@@ -51,7 +51,6 @@ def train(yaml_setting_path, debug_mode):
         data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True))
         for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
             start = time()
-            np.save("data/dataset/cryoStar_test/image.npy", batch_images[0].detach().numpy())
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
             batch_poses_translation = batch_poses_translation.to(device)
@@ -70,8 +69,8 @@ def train(yaml_setting_path, debug_mode):
             posed_predicted_structures = renderer.get_posed_structure(predicted_structures, batch_poses, batch_poses_translation)
 
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
-            #batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
-            batch_predicted_images = predicted_images
+            batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
+            #batch_predicted_images = predicted_images
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
             batch_predicted_images = dataset.standardize(batch_predicted_images, device=device)
 

@@ -125,22 +125,30 @@ else:
     n_iter = int(N_images/N_pose_per_structure)
 
 poly = centering_structure
+#amplitudes = torch.tensor(poly.num_electron, device=device)[:, None]/(2*torch.pi*sigma_gmm)
+amplitudes = torch.ones((backbone.shape[1], 1), device=device)/(2*torch.pi*sigma_gmm)
+size_prot = []
+faulty_indexes = []
 for i in tqdm(range(n_iter)):
     if not is_homogeneous:
         poly = Polymer.from_pdb(sorted_structures[i], False) 
         backbone = poly.coord - center_vector
         backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
         backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
+        if len(size_prot) not in size_prot:
+            size_prot.append(len(size_prot))
+            faulty_indexes.append(i)
+
 
     posed_backbones = get_posed_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
-    #batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, torch.tensor(poly.num_electron, device=device)[:, None], grid)
-    batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, torch.ones((backbone.shape[1], 1), device=device), grid)
-    #batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
+    batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
+    #batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, torch.ones((backbone.shape[1], 1), device=device), grid)
+    batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
     #plt.imshow(batch_ctf_corrupted_images[0].detach().numpy())
     #plt.show()
     #batch_ctf_corrupted_images_bis = apply_ctf_bis(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)]))
-    all_images.append(batch_images.detach().cpu())
-    #all_images.append(batch_ctf_corrupted_images.detach().cpu())
+    #all_images.append(batch_images.detach().cpu())
+    all_images.append(batch_ctf_corrupted_images.detach().cpu())
     #plt.imshow(batch_ctf_corrupted_images.detach().numpy()[0])
     #plt.show()
     #plt.imshow(batch_ctf_corrupted_images_bis.detach().numpy()[0])
@@ -162,6 +170,9 @@ print("Adding Gaussian noise with variance", noise_var)
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
 all_images += torch.randn((N_images, Npix, Npix))*torch.sqrt(noise_var)
 print("Saving images in MRC format")
+if len(size_prot) > 1:
+    print("Some proteins have different residue numbers :", faulty_indexes)
+
 mrc.MRCFile.write(f"{folder_experiment}particles.mrcs", all_images.detach().cpu().numpy(), Apix=apix, is_vol=False)
 print("Saving poses and ctf in star format.")
 output_path = f"{folder_experiment}particles.star"
