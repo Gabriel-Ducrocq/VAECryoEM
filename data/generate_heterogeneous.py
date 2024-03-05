@@ -138,10 +138,9 @@ for i in tqdm(range(n_iter)):
             size_prot.append(len(poly))
             faulty_indexes.append(i)
 
-    amplitudes = torch.ones((backbone.shape[1], 1), device=device)/(2*torch.pi*sigma_gmm)
+    amplitudes = poly.num_electron
     posed_backbones = get_posed_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
     batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
-    #batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, torch.ones((backbone.shape[1], 1), device=device), grid)
     batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
     #plt.imshow(batch_ctf_corrupted_images[0].detach().numpy())
     #plt.show()
