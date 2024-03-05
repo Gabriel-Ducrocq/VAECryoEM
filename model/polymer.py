@@ -6,7 +6,7 @@ import biotite.structure as struc
 from biotite.structure.io.pdb import PDBFile
 
 # careful about the order
-AA_ATOMS = ("N", "CA", "CB", )
+AA_ATOMS = ("CA", )
 NT_ATOMS = ("C1'", )
 
 
