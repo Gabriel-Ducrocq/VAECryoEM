@@ -23,7 +23,7 @@ def convert_poses_to_relion(poses_rotations, poses_translations):
 	poses_rotations = Rotation.from_matrix(poses_rotations)
 	poses_rotations_euler = poses_rotations.as_euler("ZYZ", degrees=True)
 
-	poses_dict = {"rlnOriginX":poses_translations[:, 0], "rlnOriginY":poses_translations[:, 1], "rlnAngleRot":poses_rotations_euler[:, 0], 
+	poses_dict = {"rlnOriginXAngst":poses_translations[:, 0], "rlnOriginYAngst":poses_translations[:, 1], "rlnAngleRot":poses_rotations_euler[:, 0], 
 	"rlnAngleTilt":poses_rotations_euler[:, 1], "rlnAnglePsi":poses_rotations_euler[:, 2]}
 
 	return poses_dict
