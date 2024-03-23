@@ -170,7 +170,7 @@ def get_all_mrcs(particles_star):
 
     #### CHANG THE PATH ?!
     all_mrcs = {}
-    uniques_mrcs_names = pd.unique(particles_star["_rlnImageName"])
+    uniques_mrcs_names = pd.unique(particles_star["ImageName"])
     length_mrcs = 0
     for name in uniques_mrcs_names:
         if name not in uniques_mrcs_names:
@@ -180,7 +180,7 @@ def get_all_mrcs(particles_star):
                 length_mrcs += len(images)
 
     all_images = []
-    for name in particles_star["_rlnImageName"]:
+    for name in particles_star["ImageName"]:
         idx, path = name.split("@")
         all_data = [all_mrcs[path][idx]]
 
