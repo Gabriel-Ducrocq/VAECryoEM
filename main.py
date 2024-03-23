@@ -66,8 +66,7 @@ def train(yaml_setting_path, debug_mode):
             predicted_structures = model.utils.deform_structure(gmm_repr.mus, translation_per_residue,
                                                                rotation_per_residue)
 
-            posed_predicted_structures = renderer.get_posed_structure(predicted_structures, batch_poses, batch_poses_translation)
-
+            posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
             batch_predicted_images = image_translator.transform(batch_predicted_images, batch_poses_translation[:, None, :])
