@@ -51,6 +51,8 @@ class ImageDataSet(Dataset):
                     print(mrc.data[mrc_idx])
                     proj = torch.from_numpy(np.array(mrc.data[mrc_idx])).float() #* self.cfg.scale_images
                 else:
+                    print("MRC_IDX", mrc_idx)
+                    print(mrc.data)
                     # the mrcs file can contain only one particle
                     proj = torch.from_numpy(np.array(mrc.data)).float() #* self.cfg.scale_images
 
