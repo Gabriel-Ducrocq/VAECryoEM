@@ -13,6 +13,7 @@ from ctf import CTF
 from vae import VAE
 from mlp import MLP
 import pandas as pd
+from tqdm import tqdm
 from gmm import Gaussian, EMAN2Grid
 from polymer import Polymer
 from dataset import ImageDataSet
@@ -172,7 +173,7 @@ def get_all_mrcs(particles_star):
     all_mrcs = {}
     uniques_mrcs_names = pd.unique(particles_star["rlnImageName"])
     length_mrcs = 0
-    for name in uniques_mrcs_names:
+    for name in tqdm(uniques_mrcs_names):
         if name not in uniques_mrcs_names:
             with mrcfile.open(name) as f:
                 images = f.data
