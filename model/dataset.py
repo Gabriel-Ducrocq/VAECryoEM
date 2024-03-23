@@ -37,7 +37,7 @@ class ImageDataSet(Dataset):
         print("Dataset size:", self.particles_df, "apix:",self.apix)
         print("Normalizing training data")
 
-        self.down_side_shape = side_shape_down_side
+        self.down_side_shape = down_side_shape
         self.down_apix = apix_down_side
         if down_side_shape is not None:
             self.down_side_shape = down_side_shape
