@@ -84,7 +84,10 @@ def train(yaml_setting_path, debug_mode):
             batch_predicted_images = image_translator.transform(batch_predicted_images, batch_poses_translation[:, None, :])
             end_trans = time()
             print("Tran time", end_trans- start_trans)
+            start_flatten = time()
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
+            end_flatten = time()
+            print("FLATTEN time", end_flatten - start_flatten)
             #batch_predicted_images = dataset.standardize(batch_predicted_images, device=device)
 
 
@@ -93,13 +96,19 @@ def train(yaml_setting_path, debug_mode):
 
             #print("True images mean", torch.mean(batch_images), "True images std", torch.std(batch_images))
             #print("Pred images mean", torch.mean(batch_predicted_images), "Pred images std", torch.std(batch_predicted_images))
+            start_loss = time()
             loss = compute_loss(batch_predicted_images, batch_images, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics)
                                 #predicted_structures=deformed_structures)
+            end_loss = time()
+            print("Loss time", end_loss - start_loss)
             print("Epoch:",  epoch, "Batch number:", batch_num, "Loss:", loss)
+            start_gradient = time()
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
+            end_gradient = time()
+            print("Gradient time", end_gradient - start_gradient)
             end = time()
             print("Iteration duration:", end-start)
 
