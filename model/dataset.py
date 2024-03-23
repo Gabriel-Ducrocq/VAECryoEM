@@ -50,31 +50,31 @@ class ImageDataSet(Dataset):
 
     def __getitem__(self, idx):
         particles = self.particles_df.iloc[idx]
-        try:
-            mrc_idx, img_name = particles["rlnImageName"].split("@")
-            mrc_idx = int(mrc_idx) - 1
-            mrc_path = os.path.join(self.particles_path, img_name)
-            print("MRC PATH", mrc_path)
-            with mrcfile.mmap(mrc_path, mode="r", permissive=True) as mrc:
-                if mrc.data.ndim > 2:
-                    proj = torch.from_numpy(np.array(mrc.data[mrc_idx])).float() #* self.cfg.scale_images
-                else:
-                    # the mrcs file can contain only one particle
-                    proj = torch.from_numpy(np.array(mrc.data)).float() #* self.cfg.scale_images
+        #try:
+        mrc_idx, img_name = particles["rlnImageName"].split("@")
+        mrc_idx = int(mrc_idx) - 1
+        mrc_path = os.path.join(self.particles_path, img_name)
+        print("MRC PATH", mrc_path)
+        with mrcfile.mmap(mrc_path, mode="r", permissive=True) as mrc:
+            if mrc.data.ndim > 2:
+                proj = torch.from_numpy(np.array(mrc.data[mrc_idx])).float() #* self.cfg.scale_images
+            else:
+                # the mrcs file can contain only one particle
+                proj = torch.from_numpy(np.array(mrc.data)).float() #* self.cfg.scale_images
 
-            if self.down_side_shape != self.side_shape:
-                if self.down_method == "interp":
-                    print("PROJ SHAPE", proj.shape)
-                    print([self.down_side_shape, ] * 2)
-                    proj = tvf.resize(proj, [self.down_side_shape, ] * 2, antialias=True)
-                #elif self.down_method == "fft":
-                #    proj = downsample_2d(proj[0, :, :], self.down_side_shape)[None, :, :]
-                else:
-                    raise NotImplementedError            
+        if self.down_side_shape != self.side_shape:
+            if self.down_method == "interp":
+                print("PROJ SHAPE", proj.shape)
+                print([self.down_side_shape, ] * 2)
+                proj = tvf.resize(proj, [self.down_side_shape, ] * 2, antialias=True)
+            #elif self.down_method == "fft":
+            #    proj = downsample_2d(proj[0, :, :], self.down_side_shape)[None, :, :]
+            else:
+                raise NotImplementedError            
 
-        except Exception as e:
-            print(f"WARNING: Particle image {img_name} invalid! Setting to zeros.")
-            print(e)
-            proj = torch.zeros(1, self.down_side_shape, self.down_side_shape)
+        #except Exception as e:
+        #    print(f"WARNING: Particle image {img_name} invalid! Setting to zeros.")
+        #    print(e)
+        #    proj = torch.zeros(1, self.down_side_shape, self.down_side_shape)
 
         return idx, proj.flatten(start_dim=-2), self.poses[idx], self.poses_translation[idx]/self.down_apix
