@@ -12,6 +12,7 @@ import numpy as np
 from ctf import CTF
 from vae import VAE
 from mlp import MLP
+import pandas as pd
 from gmm import Gaussian, EMAN2Grid
 from polymer import Polymer
 from dataset import ImageDataSet
