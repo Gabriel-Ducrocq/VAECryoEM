@@ -69,7 +69,7 @@ def parse_yaml(path):
     Npix = image_settings["Npix"]
     Npix_downsize = image_settings["Npix_downsize"]
     apix_downsize = Npix * apix /Npix_downsize
-    image_translator = SpatialGridTranslate(D=Npix_downsize, device=self.device)
+    image_translator = SpatialGridTranslate(D=Npix_downsize, device=device)
 
     if experiment_settings["latent_type"] == "continuous":
         encoder = MLP(Npix_downsize**2,
