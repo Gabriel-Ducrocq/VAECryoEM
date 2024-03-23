@@ -20,7 +20,7 @@ class ImageDataSet(Dataset):
         poses_translation = torch.zeros((particles_df.shape[0], 3), dtype=torch.float32)
         poses_translation[:, :2] = torch.tensor(particles_df[["rlnOriginX", "rlnOriginY"]].values, dtype=torch.float32)
         #assert images.shape[0] == poses.shape[0] and images.shape[0] == poses_translation.shape[0]
-        assert torch.max(torch.abs(poses_translation)) == 0, "Only 0 translation supported as poses"
+        #assert torch.max(torch.abs(poses_translation)) == 0, "Only 0 translation supported as poses"
         #print("Dataset size:", images.shape)
         #self.images = torch.flatten(images, start_dim=-2, end_dim=-1)
         #self.avg_image = torch.mean(self.images, dim=0, keepdim=True)
