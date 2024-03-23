@@ -175,7 +175,7 @@ def get_all_mrcs(particles_star):
         if name not in uniques_mrcs_names:
             with mrcfile.open(name) as f:
                 images = f.data
-                all_mrcs{name} = images
+                all_mrcs[name] = images
                 length_mrcs += len(images)
 
     all_images = []
