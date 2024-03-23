@@ -1,5 +1,6 @@
 import os
 import torch
+import mrcfile
 import numpy as np
 from torch.utils.data import Dataset
 from pytorch3d.transforms import euler_angles_to_matrix
