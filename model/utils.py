@@ -132,9 +132,7 @@ def parse_yaml(path):
 
     particles_star = starfile.read(experiment_settings["star_file"])
     particles_mrcs = experiment_settings["mrcs_file"]
-    with mrcfile.open(particles_mrcs) as f:
-        images = f.data
-
+    images = get_all_mrcs(particles_star)
 
     images = torch.tensor(np.stack(images, axis = 0), dtype=torch.float32)
     ctf_experiment = CTF.from_starfile(experiment_settings["star_file"], device=device)
@@ -154,6 +152,44 @@ def parse_yaml(path):
     assert latent_type in ["continuous", "categorical"]
 
     return vae, ctf_experiment, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler
+
+
+def get_all_mrcs(particles_star):
+    """
+    Read all the mrcs files indicated in the star file and concatenate them into a single array
+    particles_star: pandas dataframe
+    return: a numpy array with size (N_images, Npix**2)
+    """
+    assert len(pd.unique(particles_star["_rlnCtfBfactor"]))==1, "more than one Bfactor !"
+    assert  pd.unique(particles_star["_rlnCtfBfactor"])==0.0, "Bfactor different from 0 !"
+    assert len(pd.unique(particles_star["_rlnCtfScalefactor"]))==1, "more than one scale factor !"
+    assert  pd.unique(particles_star["_rlnCtfScalefactor"])==1.0, "Scale factor different from 0 !"
+    assert len(pd.unique(particles_star["_rlnPhaseShift"]))==1, "more than one phase shift!"
+    assert  pd.unique(particles_star["_rlnPhaseShift"])==0.0, "Phase shift different from 0 !"
+
+    #### CHANG THE PATH ?!
+    all_mrcs = {}
+    uniques_mrcs_names = pd.unique(particles_star["_rlnImageName"])
+    length_mrcs = 0
+    for name in uniques_mrcs_names:
+        if name not in uniques_mrcs_names:
+            with mrcfile.open(name) as f:
+                images = f.data
+                all_mrcs{name} = images
+                length_mrcs += len(images)
+
+    all_images = []
+    for name in particles_star["_rlnImageName"]:
+        idx, path = name.split("@")
+        all_data = [all_mrcs[path][idx]]
+
+    all_data = np.stack(all_data)
+    print("The dataset is of shape:", all_data.shape)
+    return all_data
+
+
+
+
 
 
 def compute_mask_prior(N_residues, N_domains, device):
