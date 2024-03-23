@@ -64,7 +64,7 @@ def train(yaml_setting_path, debug_mode):
             rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
             end_net = time()
-            print("Net time:"end_net - start_net)
+            print("Net time:", end_net - start_net)
             start_deforming = time()
             predicted_structures = model.utils.deform_structure(gmm_repr.mus, translation_per_residue,
                                                                rotation_per_residue)
