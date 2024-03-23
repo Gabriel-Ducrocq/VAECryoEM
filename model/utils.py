@@ -161,16 +161,16 @@ def get_all_mrcs(particles_star):
     particles_star: pandas dataframe
     return: a numpy array with size (N_images, Npix**2)
     """
-    assert len(pd.unique(particles_star["CtfBfactor"]))==1, "more than one Bfactor !"
-    assert  pd.unique(particles_star["CtfBfactor"])==0.0, "Bfactor different from 0 !"
-    assert len(pd.unique(particles_star["CtfScalefactor"]))==1, "more than one scale factor !"
-    assert  pd.unique(particles_star["CtfScalefactor"])==1.0, "Scale factor different from 0 !"
-    assert len(pd.unique(particles_star["PhaseShift"]))==1, "more than one phase shift!"
-    assert  pd.unique(particles_star["PhaseShift"])==0.0, "Phase shift different from 0 !"
+    assert len(pd.unique(particles_star["rlnCtfBfactor"]))==1, "more than one Bfactor !"
+    assert  pd.unique(particles_star["rlnCtfBfactor"])==0.0, "Bfactor different from 0 !"
+    assert len(pd.unique(particles_star["rlnCtfScalefactor"]))==1, "more than one scale factor !"
+    assert  pd.unique(particles_star["rlnCtfScalefactor"])==1.0, "Scale factor different from 0 !"
+    assert len(pd.unique(particles_star["rlnPhaseShift"]))==1, "more than one phase shift!"
+    assert  pd.unique(particles_star["rlnPhaseShift"])==0.0, "Phase shift different from 0 !"
 
     #### CHANG THE PATH ?!
     all_mrcs = {}
-    uniques_mrcs_names = pd.unique(particles_star["ImageName"])
+    uniques_mrcs_names = pd.unique(particles_star["rlnImageName"])
     length_mrcs = 0
     for name in uniques_mrcs_names:
         if name not in uniques_mrcs_names:
@@ -180,7 +180,7 @@ def get_all_mrcs(particles_star):
                 length_mrcs += len(images)
 
     all_images = []
-    for name in particles_star["ImageName"]:
+    for name in particles_star["rlnImageName"]:
         idx, path = name.split("@")
         all_data = [all_mrcs[path][idx]]
 
