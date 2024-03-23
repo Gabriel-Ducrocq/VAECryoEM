@@ -93,11 +93,7 @@ class Polymer:
                 raise NotImplemented
 
             valid_atom_names = set(tmp_res.atom_name).intersection(using_atom_names)
-            #print("TMP RES", tmp_res.atom_name)
-            #print("TMP RES", filtered_res.atom_name)
             for select_atom_name in valid_atom_names:
-                #print(valid_atom_names)
-                #print(filtered_res[filtered_res.atom_name == select_atom_name].element)
                 meta[pos] = {
                     "chain_id": tmp_res.chain_id[0],
                     "res_id": tmp_res.res_id[0],

@@ -67,7 +67,7 @@ def parse_yaml(path):
     particles_path = experiment_settings["particles_path"]
     apix = image_settings["apix"]
     Npix = image_settings["Npix"]
-    Npix_downsize = Npix
+    Npix_downsize = image_settings["Npix_downsize"]
     apix_downsize = Npix * apix /Npix_downsize
     image_translator = SpatialGridTranslate(D=Npix_downsize, device=self.device)
 
@@ -142,7 +142,6 @@ def parse_yaml(path):
 
 
     particles_star = starfile.read(experiment_settings["star_file"])
-    particles_mrcs = experiment_settings["mrcs_file"]
     images = get_all_mrcs(particles_star)
 
     images = torch.tensor(np.stack(images, axis = 0), dtype=torch.float32)
