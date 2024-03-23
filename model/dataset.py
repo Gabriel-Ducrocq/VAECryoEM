@@ -3,10 +3,11 @@ import torch
 import mrcfile
 import numpy as np
 from torch.utils.data import Dataset
+import torchvision.transforms.functional as tvf
 from pytorch3d.transforms import euler_angles_to_matrix
 
 class ImageDataSet(Dataset):
-    def __init__(self, apix, side_shape, particles_df, particles_path, down_side_shape=None):
+    def __init__(self, apix, side_shape, particles_df, particles_path, down_side_shape=None, down_method="interp"):
         """
         Create a dataset of images and poses
         :param images: torch.tensor(N_images, N_pix_x, N_pix_y) of images
@@ -14,6 +15,7 @@ class ImageDataSet(Dataset):
         :param particles_path: str, path to the data folder containing the mrcs files.
         """
         self.side_shape = side_shape
+        self.down_method = down_method
         self.apix = apix
         self.particles_path = particles_path
         self.particles_df = particles_df
@@ -60,6 +62,14 @@ class ImageDataSet(Dataset):
                 else:
                     # the mrcs file can contain only one particle
                     proj = torch.from_numpy(np.array(mrc.data)).float() #* self.cfg.scale_images
+
+            if self.down_side_shape != self.side_shape:
+                if self.down_method == "interp":
+                    proj = tvf.resize(proj, [self.down_side_shape, ] * 2, antialias=True)
+                #elif self.down_method == "fft":
+                #    proj = downsample_2d(proj[0, :, :], self.down_side_shape)[None, :, :]
+                else:
+                    raise NotImplementedError            
 
         except Exception as e:
             print(f"WARNING: Particle image {img_name} invalid! Setting to zeros.")
