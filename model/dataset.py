@@ -37,8 +37,7 @@ class ImageDataSet(Dataset):
         print("Dataset size:", self.particles_df, "apix:",self.apix)
         print("Normalizing training data")
 
-        self.down_side_shape = down_side_shape
-        self.down_apix = apix_down_side
+        self.down_side_shape = side_shape
         if down_side_shape is not None:
             self.down_side_shape = down_side_shape
             self.down_apix = self.side_shape * self.apix /self.down_side_shape
@@ -76,4 +75,4 @@ class ImageDataSet(Dataset):
             print(e)
             proj = torch.zeros(1, self.down_side_shape, self.down_side_shape)
 
-        return idx, proj.flatten(start_dim=-2), self.poses[idx], self.poses_translation[idx]
+        return idx, proj.flatten(start_dim=-2), self.poses[idx], self.poses_translation[idx]/self.down_apix
