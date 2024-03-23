@@ -46,13 +46,13 @@ class ImageDataSet(Dataset):
             mrc_path = os.path.join(self.particles_path, img_name)
             with mrcfile.mmap(mrc_path, mode="r", permissive=True) as mrc:
                 if mrc.data.ndim > 2:
-                    proj = torch.from_numpy(np.array(mrc.data[in_mrc_idx])).float() * self.cfg.scale_images
+                    proj = torch.from_numpy(np.array(mrc.data[mrc_idx])).float() #* self.cfg.scale_images
                 else:
                     # the mrcs file can contain only one particle
-                    proj = torch.from_numpy(np.array(mrc.data)).float() * self.cfg.scale_images
+                    proj = torch.from_numpy(np.array(mrc.data)).float() #* self.cfg.scale_images
 
         except Exception as e:
-            print(f"WARNING: Particle image {img_name_raw} invalid! Setting to zeros.")
+            print(f"WARNING: Particle image {img_name} invalid! Setting to zeros.")
             print(e)
             proj = torch.zeros(1, self.down_side_shape, self.down_side_shape)
 
