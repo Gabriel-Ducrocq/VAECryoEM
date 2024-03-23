@@ -64,7 +64,8 @@ class ImageDataSet(Dataset):
 
             if self.down_side_shape != self.side_shape:
                 if self.down_method == "interp":
-                    print("WE ARE RESIZIIIIIIIIING ######################################################")
+                    print("PROJ SHAPE", proj.shape)
+                    print([self.down_side_shape, ] * 2)
                     proj = tvf.resize(proj, [self.down_side_shape, ] * 2, antialias=True)
                 #elif self.down_method == "fft":
                 #    proj = downsample_2d(proj[0, :, :], self.down_side_shape)[None, :, :]
