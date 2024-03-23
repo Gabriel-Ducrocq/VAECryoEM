@@ -21,7 +21,6 @@ class ImageDataSet(Dataset):
         euler_angles_radians = euler_angles_degrees*np.pi/180
         poses = euler_angles_to_matrix(torch.tensor(euler_angles_radians, dtype=torch.float32), convention="ZYZ")
         poses = torch.transpose(poses, dim0=-2, dim1=-1)
-        poses_translation = torch.zeros((particles_df.shape[0], 3), dtype=torch.float32)
         if "rlnOriginXAngst" in particles_df:
             shiftX = torch.from_numpy(np.array(particles_df["rlnOriginXAngst"], dtype=np.float32))
             shiftY = torch.from_numpy(np.array(particles_df["rlnOriginYAngst"], dtype=np.float32))
@@ -29,24 +28,21 @@ class ImageDataSet(Dataset):
             shiftX = torch.from_numpy(np.array(particles_df["rlnOriginX"] * self.apix, dtype=np.float32))
             shiftY = torch.from_numpy(np.array(particles_df["rlnOriginY"] * self.apix, dtype=np.float32))
 
-        poses_translation[:, :2] = torch.tensor(torch.vstack([shiftX, shiftY]).T, dtype=torch.float32)   
-        poses_translation[:, :2] = torch.tensor(particles_df[["rlnOriginX", "rlnOriginY"]].values, dtype=torch.float32)
-        assert poses_translation.shape[0] == poses.shape[0], "Rotation and translation pose shapes are not matching !"
-        #assert torch.max(torch.abs(poses_translation)) == 0, "Only 0 translation supported as poses"
-        print("Dataset size:", self.particles_df)
-        print("Normalizing training data")
+        self.poses_translation = torch.tensor(torch.vstack([shiftY, shiftX]).T, dtype=torch.float32)   
         self.poses = poses
-        self.poses_translation = poses_translation
+        assert self.poses_translation.shape[0] == self.poses.shape[0], "Rotation and translation pose shapes are not matching !"
+        #assert torch.max(torch.abs(poses_translation)) == 0, "Only 0 translation supported as poses"
+        print("Dataset size:", self.particles_df, "apix:"self.apix)
+        print("Normalizing training data")
 
-        self.down_side_shape = side_shape
-        self.down_apix = apix
+        self.down_side_shape = side_shape_down_side
+        self.down_apix = apix_down_side
         if down_side_shape is not None:
             self.down_side_shape = down_side_shape
             self.down_apix = self.side_shape * self.apix /self.down_side_shape
 
     def standardize(self, images, device="cpu"):
         return (images - self.avg_image.to(device))/self.std_image.to(device)
-
 
     def __len__(self):
         return self.particles_df.shape[0]
@@ -70,4 +66,4 @@ class ImageDataSet(Dataset):
             print(e)
             proj = torch.zeros(1, self.down_side_shape, self.down_side_shape)
 
-        return idx, proj, self.poses[idx], self.poses_translation[idx]
+        return idx, proj.flatten(start_dim=-2), self.poses[idx], self.poses_translation[idx]

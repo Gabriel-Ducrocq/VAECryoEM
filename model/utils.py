@@ -5,6 +5,7 @@ sys.path.append(path)
 import yaml
 import wandb
 import torch
+import einops
 import mrcfile
 import warnings
 import starfile
@@ -63,11 +64,15 @@ def parse_yaml(path):
         device = "cpu"
 
 
+    particles_path = experiment_settings["particles_path"]
     apix = image_settings["apix"]
     Npix = image_settings["Npix"]
+    Npix_downsize = Npix
+    apix_downsize = Npix * apix /Npix_downsize
+    image_translator = SpatialGridTranslate(D=Npix_downsize, device=self.device)
 
     if experiment_settings["latent_type"] == "continuous":
-        encoder = MLP(Npix**2,
+        encoder = MLP(Npix_downsize**2,
                       experiment_settings["latent_dimension"] * 2,
                       experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
                       latent_type="continuous")
@@ -92,12 +97,16 @@ def parse_yaml(path):
 
 
     filter_aa = True
-    grid = EMAN2Grid(Npix, apix, device=device)
+    grid = EMAN2Grid(Npix_downsize, apix_downsize, device=device)
     base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"], filter_aa)
-    centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"], filter_aa)
-    center_of_mass = compute_center_of_mass(centering_structure)
+    #centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"], filter_aa)
+    #center_of_mass = compute_center_of_mass(centering_structure)
+
+    ##############                  I REMOVED THE CENTERING SINCE FOR THE REAL DATASET WE ASSUME THE STRUCTURE ALREADY CORRECTLY CENTERED !!!!!! ############
     # Since we operate on an EMAN2 grid, we need to translate the structure by -apix/2 to get it at the center of the image.
-    base_structure.translate_structure(-center_of_mass - apix/2)
+    #base_structure.translate_structure(-center_of_mass - apix/2)
+
+
     #gmm_repr = Gaussian(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), 
     #            torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device)*image_settings["sigma_gmm"], 
     #            torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None]) 
@@ -137,9 +146,9 @@ def parse_yaml(path):
     images = get_all_mrcs(particles_star)
 
     images = torch.tensor(np.stack(images, axis = 0), dtype=torch.float32)
-    ctf_experiment = CTF.from_starfile(experiment_settings["star_file"], device=device)
+    ctf_experiment = CTF.from_starfile(experiment_settings["star_file"], apix = apix_downsize, side_shape=Npix_downsize , device=device)
 
-    dataset = ImageDataSet(images, particles_star["particles"])
+    dataset = ImageDataSet(apix, Npix, particles_star["particles"], particles_path, down_side_shape=Npix_downsize)
 
     scheduler = None
     if "scheduler" in experiment_settings:
@@ -153,7 +162,56 @@ def parse_yaml(path):
     latent_type = experiment_settings["latent_type"]
     assert latent_type in ["continuous", "categorical"]
 
-    return vae, ctf_experiment, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler
+    return vae, image_translator, ctf_experiment, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler
+
+
+class SpatialGridTranslate(torch.nn.Module):
+
+    def __init__(self, D, device=None) -> None:
+        super().__init__()
+        self.D = D
+        # yapf: disable
+        coords = torch.stack(torch.meshgrid([
+            torch.linspace(-1.0, 1.0, self.D, device=device),
+            torch.linspace(-1.0, 1.0, self.D, device=device)],
+        indexing="ij"), dim=-1).reshape(-1, 2)
+        # yapf: enable
+        self.register_buffer("coords", coords)
+
+    def transform(self, images: torch.Tensor, trans: torch.Tensor):
+        """
+            The `images` are stored in `YX` mode, so the `trans` is also `YX`!
+
+            Supposing that D is 96, a point is at 0.0:
+                - adding 48 should move it to the right corner which is 1.0
+                    1.0 = 0.0 + 48 / (96 / 2)
+                - adding 96(>48) should leave it at 0.0
+                    0.0 = 0.0 + 96 / (96 / 2) - 2.0
+                - adding -96(<48) should leave it at 0.0
+                    0.0 = 0.0 - 96 / (96 / 2) + 2.0
+
+            Input:
+                images: (B, NY, NX)
+                trans:  (B, T,  2)
+
+            Returns:
+                images: (B, T,  NY, NX)
+        """
+        B, NY, NX = images.shape
+        assert self.D == NY == NX
+        assert images.shape[0] == trans.shape[0]
+
+        grid = einops.rearrange(self.coords, "N C2 -> 1 1 N C2") - \
+            einops.rearrange(trans, "B T C2 -> B T 1 C2") * 2 / self.D
+        grid = grid.flip(-1)  # convert the first axis from slow-axis to fast-axis
+        grid[grid >= 1] -= 2
+        grid[grid <= -1] += 2
+        grid.clamp_(-1.0, 1.0)
+
+        sampled = F.grid_sample(einops.rearrange(images, "B NY NX -> B 1 NY NX"), grid, align_corners=True)
+
+        sampled = einops.rearrange(sampled, "B 1 T (NY NX) -> B T NY NX", NX=NX, NY=NY)
+        return sampled
 
 
 def get_all_mrcs(particles_star):
