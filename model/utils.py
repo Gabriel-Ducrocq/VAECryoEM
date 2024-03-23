@@ -15,9 +15,10 @@ from vae import VAE
 from mlp import MLP
 import pandas as pd
 from tqdm import tqdm
-from gmm import Gaussian, EMAN2Grid
 from polymer import Polymer
+import torch.nn.functional as F
 from dataset import ImageDataSet
+from gmm import Gaussian, EMAN2Grid
 from Bio.PDB.PDBParser import PDBParser
 from biotite.structure.io.pdb import PDBFile
 from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
@@ -206,46 +207,9 @@ class SpatialGridTranslate(torch.nn.Module):
 
         sampled = F.grid_sample(einops.rearrange(images, "B NY NX -> B 1 NY NX"), grid, align_corners=True)
 
+        print("SAMPLE SHAPE", sampled.shape)
         sampled = einops.rearrange(sampled, "B 1 T (NY NX) -> B T NY NX", NX=NX, NY=NY)
         return sampled
-
-
-def get_all_mrcs(particles_star):
-    """
-    Read all the mrcs files indicated in the star file and concatenate them into a single array
-    particles_star: pandas dataframe
-    return: a numpy array with size (N_images, Npix**2)
-    """
-    assert len(pd.unique(particles_star["rlnCtfBfactor"]))==1, "more than one Bfactor !"
-    assert  pd.unique(particles_star["rlnCtfBfactor"])==0.0, "Bfactor different from 0 !"
-    assert len(pd.unique(particles_star["rlnCtfScalefactor"]))==1, "more than one scale factor !"
-    assert  pd.unique(particles_star["rlnCtfScalefactor"])==1.0, "Scale factor different from 0 !"
-    assert len(pd.unique(particles_star["rlnPhaseShift"]))==1, "more than one phase shift!"
-    assert  pd.unique(particles_star["rlnPhaseShift"])==0.0, "Phase shift different from 0 !"
-
-    #### CHANG THE PATH ?!
-    all_mrcs = {}
-    uniques_mrcs_names = pd.unique(particles_star["rlnImageName"])
-    length_mrcs = 0
-    for name in tqdm(uniques_mrcs_names):
-        if name not in uniques_mrcs_names:
-            with mrcfile.open(name) as f:
-                images = f.data
-                all_mrcs[name] = images
-                length_mrcs += len(images)
-
-    all_images = []
-    for name in particles_star["rlnImageName"]:
-        idx, path = name.split("@")
-        all_data = [all_mrcs[path][idx]]
-
-    all_data = np.stack(all_data)
-    print("The dataset is of shape:", all_data.shape)
-    return all_data
-
-
-
-
 
 
 def compute_mask_prior(N_residues, N_domains, device):
