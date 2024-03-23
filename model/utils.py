@@ -161,12 +161,12 @@ def get_all_mrcs(particles_star):
     particles_star: pandas dataframe
     return: a numpy array with size (N_images, Npix**2)
     """
-    assert len(pd.unique(particles_star["_rlnCtfBfactor"]))==1, "more than one Bfactor !"
-    assert  pd.unique(particles_star["_rlnCtfBfactor"])==0.0, "Bfactor different from 0 !"
-    assert len(pd.unique(particles_star["_rlnCtfScalefactor"]))==1, "more than one scale factor !"
-    assert  pd.unique(particles_star["_rlnCtfScalefactor"])==1.0, "Scale factor different from 0 !"
-    assert len(pd.unique(particles_star["_rlnPhaseShift"]))==1, "more than one phase shift!"
-    assert  pd.unique(particles_star["_rlnPhaseShift"])==0.0, "Phase shift different from 0 !"
+    assert len(pd.unique(particles_star["CtfBfactor"]))==1, "more than one Bfactor !"
+    assert  pd.unique(particles_star["CtfBfactor"])==0.0, "Bfactor different from 0 !"
+    assert len(pd.unique(particles_star["CtfScalefactor"]))==1, "more than one scale factor !"
+    assert  pd.unique(particles_star["CtfScalefactor"])==1.0, "Scale factor different from 0 !"
+    assert len(pd.unique(particles_star["PhaseShift"]))==1, "more than one phase shift!"
+    assert  pd.unique(particles_star["PhaseShift"])==0.0, "Phase shift different from 0 !"
 
     #### CHANG THE PATH ?!
     all_mrcs = {}
