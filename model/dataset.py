@@ -37,7 +37,7 @@ class ImageDataSet(Dataset):
 
 
     def __len__(self):
-        return self.particles_df
+        return self.particles_df.shape[0]
 
     def __getitem__(self, idx):
         particles = self.particles_df.iloc[idx]
