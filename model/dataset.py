@@ -37,7 +37,7 @@ class ImageDataSet(Dataset):
 
 
     def __len__(self):
-        return self.images.shape[0]
+        return self.particles_df
 
     def __getitem__(self, idx):
         particles = self.particles_df.iloc[idx]
@@ -48,12 +48,8 @@ class ImageDataSet(Dataset):
             print("MRC PATH", mrc_path)
             with mrcfile.mmap(mrc_path, mode="r", permissive=True) as mrc:
                 if mrc.data.ndim > 2:
-                    print("MRC_IDX", mrc_idx)
-                    print(mrc.data[mrc_idx])
                     proj = torch.from_numpy(np.array(mrc.data[mrc_idx])).float() #* self.cfg.scale_images
                 else:
-                    print("MRC_IDX", mrc_idx)
-                    print(mrc.data)
                     # the mrcs file can contain only one particle
                     proj = torch.from_numpy(np.array(mrc.data)).float() #* self.cfg.scale_images
 
