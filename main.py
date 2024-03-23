@@ -21,7 +21,7 @@ def train(yaml_setting_path, debug_mode):
     :param yaml_setting_path: str, path the yaml containing all the details of the experiment
     :return:
     """
-    vae, ctf, image_translator, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler = model.utils.parse_yaml(yaml_setting_path)
+    vae, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler = model.utils.parse_yaml(yaml_setting_path)
     if experiment_settings["resume_training"]["model"] != "None":
         name = f"experiment_{experiment_settings['name']}_resume"
     else:
@@ -71,7 +71,7 @@ def train(yaml_setting_path, debug_mode):
             batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
             batch_predicted_images = image_translator.transform(batch_predicted_images, batch_poses_translation[:, None, :])
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
-            batch_predicted_images = dataset.standardize(batch_predicted_images, device=device)
+            #batch_predicted_images = dataset.standardize(batch_predicted_images, device=device)
 
 
             if not experiment_settings["clashing_loss"]:
