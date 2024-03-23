@@ -65,11 +65,16 @@ def train(yaml_setting_path, debug_mode):
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
             predicted_structures = model.utils.deform_structure(gmm_repr.mus, translation_per_residue,
                                                                rotation_per_residue)
+            print("Structures predicted")
 
             posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
+            print("Structures rotated")
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
+            print("Structures pprojected")
             batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
+            print("CTF applied")
             batch_predicted_images = image_translator.transform(batch_predicted_images, batch_poses_translation[:, None, :])
+            print("Images translated")
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
             #batch_predicted_images = dataset.standardize(batch_predicted_images, device=device)
 
