@@ -57,12 +57,16 @@ def train(yaml_setting_path, debug_mode):
             indexes = indexes.to(device)
             #plt.imshow(batch_images[0].detach().cpu())
             #plt.show()
+            print("BATCH IMAGES", batch_images.shape)
             latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
-
+            print("Latent var sampled")
             mask = vae.sample_mask(batch_size)
+            print("MASK SAMPLED")
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
+            print("DECODED")
             rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
+            print("DEFORMING")
             predicted_structures = model.utils.deform_structure(gmm_repr.mus, translation_per_residue,
                                                                rotation_per_residue)
             print("Structures predicted")
