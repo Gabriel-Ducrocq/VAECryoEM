@@ -54,7 +54,6 @@ class ImageDataSet(Dataset):
             mrc_idx, img_name = particles["rlnImageName"].split("@")
             mrc_idx = int(mrc_idx) - 1
             mrc_path = os.path.join(self.particles_path, img_name)
-            print("MRC PATH", mrc_path)
             with mrcfile.mmap(mrc_path, mode="r", permissive=True) as mrc:
                 if mrc.data.ndim > 2:
                     proj = torch.from_numpy(np.array(mrc.data[mrc_idx])).float() #* self.cfg.scale_images

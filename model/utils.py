@@ -192,7 +192,7 @@ class SpatialGridTranslate(torch.nn.Module):
                 trans:  (B, T,  2)
 
             Returns:
-                images: (B, T,  NY, NX)
+                images: (B, NY, NX)
         """
         B, NY, NX = images.shape
         assert self.D == NY == NX
@@ -207,8 +207,7 @@ class SpatialGridTranslate(torch.nn.Module):
 
         sampled = F.grid_sample(einops.rearrange(images, "B NY NX -> B 1 NY NX"), grid, align_corners=True)
 
-        print("SAMPLE SHAPE", sampled.shape)
-        sampled = einops.rearrange(sampled, "B 1 T (NY NX) -> B T NY NX", NX=NX, NY=NY)
+        sampled = einops.rearrange(sampled, "B 1 T (NY NX) -> B NY NX", NX=NX, NY=NY)
         return sampled
 
 
