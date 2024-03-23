@@ -142,9 +142,6 @@ def parse_yaml(path):
 
 
     particles_star = starfile.read(experiment_settings["star_file"])
-    images = get_all_mrcs(particles_star)
-
-    images = torch.tensor(np.stack(images, axis = 0), dtype=torch.float32)
     ctf_experiment = CTF.from_starfile(experiment_settings["star_file"], apix = apix_downsize, side_shape=Npix_downsize , device=device)
 
     dataset = ImageDataSet(apix, Npix, particles_star["particles"], particles_path, down_side_shape=Npix_downsize)
