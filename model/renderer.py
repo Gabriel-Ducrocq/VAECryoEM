@@ -278,7 +278,6 @@ class Renderer():
         """
         batch_size = x.shape[0]
         if self.latent_type == "continuous":
-            print("PIX POS", pixels_pos.shape, x.shape)
             scaled_distances = -(1/2)*(torch.broadcast_to(pixels_pos, (batch_size, self.N_atoms, -1)) -
                                    x[:, :, None])**2/self.std_blob**2
         else:
