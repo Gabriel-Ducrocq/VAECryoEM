@@ -62,6 +62,12 @@ def train(yaml_setting_path, debug_mode):
             mask = vae.sample_mask(batch_size)
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
             rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
+            rotation_per_residue_einops = model.utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
+            print("\n\n\n")
+            print(rotation_per_residue[1000])
+            print(rotation_per_residue_einops[1000])
+
+            print("\n\n\n")
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
             end_net = time()
             print("Net time:", end_net - start_net)

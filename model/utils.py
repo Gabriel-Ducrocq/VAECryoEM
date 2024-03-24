@@ -335,6 +335,29 @@ def compute_rotations_per_residue(quaternions, mask, device):
 
     return overall_rotation_matrices
 
+def compute_rotations_per_residue_einops(quaternions, mask, device):
+    """
+    Computes the rotation matrix corresponding to each domain for each residue, where the angle of rotation has been
+    weighted by the mask value of the corresponding domain.
+    :param quaternions: tensor (N_batch, N_domains, 4) of non normalized quaternions defining rotations
+    :param mask: tensor (N_batch, N_residues, N_domains)
+    :return: tensor (N_batch, N_residues, 3, 3) rotation matrix for each residue
+    """
+
+    N_residues = mask.shape[1]
+    batch_size = quaternions.shape[0]
+    N_domains = mask.shape[-1]
+    # NOTE: no need to normalize the quaternions, quaternion_to_axis does it already.
+    rotation_per_domains_axis_angle = quaternion_to_axis_angle(quaternions)
+    mask_rotation_per_domains_axis_angle = mask[:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
+    mask_rotation_matrix_per_domain_per_residue = axis_angle_to_matrix(mask_rotation_per_domains_axis_angle)
+    ## Flipping to keep in line with the previous implementation
+    mask_rotation_matrix_per_domain_per_residue = torch.einops("brdl->dbrl", mask_rotation_matrix_per_domain_per_residue).flip(0)
+    dimensions = ",".join([f"a{i} a{i+1}" for i in range(N_domains)])
+    dimensions += f"-> a0 a{N_domains}"
+    overall_rotation_matrices = einops.einsum(*mask_rotation_matrix_per_domain_per_residue, dimensions)
+    return overall_rotation_matrices
+
 def compute_translations_per_residue(translation_vectors, mask):
     """
     Computes one translation vector per residue based on the mask
