@@ -69,7 +69,7 @@ def train(yaml_setting_path, debug_mode):
             end_new = time()
             print("Old and New", end_old - start_old, end_new - start_new)
             print("\n\n\n")
-            print("ARE THE TWO ROT EQUAL", torch.all(rotation_per_residue.eq(rotation_per_residue_einops)))
+            print("ARE THE TWO ROT EQUAL", torch.allclose(rotation_per_residue,rotation_per_residue_einops))
             print("\n\n\n")
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
             end_net = time()
