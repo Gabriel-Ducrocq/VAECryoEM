@@ -64,8 +64,8 @@ def train(yaml_setting_path, debug_mode):
             rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             rotation_per_residue_einops = model.utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
             print("\n\n\n")
-            print(rotation_per_residue[1000])
-            print(rotation_per_residue_einops[1000])
+            print(rotation_per_residue[10])
+            print(rotation_per_residue_einops[10])
 
             print("\n\n\n")
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
