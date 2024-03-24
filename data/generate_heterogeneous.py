@@ -29,6 +29,7 @@ pose_rotation = args.pose_rotation
 poses_translation = args.pose_translation
 is_homogeneous = args.homogeneous
 if is_homogeneous:
+    print("CONDISER HONOGENEOUS")
     structure_path = args.structure_path
 
 
