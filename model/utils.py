@@ -352,7 +352,7 @@ def compute_rotations_per_residue_einops(quaternions, mask, device):
     mask_rotation_per_domains_axis_angle = mask[:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
     mask_rotation_matrix_per_domain_per_residue = axis_angle_to_matrix(mask_rotation_per_domains_axis_angle)
     ## Flipping to keep in line with the previous implementation
-    mask_rotation_matrix_per_domain_per_residue = torch.einops("brdl->dbrl", mask_rotation_matrix_per_domain_per_residue).flip(0)
+    mask_rotation_matrix_per_domain_per_residue = torch.eisum("brdl->dbrl", mask_rotation_matrix_per_domain_per_residue).flip(0)
     dimensions = ",".join([f"a{i} a{i+1}" for i in range(N_domains)])
     dimensions += f"-> a0 a{N_domains}"
     overall_rotation_matrices = einops.einsum(*mask_rotation_matrix_per_domain_per_residue, dimensions)
