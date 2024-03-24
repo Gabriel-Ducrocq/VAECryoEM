@@ -81,7 +81,7 @@ def train(yaml_setting_path, debug_mode):
             end_ctf = time()
             print("CTF time", end_ctf - start_ctf)
             start_trans = time()
-            batch_predicted_images = image_translator.transform(batch_predicted_images, batch_poses_translation[:, None, :])
+            #batch_predicted_images = image_translator.transform(batch_predicted_images, batch_poses_translation[:, None, :])
             end_trans = time()
             print("Tran time", end_trans- start_trans)
             start_flatten = time()
