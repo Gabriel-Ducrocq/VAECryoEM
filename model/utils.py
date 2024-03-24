@@ -355,6 +355,8 @@ def compute_rotations_per_residue_einops(quaternions, mask, device):
     mask_rotation_matrix_per_domain_per_residue = torch.einsum("brdle->dbrle", mask_rotation_matrix_per_domain_per_residue).flip(0)
     dimensions = ",".join([f"b r a{i} a{i+1}" for i in range(N_domains)])
     dimensions += f"-> b r a0 a{N_domains}"
+    print("SHAPE ROT MAT", mask_rotation_matrix_per_domain_per_residue.shape)
+    print("DIMENSIONS", dimensions)
     overall_rotation_matrices = einops.einsum(*mask_rotation_matrix_per_domain_per_residue, dimensions)
     return overall_rotation_matrices
 
