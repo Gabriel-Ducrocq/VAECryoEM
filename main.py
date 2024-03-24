@@ -59,7 +59,7 @@ def train(yaml_setting_path, debug_mode):
             #plt.show()
             start_net = time()
             latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
-            mask = vae.sample_mask(batch_size)
+            mask = vae.sample_mask(batch_images.shape[0])
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
             start_old = time()
             #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
