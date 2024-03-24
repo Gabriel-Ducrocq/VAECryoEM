@@ -116,8 +116,8 @@ torch.save(poses_translation, f"{folder_experiment}poses_translation")
 #Finding the center of mass to center the protein
 center_vector = utils.compute_center_of_mass(centering_structure)
 ## !!!!!!!!!!!!!!!!!!    BE CAREFUL I AM TRANSLATING A LITTLE BIT !!!!!!!!!!!!!!!!!!
-print("Apix:", (image_settings["image_upper_bounds"][0] - image_settings["image_lower_bounds"][0])/image_settings["N_pixels_per_axis"][0])
-center_vector += 0.5*(image_settings["image_upper_bounds"][0] - image_settings["image_lower_bounds"][0])/image_settings["N_pixels_per_axis"][0]
+#print("Apix:", (image_settings["image_upper_bounds"][0] - image_settings["image_lower_bounds"][0])/image_settings["N_pixels_per_axis"][0])
+#center_vector += 0.5*(image_settings["image_upper_bounds"][0] - image_settings["image_lower_bounds"][0])/image_settings["N_pixels_per_axis"][0]
 
 all_images = []
 from time import time
