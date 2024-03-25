@@ -48,7 +48,8 @@ if not is_homogeneous:
 
     indexes_to_replace = random.sample(indexes1, round(len(indexes1)*proportion2))
     print(f"Replacing {proportion2*100} percent with missing residue structures")
-    sorted_structures = [sorted_structures1[i] if i not in indexes_to_replace else sorted_structures2[i] for i in range(1, len(structures1)+1)]
+    #We use i+1 cause the structures indexes start at 1 but lists start at 0 !
+    sorted_structures = [sorted_structures1[i] if i+1 not in indexes_to_replace else sorted_structures2[i] for i in len(sorted_structures1)]
 
     replaced_indexes = np.array(indexes_to_replace)
     np.save(f"{folder_experiment}indexe_mising_30_res.npy", replaced_indexes)
