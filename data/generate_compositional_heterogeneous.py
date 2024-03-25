@@ -83,6 +83,15 @@ renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"
                     amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
                     device=device, use_ctf=image_settings["renderer"]["use_ctf"], std = image_settings["renderer"]["std_volume"] if "std_volume" in image_settings["renderer"] else 1)
 
+renderer_mising = Renderer(pixels_x, pixels_y, N_atoms=968 * 3,
+                    dfU=image_settings["renderer"]["dfU"], dfV=image_settings["renderer"]["dfV"],
+                    dfang=image_settings["renderer"]["dfang"],
+                    spherical_aberration=image_settings["renderer"]["spherical_aberration"],
+                    accelerating_voltage=image_settings["renderer"]["accelerating_voltage"],
+                    amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
+                    device=device, use_ctf=image_settings["renderer"]["use_ctf"], std = image_settings["renderer"]["std_volume"] if "std_volume" in image_settings["renderer"] else 1)
+
+
 rendererFourier = RendererFourier(190, device=device)
 
 N_pose_per_structure = experiment_settings["N_pose_per_structure"]
@@ -159,7 +168,11 @@ for i in tqdm(range(n_iter)):
         backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
         backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
 
-    batch_images = renderer.compute_x_y_values_all_atoms(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
+    if i in indexes_to_replace:
+        batch_images = renderer_mising.compute_x_y_values_all_atoms(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
+    else:
+        batch_images = renderer.compute_x_y_values_all_atoms(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
+        
     plt.imshow(batch_images[0].detach().cpu().numpy())
     plt.show()
     all_images.append(batch_images.detach().cpu())
