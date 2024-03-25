@@ -46,7 +46,7 @@ if not is_homogeneous:
     indexes2 = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures2]
     sorted_structures2 = [struct for _, struct in sorted(zip(indexes2, structures2))]
 
-    indexes_to_replace = random.sample(indexes1, round(len(indexes)*proportion2))
+    indexes_to_replace = random.sample(indexes1, round(len(indexes1)*proportion2))
     print(f"Replacing {proportion2*100} percent with missing residue structures")
     sorted_structures = [sorted_structures1[i] if i not in indexes_to_replace else sorted_structures2[i] for i in range(1, len(structures1)+1)]
 
