@@ -31,7 +31,7 @@ is_homogeneous = False
 pose_rotation = None
 poses_translation = None
 if is_homogeneous:
-    print("CONDISER HONOGENEOUS")
+    print("CONSIDER HONOGENEOUS")
     structure_path = args.structure_path
 
 
@@ -48,11 +48,12 @@ if not is_homogeneous:
     indexes2 = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures2]
     sorted_structures2 = [struct for _, struct in sorted(zip(indexes2, structures2))]
 
+
     indexes_to_replace = random.sample(indexes1, round(len(indexes1)*proportion2))
     print("Indexes to replace", indexes_to_replace)
     print(f"Replacing {proportion2*100} percent with missing residue structures")
-    print(len(sorted_structures1))
-    print(len(sorted_structures2))
+    print(sorted_structures1)
+    print(sorted_structures2)
     #We use i+1 cause the structures indexes start at 1 but lists start at 0 !
     sorted_structures = [sorted_structures1[i] if i+1 not in indexes_to_replace else sorted_structures2[i] for i in range(len(sorted_structures1))]
 
@@ -168,6 +169,7 @@ for i in tqdm(range(n_iter)):
         backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
         backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
 
+    print(i)
     if i+1 in indexes_to_replace:
         batch_images = renderer_mising.compute_x_y_values_all_atoms(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
     else:
