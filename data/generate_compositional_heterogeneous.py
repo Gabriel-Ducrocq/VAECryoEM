@@ -28,6 +28,8 @@ folder_structures2 = args.folder_structures2
 proportion1 = args.proportion
 proportion2 = 1 - proportion1
 is_homogeneous = False
+pose_rotation = None
+poses_translation = None
 if is_homogeneous:
     print("CONDISER HONOGENEOUS")
     structure_path = args.structure_path
@@ -167,7 +169,7 @@ all_images = torch.concat(all_images, dim=0)
 print("Images shape", all_images.shape)
 mean_variance = torch.mean(torch.var(all_images, dim=(-2, -1)))
 print("Mean variance accross images", mean_variance)
-noise_var = 10000*mean_variance
+noise_var = 10*mean_variance
 print("Adding Gaussian noise with variance", noise_var)
 print("Saving non noisy images")
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
