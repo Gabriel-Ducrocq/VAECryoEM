@@ -149,7 +149,7 @@ all_images = torch.concat(all_images, dim=0)
 print("Images shape", all_images.shape)
 mean_variance = torch.mean(torch.var(all_images, dim=(-2, -1)))
 print("Mean variance accross images", mean_variance)
-noise_var = 10*mean_variance
+noise_var = 10000*mean_variance
 print("Adding Gaussian noise with variance", noise_var)
 print("Saving non noisy images")
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
