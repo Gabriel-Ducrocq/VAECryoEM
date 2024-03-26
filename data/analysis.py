@@ -73,13 +73,13 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path):
         #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
         end_old = time()
         start_new = time()
-        rotation_per_residue = model.utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
+        rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
         end_new = time()
-        translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
+        translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
         end_net = time()
         print("Net time:", end_net - start_net)
         start_deforming = time()
-        predicted_structures = model.utils.deform_structure(gmm_repr.mus, translation_per_residue,
+        predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
                                                            rotation_per_residue)
 
         for i, pred_struct in enumerate(predicted_structures):
