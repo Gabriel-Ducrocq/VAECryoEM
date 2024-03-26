@@ -112,7 +112,7 @@ if __name__ == '__main__':
     latent_path = args.latent_path
     model_path = args.model
     path = args.experiment_yaml
-    train(path, model_path, latent_path, structures_path)
+    analyze(path, model_path, latent_path, structures_path)
 
 
 
