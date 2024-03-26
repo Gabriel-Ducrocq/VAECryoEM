@@ -52,11 +52,11 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path):
     :param yaml_setting_path: str, path the yaml containing all the details of the experiment
     :return:
     """
-    base_structure, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler = model.utils.parse_yaml(yaml_setting_path)
+    _, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, base_structure = model.utils.parse_yaml(yaml_setting_path)
     vae = torch.load(model_path)
     vae.eval()
     all_latent_variables = []
-    data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True))
+    data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=False))
     for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
         start = time()
         batch_images = batch_images.to(device)
