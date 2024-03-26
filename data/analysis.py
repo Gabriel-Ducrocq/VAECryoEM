@@ -12,6 +12,7 @@ import argparse
 import starfile
 import numpy as np
 from ctf import CTF
+from time import time
 from tqdm import tqdm
 import Bio.PDB as bpdb
 from Bio.PDB import PDBIO
