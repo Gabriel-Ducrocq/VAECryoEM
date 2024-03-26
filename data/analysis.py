@@ -84,7 +84,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path):
                                                            rotation_per_residue)
 
         for i, pred_struct in enumerate(predicted_structures):
-            base_structure.coord = pred_struct
+            base_structure.coord = pred_struct.detach().cpu().numpy()
             base_structure.to_pdb(structures_path + os.path.join(structures_path, f"structure_{batch_num*batch_size + i}.pdb"))
 
 
