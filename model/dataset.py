@@ -50,7 +50,6 @@ class ImageDataSet(Dataset):
         return self.particles_df.shape[0]
 
     def __getitem__(self, idx):
-        start = time()
         particles = self.particles_df.iloc[idx]
         try:
             mrc_idx, img_name = particles["rlnImageName"].split("@")
@@ -84,7 +83,5 @@ class ImageDataSet(Dataset):
             print(e)
             proj = torch.zeros(self.down_side_shape, self.down_side_shape)
 
-        end = time()
-        print("Time to load images", end - start)
 
         return idx, proj.flatten(start_dim=-2), self.poses[idx], self.poses_translation[idx]/self.down_apix
