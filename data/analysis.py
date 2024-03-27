@@ -107,10 +107,6 @@ all_translation_per_domain = []
 all_axis_angle_per_domain = []
 
 
-
-
-
-"""
 ### BE CAREFUL !!!! ADDED A START !!!!
 #start = step*5000
 start = 0
@@ -118,7 +114,7 @@ start = 0
 
 images = torch.flatten(torch.load(experiment_settings["dataset_images_path"])[start::step],start_dim=-2, end_dim=-1)
 iterable = zip(images, torch.load(experiment_settings["dataset_poses_path"])[start::step], 
-    torch.load(experiment_settings["dataset_poses_translation_path"])[start::step])
+torch.load(experiment_settings["dataset_poses_translation_path"])[start::step])
 #for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(data_loader)):
 for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(iterable)):
     batch_images = batch_images[None, :]
@@ -172,7 +168,8 @@ for i, (batch_images, batch_poses, batch_poses_translation) in tqdm(enumerate(it
 
 #all_rotations_per_residue = np.load(f"{folder_output}all_rotations_per_residue.npy")
 #all_translation_per_residue = np.load(f"{folder_output}all_translation_per_residue.npy")
-"""
+
+
 all_rotations_per_residue = []
 all_translation_per_residue = []
 for i in range(10000):
@@ -184,7 +181,7 @@ all_translation_per_residue = np.concatenate(all_translation_per_residue, axis=0
 
 
 #for i in range(all_translation_per_residue.shape[0]):
-for i in tqdm(range(6397, 10000)):
+for i in tqdm(range(0, 10000)):
     print("Deform structure:", i)
     a = torch.ones((4,), device=device)
     a += torch.ones((4,), device=device)
