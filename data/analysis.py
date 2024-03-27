@@ -69,10 +69,11 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
             start_net = time()
             latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
             all_latent_variables.append(latent_variables)
-            """
+            
             mask = vae.sample_mask(batch_images.shape[0])
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
             start_old = time()
+            """
             #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             end_old = time()
             start_new = time()
