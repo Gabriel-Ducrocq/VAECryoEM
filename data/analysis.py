@@ -105,7 +105,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
         z = np.load(z)
         z = torch.tensor(z).to(device)
         #for i, latent_variables in enumerate(z):
-        print("Latent variable number:", i)
+        print("Latent variable number:", 0)
         #latent_variables = latent_variables[None, :]
         latent_var = torch.zeros((batch_size, z.shape[1]), device=device)
         latent_var[:10] = z
