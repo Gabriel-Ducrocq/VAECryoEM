@@ -108,7 +108,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
             print("Latent variable number:", i)
             #latent_variables = latent_variables[None, :]
             latent_variables = z[:100, :]
-            latent_variables = torch.randn((100, 60))
+            latent_variables = torch.randn((100, 60), device=device)
             print(latent_variables.shape)
             mask = vae.sample_mask(latent_variables.shape[0])
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
