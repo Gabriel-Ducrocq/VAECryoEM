@@ -111,7 +111,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
         latent_var[:10] = z
         mask = vae.sample_mask(latent_var.shape[0])
         mask = mask[:10]
-        quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
+        quaternions_per_domain, translations_per_domain = vae.decode(latent_var)
         quaternions_per_domain = quaternions_per_domain[:10]
         translations_per_domain = translations_per_domain[:10]
         start_old = time()
