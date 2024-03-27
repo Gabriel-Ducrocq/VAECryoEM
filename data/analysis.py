@@ -107,11 +107,12 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
         for i, latent_variables in enumerate(z):
             print("Latent variable number:", i)
             #latent_variables = latent_variables[None, :]
-            latent_variables = z[:100, :]
-            latent_variables = torch.randn((100, 60), device=device)
-            print(latent_variables.shape)
+            latent_variables = torch.zeros((batch_size, z.shape[1]), device=device)
+            latent_variables[:10] = latent_variables
             mask = vae.sample_mask(latent_variables.shape[0])
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
+            quaternions_per_domain = quaternions_per_domain[:10]
+            translations_per_domain = translations_per_domain[:10]
             start_old = time()
             #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             end_old = time()
@@ -119,9 +120,6 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
             rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
             end_new = time()
             translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
-            end_net = time()
-            print("Net time:", end_net - start_net)
-            start_deforming = time()
             predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
                                                                rotation_per_residue)
 
