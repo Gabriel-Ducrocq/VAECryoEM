@@ -104,27 +104,28 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
     else:
         z = np.load(z)
         z = torch.tensor(z).to(device)
-        for i, latent_variables in enumerate(z):
-            print("Latent variable number:", i)
-            #latent_variables = latent_variables[None, :]
-            latent_variables = torch.zeros((batch_size, z.shape[1]), device=device)
-            latent_variables[:10] = latent_variables
-            mask = vae.sample_mask(latent_variables.shape[0])
-            quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
-            quaternions_per_domain = quaternions_per_domain[:10]
-            translations_per_domain = translations_per_domain[:10]
-            start_old = time()
-            #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
-            end_old = time()
-            start_new = time()
-            rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
-            end_new = time()
-            translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
-            predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
-                                                               rotation_per_residue)
+        #for i, latent_variables in enumerate(z):
+        print("Latent variable number:", i)
+        #latent_variables = latent_variables[None, :]
+        latent_var = torch.zeros((batch_size, z.shape[1]), device=device)
+        latent_var[:10] = z
+        mask = vae.sample_mask(latent_var.shape[0])
+        mask = mask[:10]
+        quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
+        quaternions_per_domain = quaternions_per_domain[:10]
+        translations_per_domain = translations_per_domain[:10]
+        start_old = time()
+        #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
+        end_old = time()
+        start_new = time()
+        rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
+        end_new = time()
+        translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
+        predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
+                                                           rotation_per_residue)
 
-            base_structure.coord = pred_struct.detach().cpu().numpy()
-            base_structure.to_pdb(os.path.join(structures_path, f"structure_z_{i}.pdb"))
+        base_structure.coord = pred_struct.detach().cpu().numpy()
+        base_structure.to_pdb(os.path.join(structures_path, f"structure_z_{i}.pdb"))
 
 
 
