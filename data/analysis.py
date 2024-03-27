@@ -181,7 +181,7 @@ all_translation_per_residue = np.concatenate(all_translation_per_residue, axis=0
 
 
 #for i in range(all_translation_per_residue.shape[0]):
-for i in tqdm(range(3010, 10000)):
+for i in tqdm(range(8000, 10000)):
     print("Deform structure:", i)
     parser = PDBParser(PERMISSIVE=0)
     structure = utils.read_pdb(experiment_settings["base_structure_path"])
