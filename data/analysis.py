@@ -124,7 +124,8 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
         predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
                                                            rotation_per_residue)
 
-        for pred_struct in predicted_structures:
+        for i, pred_struct in enumerate(predicted_structures):
+            print("Saving structure", i+1)
             base_structure.coord = pred_struct.detach().cpu().numpy()
             base_structure.to_pdb(os.path.join(structures_path, f"structure_z_{i}.pdb"))
 
