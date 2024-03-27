@@ -104,7 +104,9 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
         z = np.load(z)
         z = torch.tensor(z).to(device)
         for i, latent_variables in enumerate(z):
+            print("Latent variable number:", i)
             latent_variables = latent_variables[None, :]
+            print(latent_variables.shape)
             mask = vae.sample_mask(latent_variables.shape[0])
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
             start_old = time()
