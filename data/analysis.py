@@ -102,6 +102,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
         np.save(latent_path, all_latent_variables)
     else:
         z = np.load(z)
+        z = torch.tensor(z).to(device)
         for i, latent_variables in enumerate(z):
             latent_variables = latent_variables[None, :]
             mask = vae.sample_mask(latent_variables.shape[0])
