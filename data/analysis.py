@@ -108,12 +108,12 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
         print("Latent variable number:", 0)
         #latent_variables = latent_variables[None, :]
         latent_var = torch.zeros((batch_size, z.shape[1]), device=device)
-        latent_var[:10] = z
+        latent_var[:z.shape[0]] = z
         mask = vae.sample_mask(latent_var.shape[0])
-        mask = mask[:10]
+        mask = mask[:z.shape[0]]
         quaternions_per_domain, translations_per_domain = vae.decode(latent_var)
-        quaternions_per_domain = quaternions_per_domain[:10]
-        translations_per_domain = translations_per_domain[:10]
+        quaternions_per_domain = quaternions_per_domain[:z.shape[0]]
+        translations_per_domain = translations_per_domain[:z.shape[0]]
         start_old = time()
         #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
         end_old = time()
