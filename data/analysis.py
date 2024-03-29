@@ -60,6 +60,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
     data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=False))
     if z is None:
         for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
+            print("Batch number:", batch_num)
             start = time()
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
