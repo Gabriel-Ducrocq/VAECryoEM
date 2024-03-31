@@ -145,7 +145,7 @@ def parse_yaml(path):
     particles_star = starfile.read(experiment_settings["star_file"])
     ctf_experiment = CTF.from_starfile(experiment_settings["star_file"], apix = apix_downsize, side_shape=Npix_downsize , device=device)
 
-    dataset = ImageDataSet(apix, Npix, particles_star, particles_path, down_side_shape=Npix_downsize)
+    dataset = ImageDataSet(apix, Npix, particles_star["particles"], particles_path, down_side_shape=Npix_downsize)
 
     scheduler = None
     if "scheduler" in experiment_settings:
