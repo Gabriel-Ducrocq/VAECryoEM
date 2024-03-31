@@ -20,7 +20,7 @@ class ImageDataSet(Dataset):
         self.apix = apix
         self.particles_path = particles_path
         self.particles_df = particles_df
-        print(particles_df)
+        print(particles_df.columns)
         euler_angles_degrees = particles_df[["rlnAngleRot", "rlnAngleTilt", "rlnAnglePsi"]].values
         euler_angles_radians = euler_angles_degrees*np.pi/180
         poses = euler_angles_to_matrix(torch.tensor(euler_angles_radians, dtype=torch.float32), convention="ZYZ")
