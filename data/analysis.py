@@ -22,7 +22,6 @@ from dataset import ImageDataSet
 from gmm import Gaussian, EMAN2Grid
 from torch.utils.data import DataLoader
 from pytorch3d.transforms import quaternion_to_axis_angle
-from protein.main import rotate_residues, translate_residues
 
 class ResSelect(bpdb.Select):
     def accept_residue(self, res):
