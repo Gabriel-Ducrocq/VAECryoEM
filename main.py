@@ -110,7 +110,7 @@ def train(yaml_setting_path, debug_mode):
                                 #predicted_structures=deformed_structures)
             end_loss = time()
             #print("Loss time", end_loss - start_loss)
-            print("Epoch:",  epoch, "Batch number:", batch_num, "Loss:", loss)
+            print("Epoch:",  epoch, "Batch number:", batch_num, "Loss:", loss, "device:", device)
             start_gradient = time()
             loss.backward()
             optimizer.step()
