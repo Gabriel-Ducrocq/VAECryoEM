@@ -82,8 +82,6 @@ def train(yaml_setting_path, debug_mode):
             #print("Deforming time", end_deforming - start_deforming)
             start_proj = time()
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
-            plt.imshow(predicted_images[0].detach().cpu().numpy())
-            plt.savefig("example_image.png")
             end_proj = time()
             #print("Proj time", end_proj- start_proj)
             start_ctf = time()
@@ -91,6 +89,7 @@ def train(yaml_setting_path, debug_mode):
             end_ctf = time()
             #print("CTF time", end_ctf - start_ctf)
             start_trans = time()
+            ### THE TRANSLATION IS NOT CORRECT, I AM SUPPOSED TO TRANSLATE THE TRUE IMAGES, SEE CRYOSTAR !!!
             #batch_predicted_images = image_translator.transform(batch_predicted_images, batch_poses_translation[:, None, :])
             end_trans = time()
             #print("Tran time", end_trans- start_trans)
@@ -114,7 +113,7 @@ def train(yaml_setting_path, debug_mode):
             #print("Loss time", end_loss - start_loss)
             print("Epoch:",  epoch, "Batch number:", batch_num, "Loss:", loss, "device:", device)
             test = torch.sum(torch.abs(batch_poses_translation))
-            print("Batch trans", test)
+            print("Grav center", torch.mean(gmm_repr.coord, dim=0))
             if test != 0:
                 print("PROBLEM !")
                 break
