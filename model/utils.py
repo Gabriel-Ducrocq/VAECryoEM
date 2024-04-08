@@ -159,6 +159,7 @@ def parse_yaml(path):
     latent_type = experiment_settings["latent_type"]
     assert latent_type in ["continuous", "categorical"]
 
+    base_structure.to_pdb("test_input.pdb")
     return vae, image_translator, ctf_experiment, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, base_structure
 
 
