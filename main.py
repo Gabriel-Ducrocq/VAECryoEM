@@ -82,6 +82,8 @@ def train(yaml_setting_path, debug_mode):
             #print("Deforming time", end_deforming - start_deforming)
             start_proj = time()
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
+            plt.imshow(predicted_images[0].detach().cpu().numpy())
+            plt.savefig("example_image.png")
             end_proj = time()
             #print("Proj time", end_proj- start_proj)
             start_ctf = time()
