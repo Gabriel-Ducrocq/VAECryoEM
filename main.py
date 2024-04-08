@@ -113,7 +113,7 @@ def train(yaml_setting_path, debug_mode):
             #print("Loss time", end_loss - start_loss)
             print("Epoch:",  epoch, "Batch number:", batch_num, "Loss:", loss, "device:", device)
             test = torch.sum(torch.abs(batch_poses_translation))
-            print("Grav center", torch.mean(gmm_repr.coord, dim=0))
+            print("Grav center", torch.mean(gmm_repr.mus, dim=0))
             if test != 0:
                 print("PROBLEM !")
                 break
