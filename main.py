@@ -84,7 +84,7 @@ def train(yaml_setting_path, debug_mode):
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             proj_base = renderer.project(gmm_repr.mus[None, :, :], gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             plt.imshow(proj_base[0].detach().cpu())
-            plt.show()
+            plt.savefig("true_image.png")
             end_proj = time()
             #print("Proj time", end_proj- start_proj)
             start_ctf = time()
