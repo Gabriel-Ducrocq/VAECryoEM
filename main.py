@@ -78,11 +78,11 @@ def train(yaml_setting_path, debug_mode):
                                                                rotation_per_residue)
 
             posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
+            print("SUM", torch.sum(posed_predicted_structures))
             end_deforming = time()
             print("Deforming time", end_deforming - start_deforming)
             start_proj = time()
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
-            print("SUM", torch.sum(predicted_images))
             #proj_base = renderer.project(gmm_repr.mus[None, :, :], gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             #plt.imshow(proj_base[0].detach().cpu())
             #plt.savefig("true_image.png")
