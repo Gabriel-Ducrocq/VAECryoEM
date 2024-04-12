@@ -1,5 +1,6 @@
 import mrc
 import time
+import yaml
 import argparse
 import numpy as np
 from EMAN2 import *
