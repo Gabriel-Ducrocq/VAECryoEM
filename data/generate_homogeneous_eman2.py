@@ -8,7 +8,7 @@ parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--volume_path', type=str, required=True)
 parser_arg.add_argument('--Nimages', type=int, required=True)
 args = parser_arg.parse_args()
-volume_path = args.folder_experiment
+volume_path = args.volume_path
 Nimages = args.Nimages
 
 
