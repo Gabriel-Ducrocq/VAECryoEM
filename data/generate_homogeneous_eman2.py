@@ -12,7 +12,7 @@ volume_path = args.volume_path
 Nimages = args.Nimages
 
 
-volume = EMData(volume_path)
+vol = EMData(volume_path)
 all_rotations = Rotation.random(num=Nimages)
 all_rotations_eman2 = all_rotations.as_euler("ZXZ", degrees=True)
 all_rotations_relion = all_rotations.as_euler("ZYZ", degrees=True)
