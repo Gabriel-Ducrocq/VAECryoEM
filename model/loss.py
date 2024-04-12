@@ -86,6 +86,7 @@ def compute_loss(predicted_images, images, latent_mean, latent_std, vae, loss_we
     :return:
     """
     rmsd = compute_rmsd(predicted_images, images)
+    print("rsmd", rmsd)
     KL_prior_latent = compute_KL_prior_latent(latent_mean, latent_std, experiment_settings["epsilon_kl"])
     KL_prior_mask_means = compute_KL_prior_mask(
         vae.mask_parameters, experiment_settings["mask_prior"],
