@@ -90,12 +90,16 @@ if not pose_rotation:
     print("Min norm of rotation axis", torch.min(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
     print("Max norm of rotation axis", torch.max(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
 
+    #BE CAREFUL IS SET THE ANGLE TO 0 !!!
     angle_rotation = torch.rand((N_images,1), device=device)*torch.pi
     plt.hist(angle_rotation[:, 0].detach().cpu().numpy())
     plt.show()
 
     axis_angle = normalized_axis*angle_rotation
-    poses = axis_angle_to_matrix(axis_angle)
+    #poses = axis_angle_to_matrix(axis_angle)
+    #### BA CAREFUL I SET ALL POSES TO IDENTITY !!!!!
+    poses = torch.eye((1, 3, 3), device=device)
+    poses = poses.repeat(N_images, 1, 1)
 else:
     poses = torch.load(pose_rotation)
 
@@ -143,6 +147,8 @@ for i in tqdm(range(n_iter)):
     amplitudes = torch.tensor(poly.num_electron, dtype=torch.float32, device=device)[:, None]
     posed_backbones = get_posed_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
     batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
+    im = batch_images.detach().cpu().numpy()
+    np.save("image_cryosphere.npy", im[0])
     batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
     #plt.imshow(batch_ctf_corrupted_images[0].detach().numpy())
     #plt.show()
