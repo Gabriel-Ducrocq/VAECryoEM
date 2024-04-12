@@ -13,7 +13,6 @@ parser_arg.add_argument('--folder_experiment', type=str, required=True)
 args = parser_arg.parse_args()
 volume_path = args.volume_path
 folder_experiment = args.folder_experiment
-Nimages = args.Nimages
 
 with open(f"{folder_experiment}/parameters.yaml", "r") as file:
     experiment_settings = yaml.safe_load(file)
