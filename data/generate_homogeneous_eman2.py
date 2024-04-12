@@ -4,6 +4,7 @@ import argparse
 import numpy as np
 from EMAN2 import *
 from tqdm import tqdm
+from convert_to_star import create_star_file
 from scipy.spatial.transform import Rotation
 
 parser_arg = argparse.ArgumentParser()
@@ -22,6 +23,7 @@ with open(f"{folder_experiment}/parameters.yaml", "r") as file:
 with open(f"{folder_experiment}/images.yaml", "r") as file:
     image_settings = yaml.safe_load(file)
 
+N_images = experiment_settings["N_images"]
 apix = image_settings["apix"]
 Npix = image_settings["Npix"]
 
