@@ -10,8 +10,6 @@ from scipy.spatial.transform import Rotation
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--volume_path', type=str, required=True)
 parser_arg.add_argument('--folder_experiment', type=str, required=True)
-parser_arg.add_argument('--Nimages', type=int, required=True)
-parser_arg.add_argument('--apix', type=int, required=True)
 args = parser_arg.parse_args()
 volume_path = args.volume_path
 folder_experiment = args.folder_experiment
