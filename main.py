@@ -88,7 +88,9 @@ def train(yaml_setting_path, debug_mode):
             end_proj = time()
             #print("Proj time", end_proj- start_proj)
             start_ctf = time()
-            batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
+            ###------------------------------------------------- I REMOVED CTF CORRUPTION -----------------------------------------------------------###
+            #batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
+            batch_predicted_images = predicted_images
             end_ctf = time()
             #print("CTF time", end_ctf - start_ctf)
             start_trans = time()
@@ -115,11 +117,6 @@ def train(yaml_setting_path, debug_mode):
             end_loss = time()
             #print("Loss time", end_loss - start_loss)
             print("Epoch:",  epoch, "Batch number:", batch_num, "Loss:", loss, "device:", device)
-            test = torch.sum(torch.abs(batch_poses_translation))
-            print("Grav center", torch.mean(gmm_repr.mus, dim=0))
-            if test != 0:
-                print("PROBLEM !")
-                break
             start_gradient = time()
             loss.backward()
             optimizer.step()
