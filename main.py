@@ -89,8 +89,8 @@ def train(yaml_setting_path, debug_mode):
             #print("Proj time", end_proj- start_proj)
             start_ctf = time()
             ###------------------------------------------------- I REMOVED CTF CORRUPTION -----------------------------------------------------------###
-            #batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
-            batch_predicted_images = predicted_images
+            batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
+            #batch_predicted_images = predicted_images
             end_ctf = time()
             #print("CTF time", end_ctf - start_ctf)
             start_trans = time()
