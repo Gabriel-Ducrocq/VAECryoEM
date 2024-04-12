@@ -125,6 +125,9 @@ def train(yaml_setting_path, debug_mode):
             print("Gradient time", end_gradient - start_gradient)
             end = time()
             print("Iteration duration:", end-start)
+            break
+
+        break
 
         if scheduler:
             scheduler.step()
