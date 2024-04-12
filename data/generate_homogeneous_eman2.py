@@ -1,3 +1,4 @@
+import mrc
 import time
 import argparse
 import numpy as np
@@ -7,10 +8,22 @@ from scipy.spatial.transform import Rotation
 
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--volume_path', type=str, required=True)
+parser_arg.add_argument('--folder_experiment', type=str, required=True)
 parser_arg.add_argument('--Nimages', type=int, required=True)
+parser_arg.add_argument('--apix', type=int, required=True)
 args = parser_arg.parse_args()
 volume_path = args.volume_path
+folder_experiment = args.folder_experiment
 Nimages = args.Nimages
+
+with open(f"{folder_experiment}/parameters.yaml", "r") as file:
+    experiment_settings = yaml.safe_load(file)
+
+with open(f"{folder_experiment}/images.yaml", "r") as file:
+    image_settings = yaml.safe_load(file)
+
+apix = image_settings["apix"]
+Npix = image_settings["Npix"]
 
 
 vol = EMData(volume_path)
@@ -27,5 +40,8 @@ for rot in tqdm(all_rotations_eman2):
 	all_images.append(image)
 
 all_images = np.stack(all_images, axis=0)
+mrc.MRCFile.write(f"{folder_experiment}particles.mrcs", all_images, Apix=apix, is_vol=False)
+output_path = f"{folder_experiment}particles.star"
+create_star_file(all_rotations_eman2, np.zeros((Nimages, 2)), "particles.mrcs", N_images, Npix, apix, image_settings["ctf"], output_path)
 end = time.time()
 print(end-start)
