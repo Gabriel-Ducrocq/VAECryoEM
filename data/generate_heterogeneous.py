@@ -98,7 +98,8 @@ if not pose_rotation:
     axis_angle = normalized_axis*angle_rotation
     #poses = axis_angle_to_matrix(axis_angle)
     #### BA CAREFUL I SET ALL POSES TO IDENTITY !!!!!
-    poses = torch.eye((1, 3, 3), device=device)
+    poses = torch.eye(3, device=device)
+    poses = poses.reshape((1, 3, 3))
     poses = poses.repeat(N_images, 1, 1)
 else:
     poses = torch.load(pose_rotation)
