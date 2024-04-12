@@ -100,6 +100,7 @@ def train(yaml_setting_path, debug_mode):
             print("Tran time", end_trans- start_trans)
             start_flatten = time()
             batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
+            print("SUM", torch.sum(batch_predicted_images))
             end_flatten = time()
             print("FLATTEN time", end_flatten - start_flatten)
             #batch_predicted_images = dataset.standardize(batch_predicted_images, device=device)
