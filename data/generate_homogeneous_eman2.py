@@ -36,7 +36,7 @@ all_images = []
 for rot in tqdm(all_rotations_eman2):
 	t = Transform({"type":"eman","az":rot[0],"alt":rot[1], "phi":rot[2]})
 	proj = vol.project("standard", t)
-	image = np.flip(proj.numpy(), axis=0)
+	image = proj.numpy()
 	all_images.append(image)
 
 all_images = np.stack(all_images, axis=0)
