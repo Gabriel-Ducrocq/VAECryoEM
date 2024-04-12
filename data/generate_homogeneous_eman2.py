@@ -42,6 +42,6 @@ for rot in tqdm(all_rotations_eman2):
 all_images = np.stack(all_images, axis=0)
 mrc.MRCFile.write(f"{folder_experiment}particles.mrcs", all_images, Apix=apix, is_vol=False)
 output_path = f"{folder_experiment}particles.star"
-create_star_file(all_rotations_eman2, np.zeros((N_images, 2)), "particles.mrcs", N_images, Npix, apix, image_settings["ctf"], output_path)
+create_star_file(all_rotations_relion, np.zeros((N_images, 2)), "particles.mrcs", N_images, Npix, apix, image_settings["ctf"], output_path)
 end = time.time()
 print(end-start)
