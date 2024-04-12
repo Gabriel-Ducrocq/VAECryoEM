@@ -60,6 +60,7 @@ def train(yaml_setting_path, debug_mode):
             latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
             mask = vae.sample_mask(batch_images.shape[0])
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
+            print("SUM", torch.sum(quaternions_per_domain), torch.sum(translations_per_domain), torch.sum(mask))
             start_old = time()
             #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             end_old = time()
@@ -78,7 +79,6 @@ def train(yaml_setting_path, debug_mode):
                                                                rotation_per_residue)
 
             posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
-            print("SUM", torch.sum(posed_predicted_structures))
             end_deforming = time()
             print("Deforming time", end_deforming - start_deforming)
             start_proj = time()
