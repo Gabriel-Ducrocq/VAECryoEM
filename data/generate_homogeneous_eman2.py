@@ -29,7 +29,7 @@ Npix = image_settings["Npix"]
 vol = EMData(volume_path)
 all_rotations = Rotation.random(num=N_images)
 all_rotations_eman2 = all_rotations.as_euler("ZXZ", degrees=True)
-all_rotations_relion = all_rotations.as_euler("ZYZ", degrees=True)
+all_rotations_relion = all_rotations.as_matrix()
 
 start = time.time()
 all_images = []
