@@ -152,6 +152,7 @@ for i in tqdm(range(n_iter)):
     np.save("image_cryosphere.npy", im[0])
     ############ ---------------------------------- I suppress the batch corruption !!!! ------------------------------------------------------ ###################
     #batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
+    batch_ctf_corrupted_images = batch_images
     #plt.imshow(batch_ctf_corrupted_images[0].detach().numpy())
     #plt.show()
     #batch_ctf_corrupted_images_bis = apply_ctf_bis(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)]))
