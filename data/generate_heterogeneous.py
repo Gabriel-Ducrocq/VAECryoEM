@@ -175,7 +175,7 @@ mean_variance = torch.mean(torch.var(all_images, dim=(-2, -1)))
 print("Mean variance accross images", mean_variance)
 noise_var = mean_variance/image_settings["SNR"]
 print("Mean variance accross images", mean_variance)
-print("Adding Gaussian noise with variance", noise_var)
+#print("Adding Gaussian noise with variance", noise_var)
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
 
 ###### ----------------------------------------- REMOVED NOISE !!!! ------------------------------------------------------------------------##############
