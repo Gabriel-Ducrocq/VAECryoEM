@@ -21,7 +21,7 @@ from dataset import ImageDataSet
 from gmm import Gaussian, EMAN2Grid
 from Bio.PDB.PDBParser import PDBParser
 from biotite.structure.io.pdb import PDBFile
-from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix, axis_angle_to_quaternion, quaternion_apply, Tran
+from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix, axis_angle_to_quaternion, quaternion_apply
 from pytorch3d.transforms import Transform3d
 
 def compute_center_of_mass(structure):
