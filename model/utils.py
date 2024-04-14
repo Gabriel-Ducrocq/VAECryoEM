@@ -21,7 +21,7 @@ from dataset import ImageDataSet
 from gmm import Gaussian, EMAN2Grid
 from Bio.PDB.PDBParser import PDBParser
 from biotite.structure.io.pdb import PDBFile
-from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
+from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix, axis_angle_to_quaternion, quaternion_apply
 
 
 def compute_center_of_mass(structure):
@@ -379,11 +379,10 @@ def rotate_residues_einops(atom_positions, quaternions, mask, device):
     rotation_per_domains_axis_angle = quaternion_to_axis_angle(quaternions)
     #The below tensor is [N_batch, N_residues, N_domains, 3]
     mask_rotation_per_domains_axis_angle = mask[:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
-    rot_matrix = axis_angle_to_matrix(mask_rotation_per_domains_axis_angle[:, :, 0, :])
-    atom_positions = torch.einsum("lbjk, bk->lbj", rot_matrix, atom_positions)
+    mask_rotation_per_domains_quaternions = axis_angle_to_quaternion(mask_rotation_per_domains_axis_angle)
+    atom_positions = quaternion_apply(mask_rotation_per_domains_quaternions[:, :, 0, :], atom_positions)
     for dom in range(1, N_domains):
-        rot_matrix = axis_angle_to_matrix(mask_rotation_per_domains_axis_angle[:, :, dom, :])
-        atom_positions = torch.einsum("lbjk, lbk->lbj", rot_matrix, atom_positions)
+        atom_positions = quaternion_apply(mask_rotation_per_domains_quaternions[:, :, dom, :], atom_positions)
 
     return atom_positions
 
@@ -415,9 +414,7 @@ def deform_structure_bis(atom_positions, translation_per_residue, quaternions, m
     ## We displace the structure, using an interleave because there are 3 consecutive atoms belonging to one
     ## residue.
     ##We compute the rotated residues, where this axis of rotation is at the origin.
-    ##### ------------------------- I SKIPPED THE ROTATION !!!!! ---------------
-    #transformed_atom_positions = rotate_residues_einops(atom_positions, quaternions, mask, device)
-    transformed_atom_positions = atom_positions[None, :, :]
+    transformed_atom_positions = rotate_residues_einops(atom_positions, quaternions, mask, device)
     new_atom_positions = transformed_atom_positions + translation_per_residue
     return new_atom_positions
 
