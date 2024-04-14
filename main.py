@@ -74,8 +74,8 @@ def train(yaml_setting_path, debug_mode):
             end_net = time()
             print("Net time:", end_net - start_net)
             start_deforming = time()
-            predicted_structures = model.utils.deform_structure(gmm_repr.mus, translation_per_residue,
-                                                               rotation_per_residue)
+            #predicted_structures = model.utils.deform_structure(gmm_repr.mus, translation_per_residue,
+            #                                                   rotation_per_residue)
 
             predicted_structures = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, mask, device)
 
