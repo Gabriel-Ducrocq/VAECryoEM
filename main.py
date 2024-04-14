@@ -47,7 +47,7 @@ def train(yaml_setting_path, debug_mode):
         tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
                             "kl_prior_mask_proportions":[], "l2_pen":[]}
 
-        data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 0))
+        data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4))
         start_tot = time()
         for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
             start = time()
@@ -65,8 +65,8 @@ def train(yaml_setting_path, debug_mode):
             #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             end_old = time()
             start_new = time()
-            #rotation_per_residue = model.utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
-            rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
+            rotation_per_residue = model.utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
+            #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             end_new = time()
             #print("Old and New", end_old - start_old, end_new - start_new)
             #print("\n\n\n")
