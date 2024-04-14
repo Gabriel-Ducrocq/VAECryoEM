@@ -379,11 +379,11 @@ def rotate_residues_einops(atom_positions, quaternions, mask, device):
     rotation_per_domains_axis_angle = quaternion_to_axis_angle(quaternions)
     #The below tensor is [N_batch, N_residues, N_domains, 3]
     mask_rotation_per_domains_axis_angle = mask[:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
-    for dom in range(N_domains):
+    rot_matrix = axis_angle_to_matrix(mask_rotation_per_domains_axis_angle[:, :, 0, :])
+    atom_positions = torch.einsum("lbjk, bk->lbj", rot_matrix, atom_positions)
+    for dom in range(1, N_domains):
         rot_matrix = axis_angle_to_matrix(mask_rotation_per_domains_axis_angle[:, :, dom, :])
-        print("ROT MAT", rot_matrix.shape)
-        print("ATOM POS", atom_positions.shape)
-        atom_positions = torch.einsum("lbjk, bk->lbj", rot_matrix, atom_positions)
+        atom_positions = torch.einsum("lbjk, lbk->lbj", rot_matrix, atom_positions)
 
     return atom_positions
 
