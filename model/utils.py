@@ -361,6 +361,32 @@ def compute_rotations_per_residue_einops(quaternions, mask, device):
     overall_rotation_matrices = einops.einsum(*mask_rotation_matrix_per_domain_per_residue, dimensions)
     return overall_rotation_matrices
 
+
+def rotate_residues_einops(atom_positions, quaternions, mask, device):
+    """
+    Computes the rotation matrix corresponding to each domain for each residue, where the angle of rotation has been
+    weighted by the mask value of the corresponding domain.
+    :param positions: torch.tensor(N_residues, 3)
+    :param quaternions: tensor (N_batch, N_domains, 4) of non normalized quaternions defining rotations
+    :param mask: tensor (N_batch, N_residues, N_domains)
+    :return: tensor (N_batch, N_residues, 3, 3) rotation matrix for each residue
+    """
+
+    N_residues = mask.shape[1]
+    batch_size = quaternions.shape[0]
+    N_domains = mask.shape[-1]
+    # NOTE: no need to normalize the quaternions, quaternion_to_axis does it already.
+    rotation_per_domains_axis_angle = quaternion_to_axis_angle(quaternions)
+    #The below tensor is [N_batch, N_residues, N_domains, 3]
+    mask_rotation_per_domains_axis_angle = mask[:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
+    for dom in range(N_domains):
+        rot_matrix = axis_angle_to_matrix(mask_rotation_per_domains_axis_angle[:, :, dom, :])
+        atom_positions = torch.einsum("lbjk, bk->lbj", rot_matrix, atom_positions)
+
+    return atom_positions
+
+
+
 def compute_translations_per_residue(translation_vectors, mask):
     """
     Computes one translation vector per residue based on the mask
@@ -371,6 +397,27 @@ def compute_translations_per_residue(translation_vectors, mask):
     #### How is it possible to compute this product given the two tensor size
     translation_per_residue = torch.einsum("bij, bjk -> bik", mask, translation_vectors)
     return translation_per_residue
+
+
+def deform_structure_bis(atom_positions, translation_per_residue, quaternions, mask, device):
+    """
+    Note that the reference frame absolutely needs to be the SAME for all the residues (placed in the same spot),
+     otherwise the rotation will NOT be approximately rigid !!!
+    :param positions: torch.tensor(N_residues, 3)
+    :param translation_vectors: translations vectors:
+            tensor (Batch_size, N_residues, 3)
+    :param rotations_per_residue: tensor (N_batch, N_residues, 3, 3) of rotation matrices per residue
+    :return: tensor (Batch_size, 3*N_residues, 3) corresponding to translated structure, tensor (3*N_residues, 3)
+            of translation vectors
+    """
+    ## We displace the structure, using an interleave because there are 3 consecutive atoms belonging to one
+    ## residue.
+    ##We compute the rotated residues, where this axis of rotation is at the origin.
+    transformed_atom_positions = rotate_residues_einops(atom_positions, quaternions, mask, device)
+    #transformed_atom_positions = torch.matmul(rotation_per_atom, atom_positions[None, :, :, None])
+    new_atom_positions = transformed_atom_positions + translation_per_residue
+    return new_atom_positions
+
 
 
 def deform_structure(atom_positions, translation_per_residue, rotations_per_residue):
