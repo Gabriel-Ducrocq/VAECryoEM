@@ -309,7 +309,7 @@ def read_pdb(path):
 
 
 @torch.jit.script
-def compute_rotations_per_residue(quaternions: torch.Tensor, mask: torch.Tensor, device:str):
+def compute_rotations_per_residue(quaternions: torch.Tensor, mask: torch.Tensor, device:torch.device):
     """
     Computes the rotation matrix corresponding to each domain for each residue, where the angle of rotation has been
     weighted by the mask value of the corresponding domain.
