@@ -21,8 +21,8 @@ from dataset import ImageDataSet
 from gmm import Gaussian, EMAN2Grid
 from Bio.PDB.PDBParser import PDBParser
 from biotite.structure.io.pdb import PDBFile
-from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix, axis_angle_to_quaternion, quaternion_apply
-
+from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix, axis_angle_to_quaternion, quaternion_apply, Tran
+from pytorch3d.transforms import Transform3d
 
 def compute_center_of_mass(structure):
     """
@@ -381,6 +381,7 @@ def rotate_residues_einops(atom_positions, quaternions, mask, device):
     #The below tensor is [N_batch, N_residues, N_domains, 3]
     mask_rotation_per_domains_axis_angle = mask[:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
     mask_rotation_per_domains_quaternions = axis_angle_to_quaternion(mask_rotation_per_domains_axis_angle)
+
     atom_positions = quaternion_apply(mask_rotation_per_domains_quaternions[:, :, 0, :], atom_positions)
     for dom in range(1, N_domains):
         atom_positions = quaternion_apply(mask_rotation_per_domains_quaternions[:, :, dom, :], atom_positions)
