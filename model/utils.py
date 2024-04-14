@@ -381,6 +381,8 @@ def rotate_residues_einops(atom_positions, quaternions, mask, device):
     mask_rotation_per_domains_axis_angle = mask[:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
     for dom in range(N_domains):
         rot_matrix = axis_angle_to_matrix(mask_rotation_per_domains_axis_angle[:, :, dom, :])
+        print(rot_matrix.shape)
+        print(atom_positions.shape)
         atom_positions = torch.einsum("lbjk, bk->lbj", rot_matrix, atom_positions)
 
     return atom_positions
@@ -414,7 +416,6 @@ def deform_structure_bis(atom_positions, translation_per_residue, quaternions, m
     ## residue.
     ##We compute the rotated residues, where this axis of rotation is at the origin.
     transformed_atom_positions = rotate_residues_einops(atom_positions, quaternions, mask, device)
-    #transformed_atom_positions = torch.matmul(rotation_per_atom, atom_positions[None, :, :, None])
     new_atom_positions = transformed_atom_positions + translation_per_residue
     return new_atom_positions
 
