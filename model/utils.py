@@ -417,7 +417,7 @@ def deform_structure_bis(atom_positions, translation_per_residue, quaternions, m
     ##We compute the rotated residues, where this axis of rotation is at the origin.
     ##### ------------------------- I SKIPPED THE ROTATION !!!!! ---------------
     #transformed_atom_positions = rotate_residues_einops(atom_positions, quaternions, mask, device)
-    transformed_atom_positions = new_atom_positions[None, :, :]
+    transformed_atom_positions = atom_positions[None, :, :]
     new_atom_positions = transformed_atom_positions + translation_per_residue
     return new_atom_positions
 
