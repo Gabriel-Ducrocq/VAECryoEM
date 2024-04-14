@@ -130,9 +130,11 @@ def train(yaml_setting_path, debug_mode):
             end = time()
             print("Iteration duration:", end-start)
 
-
-        end_tot = time()
-        print("TOTAL TIME", end_tot - start_tot) 
+            if batch_num == 100
+            end_tot = time()
+            print("TOTAL TIME", end_tot - start_tot) 
+            break
+            
         break 
 
         
