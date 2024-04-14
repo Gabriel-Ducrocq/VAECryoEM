@@ -381,7 +381,7 @@ def rotate_residues_einops(atom_positions, quaternions, mask, device):
     #The below tensor is [N_batch, N_residues, N_domains, 3]
     mask_rotation_per_domains_axis_angle = mask[:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
     mask_rotation_per_domains_quaternions = axis_angle_to_quaternion(mask_rotation_per_domains_axis_angle)
-
+    #T = Transform3d(dtype=torch.float32, device = device)
     atom_positions = quaternion_apply(mask_rotation_per_domains_quaternions[:, :, 0, :], atom_positions)
     for dom in range(1, N_domains):
         atom_positions = quaternion_apply(mask_rotation_per_domains_quaternions[:, :, dom, :], atom_positions)
