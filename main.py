@@ -48,6 +48,7 @@ def train(yaml_setting_path, debug_mode):
                             "kl_prior_mask_proportions":[], "l2_pen":[]}
 
         data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True))
+        start_tot = time()
         for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
             start = time()
             batch_images = batch_images.to(device)
@@ -128,7 +129,13 @@ def train(yaml_setting_path, debug_mode):
             print("Gradient time", end_gradient - start_gradient)
             end = time()
             print("Iteration duration:", end-start)
-            
+
+            if batch_num == 10:
+                break
+
+        break
+        end_tot = time()
+        print("TOTAL TIME", end_tot - start_tot)  
 
         
 
