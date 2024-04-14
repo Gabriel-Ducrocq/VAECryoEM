@@ -79,7 +79,7 @@ def train(yaml_setting_path, debug_mode):
 
             predicted_structures = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, mask, device)
 
-            #posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
+            posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
             end_deforming = time()
             print("Deforming time", end_deforming - start_deforming)
             start_proj = time()
