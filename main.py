@@ -47,7 +47,7 @@ def train(yaml_setting_path, debug_mode):
         tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
                             "kl_prior_mask_proportions":[], "l2_pen":[]}
 
-        data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 6))
+        data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 5))
         start_tot = time()
         for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
             start = time()
@@ -93,7 +93,7 @@ def train(yaml_setting_path, debug_mode):
             print("Proj time", end_proj- start_proj)
             start_ctf = time()
             ###------------------------------------------------- I REMOVED CTF CORRUPTION -----------------------------------------------------------###
-            #batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
+            batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
             batch_predicted_images = predicted_images
             end_ctf = time()
             print("CTF time", end_ctf - start_ctf)
