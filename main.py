@@ -66,6 +66,7 @@ def train(yaml_setting_path, debug_mode):
             #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             end_old = time()
             start_new = time()
+            print(device)
             with torch.autocast(device_type=device, dtype=torch.float16):
                 rotation_per_residue = model.utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
 
