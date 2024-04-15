@@ -117,7 +117,6 @@ def parse_yaml(path):
                 torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device)*image_settings["sigma_gmm"], 
                 amplitudes)
 
-    print("-------------------------------", experiment_settings["N_domains"])
     if experiment_settings["mask_prior"]["type"] == "uniform":
         experiment_settings["mask_prior"] = compute_mask_prior(experiment_settings["N_residues"],
                                                                experiment_settings["N_domains"], device)

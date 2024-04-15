@@ -96,7 +96,6 @@ def train(yaml_setting_path, debug_mode):
                 #end_proj = time()
                 #print("Proj time", end_proj- start_proj)
                 #start_ctf = time()
-                print("------------------------------------------", vae.N_domains, "----------------------------------------------")
                 ###------------------------------------------------- I REMOVED CTF CORRUPTION -----------------------------------------------------------###
                 batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
                 #batch_predicted_images = predicted_images
