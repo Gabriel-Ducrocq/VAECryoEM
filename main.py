@@ -3,6 +3,7 @@ import wandb
 import argparse
 import model.utils
 import numpy as np
+from tqdm import tqdm
 from time import time
 from model import renderer
 from model.loss import compute_loss
@@ -49,7 +50,7 @@ def train(yaml_setting_path, debug_mode):
             tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
                                 "kl_prior_mask_proportions":[], "l2_pen":[]}
 
-            data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 0))
+            data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4)))
             start_tot = time()
             for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
                 #start = time()
@@ -136,7 +137,7 @@ def train(yaml_setting_path, debug_mode):
                 #end = time()
                 #print("Iteration duration:", end-start)
 
-                if batch_num == 100:
+                if batch_num == 1000:
                     end_tot = time()
                     print("TOTAL TIME", end_tot - start_tot) 
                     break
