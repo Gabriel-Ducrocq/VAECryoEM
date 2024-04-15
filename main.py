@@ -67,7 +67,7 @@ def train(yaml_setting_path, debug_mode):
             end_old = time()
             start_new = time()
             print(device)
-            with torch.autocast(device_type=torch.device(device), dtype=torch.float16):
+            with torch.autocast(device_type="cuda", dtype=torch.float16):
                 rotation_per_residue = model.utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
 
             #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
@@ -76,7 +76,7 @@ def train(yaml_setting_path, debug_mode):
             #print("\n\n\n")
             #print("ARE THE TWO ROT EQUAL", torch.allclose(rotation_per_residue,rotation_per_residue_einops))
             #print("\n\n\n")
-            with torch.autocast(device_type=torch.device(device), dtype=torch.float16):
+            with torch.autocast(device_type="cuda", dtype=torch.float16):
                 translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
 
             end_net = time()
