@@ -34,6 +34,8 @@ def compute_KL_prior_mask(mask_parameters, mask_prior, variable, epsilon_kl):
     :return: torch.float32,  Dkl loss
     """
     assert variable in ["means", "stds", "proportions"]
+    print(mask_prior[variable]["std"].shape)
+    print(mask_parameters[variable]["std"].shape)
     return torch.sum(-1/2 + torch.log(mask_prior[variable]["std"]/mask_parameters[variable]["std"] + eval(epsilon_kl)) \
     + (1/2)*(mask_parameters[variable]["std"]**2 +
     (mask_prior[variable]["mean"] - mask_parameters[variable]["mean"])**2)/mask_prior[variable]["std"]**2)
