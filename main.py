@@ -42,6 +42,7 @@ def train(yaml_setting_path, debug_mode):
                 "epochs": experiment_settings["N_epochs"],
             })
 
+    scaler = torch.cuda.amp.GradScaler()
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
         tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
@@ -65,14 +66,18 @@ def train(yaml_setting_path, debug_mode):
             #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             end_old = time()
             start_new = time()
-            rotation_per_residue = model.utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
+            with torch.autocast(device_type=device, dtype=torch.float16):
+                rotation_per_residue = model.utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
+
             #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             end_new = time()
             #print("Old and New", end_old - start_old, end_new - start_new)
             #print("\n\n\n")
             #print("ARE THE TWO ROT EQUAL", torch.allclose(rotation_per_residue,rotation_per_residue_einops))
             #print("\n\n\n")
-            translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
+            with torch.autocast(device_type=device, dtype=torch.float16):
+                translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
+
             end_net = time()
             print("Net time:", end_net - start_net)
             start_deforming = time()
@@ -118,12 +123,15 @@ def train(yaml_setting_path, debug_mode):
             loss = compute_loss(batch_predicted_images, batch_images, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics)
                                 #predicted_structures=deformed_structures)
+
             end_loss = time()
             print("Loss time", end_loss - start_loss)
             print("Epoch:",  epoch, "Batch number:", batch_num, "Loss:", loss, "device:", device)
             start_gradient = time()
-            loss.backward()
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
             optimizer.step()
+            scaler.update()
             optimizer.zero_grad()
             end_gradient = time()
             print("Gradient time", end_gradient - start_gradient)
