@@ -69,7 +69,6 @@ def train(yaml_setting_path, debug_mode):
                 #end_old = time()
                 #start_new = time()
                 #rotation_per_residue = model.utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
-                rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
                 #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
                 #end_new = time()
                 #print("Old and New", end_old - start_old, end_new - start_new)
@@ -80,10 +79,10 @@ def train(yaml_setting_path, debug_mode):
                 #end_net = time()
                 #print("Net time:", end_net - start_net)
                 #start_deforming = time()
-                predicted_structures = model.utils.deform_structure(gmm_repr.mus, translation_per_residue,
-                                                                   rotation_per_residue)
+                #predicted_structures = model.utils.deform_structure(gmm_repr.mus, translation_per_residue,
+                #                                                   rotation_per_residue)
 
-                #predicted_structures = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, mask, device)
+                predicted_structures = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, mask, device)
 
                 posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
                 #end_deforming = time()
