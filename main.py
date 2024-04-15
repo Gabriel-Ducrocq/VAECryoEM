@@ -68,9 +68,9 @@ def train(yaml_setting_path, debug_mode):
             start_new = time()
             print(device)
             with torch.autocast(device_type="cuda", dtype=torch.float16):
-                #rotation_per_residue = model.utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
-                rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
-                
+                rotation_per_residue = model.utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
+                #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
+
             #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             end_new = time()
             #print("Old and New", end_old - start_old, end_new - start_new)
