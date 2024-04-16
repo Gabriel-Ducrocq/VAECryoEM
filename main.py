@@ -59,7 +59,9 @@ def train(yaml_setting_path, debug_mode):
             #plt.imshow(batch_images[0].detach().cpu())
             #plt.show()
             #start_net = time()
-            latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
+            flattened_batch_images = batch_images.flatten(start_dim=-2)
+            batch_translated_images = image_translator.transform(batch_images, batch_poses_translation[:, None, :]).flatten(start_dim=-2)
+            latent_variables, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
             mask = vae.sample_mask(batch_images.shape[0])
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
             #start_old = time()
@@ -93,14 +95,11 @@ def train(yaml_setting_path, debug_mode):
             #end_proj = time()
             #print("Proj time", end_proj- start_proj)
             #start_ctf = time()
-            ###------------------------------------------------- I REMOVED CTF CORRUPTION -----------------------------------------------------------###
             batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
             #batch_predicted_images = predicted_images
             #end_ctf = time()
             #print("CTF time", end_ctf - start_ctf)
             #start_trans = time()
-            ### THE TRANSLATION IS NOT CORRECT, I AM SUPPOSED TO TRANSLATE THE TRUE IMAGES, SEE CRYOSTAR !!!
-            #batch_predicted_images = image_translator.transform(batch_predicted_images, batch_poses_translation[:, None, :])
             #end_trans = time()
             #print("Tran time", end_trans- start_trans)
             #start_flatten = time()
@@ -116,7 +115,7 @@ def train(yaml_setting_path, debug_mode):
             #print("True images mean", torch.mean(batch_images), "True images std", torch.std(batch_images))
             #print("Pred images mean", torch.mean(batch_predicted_images), "Pred images std", torch.std(batch_predicted_images))
             #start_loss = time()
-            loss = compute_loss(batch_predicted_images, batch_images, latent_mean, latent_std, vae,
+            loss = compute_loss(batch_predicted_images, batch_translated_images, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics)
                                 #predicted_structures=deformed_structures)
 

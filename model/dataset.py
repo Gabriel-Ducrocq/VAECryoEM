@@ -51,6 +51,9 @@ class ImageDataSet(Dataset):
         return self.particles_df.shape[0]
 
     def __getitem__(self, idx):
+        """
+        Return a batch of true images, as 2d array !
+        """
         particles = self.particles_df.iloc[idx]
         try:
             mrc_idx, img_name = particles["rlnImageName"].split("@")
@@ -85,4 +88,4 @@ class ImageDataSet(Dataset):
             proj = torch.zeros(self.down_side_shape, self.down_side_shape)
 
 
-        return idx, proj.flatten(start_dim=-2), self.poses[idx], self.poses_translation[idx]/self.down_apix
+        return idx, proj, self.poses[idx], self.poses_translation[idx]/self.down_apix
