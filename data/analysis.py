@@ -56,7 +56,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
     vae = torch.load(model_path)
     vae.eval()
     all_latent_variables = []
-    data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=False))
+    data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=4))
     if z is None:
         for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
             print("Batch number:", batch_num)
@@ -67,6 +67,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
             indexes = indexes.to(device)
 
             start_net = time()
+            print("image input size", batch_images.shape)
             latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
             all_latent_variables.append(latent_variables)
             print(latent_variables.shape)
