@@ -67,7 +67,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
             indexes = indexes.to(device)
 
             start_net = time()
-            print("image input size", batch_images.shape)
+            batch_images = batch_images.flatten(start_dim=-2)
             latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
             all_latent_variables.append(latent_variables)
             print(latent_variables.shape)
