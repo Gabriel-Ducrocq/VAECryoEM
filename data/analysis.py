@@ -72,7 +72,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
             all_latent_variables.append(latent_variables)
 
             if batch_num == 1550:
-                np.save(torch.concat("z_0.npy", all_latent_variables, dim=0).detach().cpu().numpy())
+                np.save("z_0.npy", torch.concat(all_latent_variables, dim=0).detach().cpu().numpy())
                 all_latent_variables = []
 
             #print(latent_variables.shape)
