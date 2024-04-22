@@ -70,6 +70,11 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
             batch_images = batch_images.flatten(start_dim=-2)
             latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
             all_latent_variables.append(latent_variables)
+
+            if batch_num == 1550:
+                np.save(torch.concat("z_0.npy", all_latent_variables, dim=0).detach().cpu().numpy())
+                all_latent_variables = []
+
             #print(latent_variables.shape)
             #mask = vae.sample_mask(batch_images.shape[0])
             #quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
@@ -101,7 +106,8 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
             """
 
         all_latent_variables = torch.concat(all_latent_variables, dim=0).detach().cpu().numpy()
-        np.save(latent_path, all_latent_variables)
+        np.save("z_1.npy", all_latent_variables)
+        #np.save(latent_path, all_latent_variables)
     else:
         z = np.load(z)
         z = torch.tensor(z).to(device)
