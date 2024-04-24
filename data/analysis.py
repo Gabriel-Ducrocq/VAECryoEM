@@ -114,7 +114,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
         data_loader = tqdm(iter(DataLoader(dataset_z, batch_size=batch_size, shuffle=False, num_workers = 4)))
         for batch_num, z in enumerate(data_loader):
             print(len(z))
-            z = z.to(device)
+            z = z[0].to(device)
             #for i, latent_variables in enumerate(z):
             print("Latent variable number:", 0)
             #latent_variables = latent_variables[None, :]
