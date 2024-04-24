@@ -110,7 +110,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
         #np.save(latent_path, all_latent_variables)
     else:
         z = np.load(z)
-        dataset_z = torch.utils.data.dataset(torch.tensor(z))
+        dataset_z = torch.utils.data.TensorDataset(torch.tensor(z))
         data_loader = tqdm(iter(DataLoader(dataset_z, batch_size=batch_size, shuffle=False, num_workers = 4)))
         for batch_num, z in enumerate(data_loader):
             z = z.to(device)
