@@ -110,31 +110,27 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
         #np.save(latent_path, all_latent_variables)
     else:
         z = np.load(z)
-        z = torch.tensor(z).to(device)
-        #for i, latent_variables in enumerate(z):
-        print("Latent variable number:", 0)
-        #latent_variables = latent_variables[None, :]
-        latent_var = torch.zeros((batch_size, z.shape[1]), device=device)
-        latent_var[:z.shape[0]] = z
-        mask = vae.sample_mask(latent_var.shape[0])
-        mask = mask[:z.shape[0]]
-        quaternions_per_domain, translations_per_domain = vae.decode(latent_var)
-        quaternions_per_domain = quaternions_per_domain[:z.shape[0]]
-        translations_per_domain = translations_per_domain[:z.shape[0]]
-        start_old = time()
-        #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
-        end_old = time()
-        start_new = time()
-        rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
-        end_new = time()
-        translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
-        predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
-                                                           rotation_per_residue)
+        dataset_z = torch.utils.data.dataset(torch.tensor(z))
+        data_loader = tqdm(iter(DataLoader(dataset_z, batch_size=batch_size, shuffle=False, num_workers = 4)))
+        for batch_num, z in enumerate(data_loader):
+            z = z.to(device)
+            #for i, latent_variables in enumerate(z):
+            print("Latent variable number:", 0)
+            #latent_variables = latent_variables[None, :]
+            #latent_var = torch.zeros((batch_size, z.shape[1]), device=device)
+            #latent_var[:z.shape[0]] = z
+            mask = vae.sample_mask(z.shape[0])
+            quaternions_per_domain, translations_per_domain = vae.decode(latent_var)
+            #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
+            rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
+            translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
+            predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
+                                                               rotation_per_residue)
 
-        for i, pred_struct in enumerate(predicted_structures):
-            print("Saving structure", i+1)
-            base_structure.coord = pred_struct.detach().cpu().numpy()
-            base_structure.to_pdb(os.path.join(structures_path, f"structure_z_{i}.pdb"))
+            for i, pred_struct in enumerate(predicted_structures):
+                print("Saving structure", i+1)
+                base_structure.coord = pred_struct.detach().cpu().numpy()
+                base_structure.to_pdb(os.path.join(structures_path, f"structure_z_{batch_num*batch_size + i}.pdb"))
 
 
 
