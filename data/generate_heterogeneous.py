@@ -158,6 +158,7 @@ for i in tqdm(range(n_iter)):
     #plt.show()
     #batch_ctf_corrupted_images_bis = apply_ctf_bis(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)]))
     #all_images.append(batch_images.detach().cpu())
+    print(batch_ctf_corrupted_images.shape)
     all_images.append(batch_ctf_corrupted_images.detach().cpu())
     #plt.imshow(batch_ctf_corrupted_images.detach().numpy()[0])
     #plt.show()
