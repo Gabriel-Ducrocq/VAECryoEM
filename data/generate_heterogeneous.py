@@ -135,6 +135,8 @@ poly = centering_structure
 #amplitudes = torch.tensor(poly.num_electron, device=device)[:, None]/(2*torch.pi*sigma_gmm)
 size_prot = []
 faulty_indexes = []
+print(N_pose_per_structure)
+print(N_images)
 for i in tqdm(range(n_iter)):
     if not is_homogeneous:
         poly = Polymer.from_pdb(sorted_structures[i], filter_aa) 
