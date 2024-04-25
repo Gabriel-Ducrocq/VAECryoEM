@@ -97,10 +97,6 @@ if not pose_rotation:
 
     axis_angle = normalized_axis*angle_rotation
     poses = axis_angle_to_matrix(axis_angle)
-    #### BA CAREFUL I SET ALL POSES TO IDENTITY !!!!!
-    #poses = torch.eye(3, device=device)
-    #poses = poses.reshape((1, 3, 3))
-    #poses = poses.repeat(N_images, 1, 1)
 else:
     poses = torch.load(pose_rotation)
 
@@ -157,7 +153,7 @@ for i in tqdm(range(n_iter)):
     #plt.show()
     #batch_ctf_corrupted_images_bis = apply_ctf_bis(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)]))
     #all_images.append(batch_images.detach().cpu())
-    all_images.append(batch_ctf_corrupted_images.detach().cpu())
+    all_images.append(batch_ctf_corrupted_images.detach().cpu().numpy())
     #plt.imshow(batch_ctf_corrupted_images.detach().numpy()[0])
     #plt.show()
     #plt.imshow(batch_ctf_corrupted_images_bis.detach().numpy()[0])
