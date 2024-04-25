@@ -140,6 +140,8 @@ print(N_images)
 print(folder_experiment)
 for i in tqdm(range(n_iter)):
     if not is_homogeneous:
+        print(i)
+        print(len(sorted_structures))
         poly = Polymer.from_pdb(sorted_structures[i], filter_aa) 
         backbone = poly.coord - center_vector
         backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
