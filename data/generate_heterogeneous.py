@@ -139,7 +139,6 @@ for i in tqdm(range(n_iter)):
         backbone = poly.coord - center_vector
         backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
         backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
-        print(backbone.shape)
         if len(poly) not in size_prot:
             size_prot.append(len(poly))
             faulty_indexes.append(i)
@@ -147,15 +146,13 @@ for i in tqdm(range(n_iter)):
     amplitudes = torch.tensor(poly.num_electron, dtype=torch.float32, device=device)[:, None]
     posed_backbones = get_posed_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
     batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
-    im = batch_images.detach().cpu().numpy()
     batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
     #batch_ctf_corrupted_images = batch_images
     #plt.imshow(batch_ctf_corrupted_images[0].detach().numpy())
     #plt.show()
     #batch_ctf_corrupted_images_bis = apply_ctf_bis(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)]))
     #all_images.append(batch_images.detach().cpu())
-    print(torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)],device=device))
-    all_images.append(batch_ctf_corrupted_images.detach().cpu().numpy())
+    all_images.append(batch_ctf_corrupted_images.detach().cpu())
     #plt.imshow(batch_ctf_corrupted_images.detach().numpy()[0])
     #plt.show()
     #plt.imshow(batch_ctf_corrupted_images_bis.detach().numpy()[0])
