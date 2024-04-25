@@ -100,12 +100,12 @@ def parse_yaml(path):
     filter_aa = True
     grid = EMAN2Grid(Npix_downsize, apix_downsize, device=device)
     base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"], filter_aa)
-    #centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"], filter_aa)
-    #center_of_mass = compute_center_of_mass(centering_structure)
+    centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"], filter_aa)
+    ##############                  I HAVE ADDED THE CENTERING, BE CAREFUL ON REAL DATA !!!!!! ############
+    center_of_mass = compute_center_of_mass(centering_structure)
 
-    ##############                  I REMOVED THE CENTERING SINCE FOR THE REAL DATASET WE ASSUME THE STRUCTURE ALREADY CORRECTLY CENTERED !!!!!! ############
     # Since we operate on an EMAN2 grid, we need to translate the structure by -apix/2 to get it at the center of the image.
-    #base_structure.translate_structure(-center_of_mass - apix/2)
+    base_structure.translate_structure(-center_of_mass - apix/2)
 
 
     #gmm_repr = Gaussian(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), 
