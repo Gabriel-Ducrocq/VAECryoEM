@@ -142,6 +142,7 @@ def parse_yaml(path):
 
 
     particles_star = starfile.read(experiment_settings["star_file"])
+    print("CTF PARAMS !!!", apix_downsize, Npix_downsize)
     ctf_experiment = CTF.from_starfile(experiment_settings["star_file"], apix = apix_downsize, side_shape=Npix_downsize , device=device)
 
     dataset = ImageDataSet(apix, Npix, particles_star["particles"], particles_path, down_side_shape=Npix_downsize)
