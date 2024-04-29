@@ -85,6 +85,9 @@ class CTF(torch.nn.Module):
 
 		#First we find the values of the CTF in the optics block of the star file.
 		try:
+			if "side_shape" in kwargs and "apix" in kwargs:
+				raise Exception('User input', 'Apix and side_shape are input by user. Overrinding the ones in the starfile.')
+
 			side_n_pix = int(df["optics"].loc[0, "rlnImageSize"])
 			apix = df["optics"].loc[0, "rlnImagePixelSize"]
 		except Exception:
