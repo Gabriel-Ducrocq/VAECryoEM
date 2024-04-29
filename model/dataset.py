@@ -11,9 +11,11 @@ class ImageDataSet(Dataset):
     def __init__(self, apix, side_shape, particles_df, particles_path, down_side_shape=None, down_method="interp"):
         """
         Create a dataset of images and poses
-        :param images: torch.tensor(N_images, N_pix_x, N_pix_y) of images
-        :param poses: pandas dataframe (N_images, undefined) of information regarding each particles, in Relion star format.
-        :param particles_path: str, path to the data folder containing the mrcs files.
+        :param apix: float, size of a pixel in Å.
+        :param side_shape: integer, number of pixels on each side of a picture. So the picture is a side_shape x side_shape array
+        :param particle_df: particles dataframe coming from a star file
+        :particles_path: string, path to the folder containing the mrcs files. It is appended to the path present in the star file.
+        :param down_side_shape: integer, number of pixels of the downsampled images. If no downampling, set down_side_shape = side_shape. 
         """
         self.side_shape = side_shape
         self.down_method = down_method
@@ -21,10 +23,14 @@ class ImageDataSet(Dataset):
         self.particles_path = particles_path
         self.particles_df = particles_df
         print(particles_df.columns)
+        #Reading the euler angles and turning them into rotation matrices. 
         euler_angles_degrees = particles_df[["rlnAngleRot", "rlnAngleTilt", "rlnAnglePsi"]].values
         euler_angles_radians = euler_angles_degrees*np.pi/180
         poses = euler_angles_to_matrix(torch.tensor(euler_angles_radians, dtype=torch.float32), convention="ZYZ")
+        #Transposing because ReLion has a clockwise convention, while we use a counter-clockwise convention.
         poses = torch.transpose(poses, dim0=-2, dim1=-1)
+
+        #Reading the translations. ReLion may express the translations divided by apix. So we need to multiply by apix to recover them in Å
         if "rlnOriginXAngst" in particles_df:
             shiftX = torch.from_numpy(np.array(particles_df["rlnOriginXAngst"], dtype=np.float32))
             shiftY = torch.from_numpy(np.array(particles_df["rlnOriginYAngst"], dtype=np.float32))
@@ -39,6 +45,7 @@ class ImageDataSet(Dataset):
         print("Dataset size:", self.particles_df, "apix:",self.apix)
         print("Normalizing training data")
 
+        #If a downsampling is wanted, recompute the new apix and set the new down_side_shape
         self.down_side_shape = side_shape
         if down_side_shape is not None:
             self.down_side_shape = down_side_shape
@@ -53,6 +60,9 @@ class ImageDataSet(Dataset):
     def __getitem__(self, idx):
         """
         Return a batch of true images, as 2d array !
+        # return: the set of indexes queried for the batch, the corresponding images as a torch.tensor((batch_size, side_shape, side_shape)), 
+        # the corresponding poses rotation matrices as torch.tensor((batch_size, 3, 3)), the corresponding poses translations as torch.tensor((batch_size, 2))
+        # NOTA BENE: the convention for the rotation matrix is left multiplication of the coordinates of the atoms of the protein !!
         """
         particles = self.particles_df.iloc[idx]
         try:

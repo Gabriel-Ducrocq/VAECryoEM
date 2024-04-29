@@ -95,11 +95,21 @@ def get_posed_structure(Gauss_mean, rotation_matrices, translation_vectors):
 
 
 def primal_to_fourier2d(images):
+    """
+    Computes the fourier transform of the images.
+    images: torch.tensor(batch_size, N_pix, N_pix)
+    return fourier transform of the images
+    """
     r = torch.fft.ifftshift(images, dim=(-2, -1))
     fourier_images = torch.fft.fftshift(torch.fft.fft2(r, dim=(-2, -1), s=(r.shape[-2], r.shape[-1])), dim=(-2, -1))
     return fourier_images
 
 def fourier2d_to_primal(fourier_images):
+    """
+    Computes the inverse fourier transform
+    fourier_images: torch.tensor(batch_size, N_pix, N_pix)
+    return fourier transform of the images
+    """
     f = torch.fft.ifftshift(fourier_images, dim=(-2, -1))
     r = torch.fft.fftshift(torch.fft.ifft2(f, dim=(-2, -1), s=(f.shape[-2], f.shape[-1])),dim=(-2, -1)).real
     return r
@@ -114,6 +124,8 @@ def apply_ctf(images, ctf, indexes):
     return ctf corrupted images
     """
     fourier_images = primal_to_fourier2d(images)
+    c = ctf.compute_ctf(indexes)
+    print("C SHAPE", c.shape)
     fourier_images *= ctf.compute_ctf(indexes)
     ctf_corrupted = fourier2d_to_primal(fourier_images)
     return ctf_corrupted

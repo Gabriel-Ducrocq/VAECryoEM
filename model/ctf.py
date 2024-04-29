@@ -11,7 +11,6 @@ class CTF(torch.nn.Module):
 	def __init__(self, side_shape, apix, defocusU, defocusV, defocusAngle, voltage, sphericalAberration, amplitudeContrastRatio, phaseShift=None ,scalefactor = None,
 		bfactor= None, device="cpu"):
 		"""
-		device: str, device to use.
 		side shape: number of pixels on a side.
 		apix: size of a pixel in Å.
 		defocusU: defocusU.
@@ -21,6 +20,9 @@ class CTF(torch.nn.Module):
 		sphericalAberration: spherical aberration in mm.
 		AmplitudeContrastRatio: amplitude contrat ratio.
 		phaseShift: phase shift in degrees.
+		scalefactor: scalefactor.
+		bfactor: bfactor.
+		device: str, device to use.
 		"""
 		super().__init__()
 		if phaseShift is None:
@@ -72,11 +74,16 @@ class CTF(torch.nn.Module):
 
 	@classmethod
 	def from_starfile(cls, file, device="cpu", **kwargs):
+		"""
+		Instantiate a CTF object from a starfile.
+		:param file: path to the starfile containing the parameters of the ctf
+		:param device: str, path to the starfile.
+		"""
 		df = starfile.read(file)
 
 		overrides = {}
 
-		#First we find the values of the CTF im the optics block of the star file.
+		#First we find the values of the CTF in the optics block of the star file.
 		try:
 			side_n_pix = int(df["optics"].loc[0, "rlnImageSize"])
 			apix = df["optics"].loc[0, "rlnImagePixelSize"]
