@@ -76,6 +76,8 @@ ctf = CTF(*ctf_vals, device=device)
 
 #Creating the grid:
 grid = EMAN2Grid(Npix, apix, device)
+#Creating the image translator
+image_translator = SpatialGridTranslate(D=Npix, device=device)
 
 #Create poses:
 if not is_homogeneous:
@@ -101,17 +103,25 @@ else:
     poses = torch.load(pose_rotation)
 
 if not poses_translation:
-    poses_translation = torch.zeros((N_images, 3), device=device)
+    #poses_translation = torch.zeros((N_images, 3), device=device)
+    shiftX_angstrom = (torch.ran((N_images, 1), device=device)*2 - 1)*10
+    shiftY_angstrom = (torch.ran((N_images, 1), device=device)*2 - 1)*10
+    shiftX /= apix
+    shiftY /= apix
 else:
     poses_translation = torch.load(poses_translation)
 
-print("Min translation", torch.min(poses_translation))
-print("Max translation", torch.max(poses_translation))
+print("Min shiftX in Å", torch.min(shiftX_angstrom))
+print("Max shiftX in Å", torch.max(shiftX_angstrom))
+print("Min shiftY in Å", torch.min(shiftY_angstrom))
+print("Max shiftY in Å", torch.max(shiftY_angstrom))
+
+poses_tranlations = torch.concatenate([shiftY, shiftX], dim=1)
 
 #Finding the center of mass to center the protein
 center_vector = np.mean(centering_structure.coord, axis=0)
-## !!!!!!!!!!!!!!!!!!    BE CAREFUL I AM TRANSLATING A LITTLE BIT !!!!!!!!!!!!!!!!!!
-center_vector += 0.5*apix
+## !!!!!!!!!!!!!!!!!!    BE CAREFUL I AM NOT TRANSLATING A LITTLE BIT !!!!!!!!!!!!!!!!!!
+#center_vector += 0.5*apix
 
 all_images = []
 from time import time
@@ -147,12 +157,14 @@ for i in tqdm(range(n_iter)):
     posed_backbones = get_posed_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
     batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
     batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
+    batch_poses_translation = poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure]
+    batch_translated_images = image_translator.transform(batch_ctf_corrupted_images, batch_poses_translation[:, None, :])
     #batch_ctf_corrupted_images = batch_images
     #plt.imshow(batch_ctf_corrupted_images[0].detach().numpy())
     #plt.show()
     #batch_ctf_corrupted_images_bis = apply_ctf_bis(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)]))
     #all_images.append(batch_images.detach().cpu())
-    all_images.append(batch_ctf_corrupted_images.detach().cpu())
+    all_images.append(batch_translated_images.detach().cpu())
     #plt.imshow(batch_ctf_corrupted_images.detach().numpy()[0])
     #plt.show()
     #plt.imshow(batch_ctf_corrupted_images_bis.detach().numpy()[0])
@@ -182,7 +194,8 @@ if len(size_prot) > 1:
 mrc.MRCFile.write(f"{folder_experiment}particles.mrcs", all_images.detach().cpu().numpy(), Apix=apix, is_vol=False)
 print("Saving poses and ctf in star format.")
 output_path = f"{folder_experiment}particles.star"
-create_star_file(poses.detach().cpu().numpy(), poses_translation[:, :2].detach().cpu().numpy(), "particles.mrcs", N_images, Npix, apix, image_settings["ctf"], output_path)
+create_star_file(poses.detach().cpu().numpy(), shiftX.detach().cpu().numpy(), shiftY.detach().cpu().numpy(), "particles.mrcs",
+ N_images, Npix, apix, image_settings["ctf"], output_path)
 
 
 

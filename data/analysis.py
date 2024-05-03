@@ -116,7 +116,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
             print(len(z))
             z = z[0].to(device)
             #for i, latent_variables in enumerate(z):
-            print("Latent variable number:", 0)
+            print("Latent variable number:", batch_num)
             #latent_variables = latent_variables[None, :]
             #latent_var = torch.zeros((batch_size, z.shape[1]), device=device)
             #latent_var[:z.shape[0]] = z

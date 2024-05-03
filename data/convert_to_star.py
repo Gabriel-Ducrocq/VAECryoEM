@@ -7,10 +7,12 @@ import pandas as pd
 from scipy.spatial.transform import Rotation
 
 
-def convert_poses_to_relion(poses_rotations, poses_translations):
+def convert_poses_to_relion(poses_rotations, shiftX, shiftY):
 	"""
 	converts the rotation matrices and translation vectors to a dictionnary
 	poses_rotations: np.array(N_images, 3, 3) of rotation matrix in cryoSPHERE conventions
+	shiftX: np.array(N_images, 1) of translation value along the X axis in fractions of pixel, similar to Relion
+	shiftY: np.array(N_images, 1) of translation value along the Y axis in fractions of pixel, similar to Relion
 	poses_translations: np.array(N_images, 2) of translation vectors in cryoSPHERE conventions
 	return dict
 	"""
@@ -23,7 +25,7 @@ def convert_poses_to_relion(poses_rotations, poses_translations):
 	poses_rotations = Rotation.from_matrix(poses_rotations)
 	poses_rotations_euler = poses_rotations.as_euler("ZYZ", degrees=True)
 
-	poses_dict = {"rlnOriginXAngst":poses_translations[:, 0], "rlnOriginYAngst":poses_translations[:, 1], "rlnAngleRot":poses_rotations_euler[:, 0], 
+	poses_dict = {"rlnOriginX":shiftX[:, 0], "rlnOriginY":shiftY[:, 0], "rlnAngleRot":poses_rotations_euler[:, 0], 
 	"rlnAngleTilt":poses_rotations_euler[:, 1], "rlnAnglePsi":poses_rotations_euler[:, 2]}
 
 	return poses_dict
@@ -49,11 +51,12 @@ def convert_ctf_to_relion(particle_mrcs, N_images, N_pixels, apix, ctf_yaml):
 	return particle_dict, optics_df
 
 
-def create_star_file(poses_rotations, poses_translations, particle_mrcs, N_images, N_pixels, apix, ctf_yaml, output_path):
+def create_star_file(poses_rotations, shiftX, shiftY, particle_mrcs, N_images, N_pixels, apix, ctf_yaml, output_path):
 	"""
 	create a star file based on the ctf and poses
 	poses_rotations: np.array(N_images, 3, 3) of rotation matrix in cryoSPHERE conventions
-	poses_tranlations: np.array(N_images, 2) of translation vectors in cryoSPHERE conventions
+	shiftX: np.array(N_images, 1) of translation value along the X axis in fractions of pixel, similar to Relion
+	shiftY: shiftY: np.array(N_images, 1) of translation value along the Y axis in fractions of pixel, similar to Relion
 	particle_mrcs: str, name of the mrc file containing the particles.
 	N_images: int, number of particles
 	N_pixels: int, number of pixels on one side
