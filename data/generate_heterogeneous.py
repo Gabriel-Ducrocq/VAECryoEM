@@ -78,7 +78,7 @@ ctf = CTF(*ctf_vals, device=device)
 #Creating the grid:
 grid = EMAN2Grid(Npix, apix, device)
 #Creating the image translator
-image_translator = SpatialGridTranslate(D=Npix, device=device)
+image_translator = utils.SpatialGridTranslate(D=Npix, device=device)
 
 #Create poses:
 if not is_homogeneous:
