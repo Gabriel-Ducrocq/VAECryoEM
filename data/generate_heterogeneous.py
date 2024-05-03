@@ -117,7 +117,7 @@ print("Max shiftX in Å", torch.max(shiftX_angstrom))
 print("Min shiftY in Å", torch.min(shiftY_angstrom))
 print("Max shiftY in Å", torch.max(shiftY_angstrom))
 
-poses_tranlations = torch.concatenate([shiftY, shiftX], dim=1)
+poses_translations = torch.concatenate([shiftY, shiftX], dim=1)
 
 #Finding the center of mass to center the protein
 center_vector = np.mean(centering_structure.coord, axis=0)
@@ -159,7 +159,7 @@ for i in tqdm(range(n_iter)):
     batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
     batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
     ###  !!!!!!!!!!!!! We multiply by -1 so that when we correct for the translation in the cryoSPHERE run, we dont get 2x translation but 0 tranlations !
-    batch_poses_translation = - poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure]
+    batch_poses_translation = - poses_translations[i*N_pose_per_structure:(i+1)*N_pose_per_structure]
     batch_translated_images = image_translator.transform(batch_ctf_corrupted_images, batch_poses_translation[:, None, :])
     #batch_ctf_corrupted_images = batch_images
     #plt.imshow(batch_ctf_corrupted_images[0].detach().numpy())
