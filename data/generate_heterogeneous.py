@@ -48,7 +48,7 @@ if not is_homogeneous:
     structures = [folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path]
     indexes = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures]
     ####      !!!!!!!!!            I TAKE ONLY THE FIRST 10 STRUCTURES.  !!!!!!!!!!!!!!
-    sorted_structures = [struct for _, struct in sorted(zip(indexes, structures))][:10]
+    sorted_structures = [struct for _, struct in sorted(zip(indexes, structures))]
 
 with open(f"{folder_experiment}/parameters.yaml", "r") as file:
     experiment_settings = yaml.safe_load(file)
