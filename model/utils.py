@@ -104,8 +104,9 @@ def parse_yaml(path):
     ##############                  I HAVE ADDED THE CENTERING, BE CAREFUL ON REAL DATA !!!!!! ############
     center_of_mass = compute_center_of_mass(centering_structure)
 
-    # Since we operate on an EMAN2 grid, we need to translate the structure by -apix/2 to get it at the center of the image.
-    base_structure.translate_structure(-center_of_mass - apix/2)
+    #  !!!!!!!!!!!!!!!!!!!!!!!!!!!!! I AM NOT HAVING A 0.5 OFFSET ANYMORE !!!!!!!!!!!!!!
+    base_structure.translate_structure(-center_of_mass)
+
 
 
     #gmm_repr = Gaussian(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), 
@@ -142,7 +143,6 @@ def parse_yaml(path):
 
 
     particles_star = starfile.read(experiment_settings["star_file"])
-    print("CTF PARAMS !!!", apix_downsize, Npix_downsize)
     ctf_experiment = CTF.from_starfile(experiment_settings["star_file"], apix = apix_downsize, side_shape=Npix_downsize , device=device)
 
     dataset = ImageDataSet(apix, Npix, particles_star["particles"], particles_path, down_side_shape=Npix_downsize)
@@ -160,8 +160,9 @@ def parse_yaml(path):
     latent_type = experiment_settings["latent_type"]
     assert latent_type in ["continuous", "categorical"]
 
-    base_structure.to_pdb("test_input.pdb")
-    return vae, image_translator, ctf_experiment, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, base_structure
+    
+    return vae, image_translator, ctf_experiment, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, \
+    scheduler, base_structure, pairwise_distances
 
 
 class SpatialGridTranslate(torch.nn.Module):
