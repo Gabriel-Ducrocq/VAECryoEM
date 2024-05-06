@@ -16,8 +16,8 @@ def convert_poses_to_relion(poses_rotations, shiftX, shiftY):
 	poses_translations: np.array(N_images, 2) of translation vectors in cryoSPHERE conventions
 	return dict
 	"""
-	assert np.sum(poses_translations) == 0, "Translations must be 0 for now !"
-	assert poses_rotations.shape[0] == poses_translations.shape[0], "Different number of rotations and translations"
+	#assert np.sum(poses_translations) == 0, "Translations must be 0 for now !"
+	assert poses_rotations.shape[0] == shiftX.shape[0] and poses_rotations.shape[0] == shiftY.shape[0] , "Different number of rotations and translations"
 	## Note that cryoDRGN uses the transposed matrix obtained from the Euler angles.
 	## Note also that Relion uses left multiplication with the rotation matrix obtained from the Euler angles (ZYZ). It rotates the grid, so this rotation 
 	## matrix should be the transpose of the cryoSphere rotation matrix.
