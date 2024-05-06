@@ -64,7 +64,7 @@ def create_star_file(poses_rotations, shiftX, shiftY, particle_mrcs, N_images, N
 	output_path: str, path to the star file
 	"""
 	assert output_path.split(".")[-1] == "star", "The file must have a star extension."
-	poses_dict = convert_poses_to_relion(poses_rotations, poses_translations)
+	poses_dict = convert_poses_to_relion(poses_rotations, shiftX, shiftY)
 	particle_dict, optics_df = convert_ctf_to_relion(particle_mrcs, N_images, N_pixels, apix, ctf_yaml)
 	particle_dict.update(poses_dict)
 	particle_df = pd.DataFrame(particle_dict)
