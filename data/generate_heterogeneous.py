@@ -18,7 +18,7 @@ from Bio import BiopythonWarning
 from gmm import Gaussian, EMAN2Grid
 from convert_to_star import create_star_file
 from pytorch3d.transforms import axis_angle_to_matrix
-from renderer import project, get_posed_structure, apply_ctf
+from renderer import project, rotate_structure, apply_ctf
 
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--folder_experiment', type=str, required=True)
@@ -155,7 +155,7 @@ for i in tqdm(range(n_iter)):
             faulty_indexes.append(i)
 
     amplitudes = torch.tensor(poly.num_electron, dtype=torch.float32, device=device)[:, None]
-    posed_backbones = renderer.rotate_structure(predicted_structures, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
+    posed_backbones = rotate_structure(predicted_structures, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
     batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
     batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
     ###  !!!!!!!!!!!!! We multiply by -1 so that when we correct for the translation in the cryoSPHERE run, we dont get 2x translation but 0 tranlations !
