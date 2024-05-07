@@ -47,7 +47,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if not is_homogeneous:
     structures = [folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path]
     indexes = [int(name.split("/")[-1].split(".")[0].split("_")[-1]) for name in structures]
-    ####      !!!!!!!!!            I TAKE ONLY THE FIRST 10 STRUCTURES.  !!!!!!!!!!!!!!
     sorted_structures = [struct for _, struct in sorted(zip(indexes, structures))]
 
 with open(f"{folder_experiment}/parameters.yaml", "r") as file:
@@ -107,6 +106,9 @@ if not poses_translation:
     #poses_translation = torch.zeros((N_images, 3), device=device)
     shiftX_angstrom = (torch.rand((N_images, 1), device=device)*2 - 1)*10
     shiftY_angstrom = (torch.rand((N_images, 1), device=device)*2 - 1)*10
+    ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CAREFUL I AM SETTING TO ZERO !!!!!!!!!!!!!!!!!!!!
+    shiftX_angstrom = torch.zeros_like(shiftX_angstrom)
+    shiftY_angstrom = torch.zeros_like(shiftY_angstrom)
     shiftX = shiftX_angstrom /apix
     shiftY = shiftY_angstrom /apix
 else:
