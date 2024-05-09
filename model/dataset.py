@@ -8,7 +8,7 @@ import torchvision.transforms.functional as tvf
 from pytorch3d.transforms import euler_angles_to_matrix
 
 class ImageDataSet(Dataset):
-    def __init__(self, apix, side_shape, particles_df, particles_path, down_side_shape=None, down_method="interp"):
+    def __init__(self, apix, side_shape, particles_df, particles_path, down_side_shape=None, down_method="interp", invert_data=True):
         """
         Create a dataset of images and poses
         :param apix: float, size of a pixel in Å.
@@ -50,6 +50,8 @@ class ImageDataSet(Dataset):
         if down_side_shape is not None:
             self.down_side_shape = down_side_shape
             self.down_apix = self.side_shape * self.apix /self.down_side_shape
+
+        self.invert_data = invert_data
 
     def standardize(self, images, device="cpu"):
         return (images - self.avg_image.to(device))/self.std_image.to(device)
@@ -97,5 +99,7 @@ class ImageDataSet(Dataset):
             print(e)
             proj = torch.zeros(self.down_side_shape, self.down_side_shape)
 
+        if self.invert_data:
+            proj *= -1
 
         return idx, proj, self.poses[idx], self.poses_translation[idx]/self.down_apix

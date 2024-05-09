@@ -106,7 +106,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
             """
 
         #all_latent_variables = torch.concat(all_latent_variables, dim=0).detach().cpu().numpy()
-        np.save("z_1.npy", all_latent_variables)
+        np.save("z_1.npy", all_latent_variables.detach().cpu().numpy())
         np.save(latent_path, all_latent_variables)
     else:
         z = np.load(z)
