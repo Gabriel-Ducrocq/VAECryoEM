@@ -99,8 +99,8 @@ class ImageDataSet(Dataset):
             print(e)
             proj = torch.zeros(self.down_side_shape, self.down_side_shape)
 
-        if self.invert_data:
-            print("INVERTING")
-            proj *= -1
+        #if self.invert_data:
+        #    print("INVERTING")
+        #    proj *= -1
 
         return idx, proj, self.poses[idx], self.poses_translation[idx]/self.down_apix
