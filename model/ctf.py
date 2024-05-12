@@ -45,7 +45,8 @@ class CTF(torch.nn.Module):
 		assert len(set({len(val) for arg_name,val in saved_args.items() if arg_name not in ["self", "__class__", "device"]})) == 1, "CTF values do not have the same shape."
 		assert len(set(side_shape)) == 1, "All images must have the same number of pixels"
 		assert len(set(apix)) == 1, "All images must have the same apix"
-		self.register_buffer("Npix", torch.tensor(side_shape, dtype=torch.float32, device=device)[:, None])
+
+		self.register_buffer("Npix", torch.tensor(side_shape , dtype=torch.float32, device=device)[:, None])
 		self.register_buffer("Apix", torch.tensor(apix, dtype=torch.float32, device=device)[:, None])
 		self.register_buffer("dfU", torch.tensor(defocusU[:, None], dtype=torch.float32, device=device))
 		self.register_buffer("dfV", torch.tensor(defocusV[:, None], dtype=torch.float32, device=device))
@@ -59,17 +60,11 @@ class CTF(torch.nn.Module):
 		self.npix = int(side_shape[0])
 		self.apix = apix[0]
 		#In this stack, freqs[0, :] corresponds to constant x values, freqs[:, 0] corresponds to contant y values.
-		freqs = (
-		    torch.stack(
-		        self.meshgrid_2d(-0.5, 0.5, self.npix, endpoint=False),
-		        -1,
-		    )
-		    / self.apix)
-
-		self.freqs = freqs.reshape(-1, 2)
+        ax = torch.fft.fftshift(torch.fft.fftfreq(self.size, self.resolution))
+        mx, my = torch.meshgrid(ax, ax, indexing="xy")
+        freqs = torch.stack([mx.flatten(), my.flatten()], 1)
+        self.register_buffer("freqs", freqs)
 		self.freqs = self.freqs.to(device)
-		#In freqs, x is the first coordinate, y is the second and we are in x major
-		#ctf = self.compute_ctf(freqs, self.dfU, self.dfV, self.dfang, self.volt, self.cs, self.w, self.phaseShift, None, None)
 
 
 	@classmethod
@@ -121,6 +116,7 @@ class CTF(torch.nn.Module):
 		"rlnAmplitudeContrast",
 		"rlnPhaseShift",
 		]):
+
 			if header in overrides:
 				ctf_params[:, i + 2] = overrides[header]
 			else:
@@ -128,22 +124,6 @@ class CTF(torch.nn.Module):
 
 		return cls(*ctf_params[:, :8].T, phaseShift=None, device=device)
 
-	def meshgrid_2d(self, lo, hi, n, endpoint=False):
-		"""
-		Torch-compatible implementation of:
-		np.meshgrid(
-		        np.linspace(-0.5, 0.5, D, endpoint=endpoint),
-		        np.linspace(-0.5, 0.5, D, endpoint=endpoint),
-		    )
-		Torch doesn't support the 'endpoint' argument (always assumed True)
-		and the behavior of torch.meshgrid is different unless the 'indexing' argument is supplied.
-		"""
-		if endpoint:
-		    values = torch.linspace(lo, hi, n)
-		else:
-		    values = torch.linspace(lo, hi, n + 1)[:-1]
-
-		return torch.meshgrid(values, values, indexing="xy")
 
 	def compute_ctf(self, indexes
 		) -> torch.Tensor:
@@ -173,6 +153,8 @@ class CTF(torch.nn.Module):
 
 		# lam = sqrt(h^2/(2*m*e*Vr)); Vr = V + (e/(2*m*c^2))*V^2
 		lam = 12.2639 / torch.sqrt(volt + 0.97845e-6 * volt ** 2)
+		bsz = len(indexes)
+		freqs = self.freqs.repeat(bsz, 1, 1)
 		x = self.freqs[..., 0]
 		y = self.freqs[..., 1]
 		#Since we take arctan between y and x and not x and y, we are still in x ordering but x is the second coordinate now !
@@ -194,7 +176,7 @@ class CTF(torch.nn.Module):
 
 		#But in this project, the images are (y_coords, x_coords), see renderer.project so we transpose:
 		ctf = ctf.reshape((len(indexes), self.npix, self.npix))
-		return torch.transpose(ctf, dim0=-2, dim1=-1)
+		return ctf
   
 
 
