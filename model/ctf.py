@@ -60,10 +60,10 @@ class CTF(torch.nn.Module):
 		self.npix = int(side_shape[0])
 		self.apix = apix[0]
 		#In this stack, freqs[0, :] corresponds to constant x values, freqs[:, 0] corresponds to contant y values.
-        ax = torch.fft.fftshift(torch.fft.fftfreq(self.size, self.resolution))
-        mx, my = torch.meshgrid(ax, ax, indexing="xy")
-        freqs = torch.stack([mx.flatten(), my.flatten()], 1)
-        self.register_buffer("freqs", freqs)
+		ax = torch.fft.fftshift(torch.fft.fftfreq(self.size, self.resolution))
+		mx, my = torch.meshgrid(ax, ax, indexing="xy")
+		freqs = torch.stack([mx.flatten(), my.flatten()], 1)
+		self.register_buffer("freqs", freqs)
 		self.freqs = self.freqs.to(device)
 
 
