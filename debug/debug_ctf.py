@@ -21,11 +21,15 @@ import random
 from torch import Tensor
 import numpy as np
 import matplotlib.pyplot as plt
+from cryostar.utils.dataio import StarfileDataSet, StarfileDatasetConfig, Mask
 
 
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--star_file', type=str, required=True)
+parser_arg.add_argument('--dataset_dir', type=str, required=True)
 parser_arg.add_argument('--ctf_pickle', type=bool, required=False)
+parser_arg.add_argument('--apix', type=bool, required=False)
+parser_arg.add_argument('--nside', type=bool, required=False)
 
 
 
@@ -228,8 +232,25 @@ def compute_ctf_cryodrgn(freqs: torch.Tensor, dfu: torch.Tensor, dfv: torch.Tens
 
 
 
-def run(path_star, path_pickle):
+def run(path_star, path_pickle, path_dataset, apix, nside):
 
+
+	dataset_cryostar = StarfileDataSet(
+	StarfileDatasetConfig(
+	    dataset_dir=path_dataset,
+	    starfile_path=path_star,
+	    apix=apix,
+	    side_shape=nside,
+	    down_side_shape=nside,
+	    mask_rad=10,
+	    power_images=1.0,
+	    ignore_rots=False,
+	    ignore_trans=False, ))
+
+
+	dataset_cryosphere = ImageDataSet(apix, nside, particles_star["particles"], path_dataset, down_side_shape=nside)
+
+	"""
 	print("A")
 	ctf_cryosphere_obj = CTF.from_starfile(path_star)
 	ctf_cryosphere = CTF.from_starfile(path_star)
@@ -285,18 +306,28 @@ def run(path_star, path_pickle):
 	plt.savefig("cryodrgn_ctf.png")
 	plt.show()
 	plt.close()
-
+	"""
 
 
 
 
 
 if __name__ == '__main__':
+
+	parser_arg.add_argument('--star_file', type=str, required=True)
+parser_arg.add_argument('--dataset_dir', type=str, required=True)
+parser_arg.add_argument('--ctf_pickle', type=bool, required=False)
+parser_arg.add_argument('--apix', type=bool, required=False)
+parser_arg.add_argument('--nside', type=bool, required=False)
+
 	args = parser_arg.parse_args()
 	path_star = args.star_file
 	path_pickle= args.ctf_pickle
+	path_dataset = args.dataset_dir
+	apix = args.apix
+	nside = args.nside
 	print("AAAAAAAAAA")
-	run(path_star, path_pickle)
+	run(path_star, path_pickle, path_dataset, apix, nside)
 
 
 
