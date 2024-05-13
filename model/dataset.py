@@ -17,6 +17,7 @@ class ImageDataSet(Dataset):
         :particles_path: string, path to the folder containing the mrcs files. It is appended to the path present in the star file.
         :param down_side_shape: integer, number of pixels of the downsampled images. If no downampling, set down_side_shape = side_shape. 
         """
+
         self.side_shape = side_shape
         self.down_method = down_method
         self.apix = apix
@@ -42,7 +43,7 @@ class ImageDataSet(Dataset):
         self.poses = poses
         assert self.poses_translation.shape[0] == self.poses.shape[0], "Rotation and translation pose shapes are not matching !"
         #assert torch.max(torch.abs(poses_translation)) == 0, "Only 0 translation supported as poses"
-        print("Dataset size:", self.particles_df, "apix:",self.apix)
+        print("Dataset size:", self.particles_df.shape[0], "apix:",self.apix)
         print("Normalizing training data")
 
         #If a downsampling is wanted, recompute the new apix and set the new down_side_shape

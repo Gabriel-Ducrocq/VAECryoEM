@@ -71,9 +71,9 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
             latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
             all_latent_variables.append(latent_variables)
 
-            #if batch_num == 1000:
-            #    np.save("z_0.npy", torch.concat(all_latent_variables, dim=0).detach().cpu().numpy())
-            #    all_latent_variables = []
+            if batch_num == 1000:
+                np.save("z_0.npy", torch.concat(all_latent_variables, dim=0).detach().cpu().numpy())
+                all_latent_variables = []
 
             #print(latent_variables.shape)
             #mask = vae.sample_mask(batch_images.shape[0])
@@ -106,7 +106,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
             """
 
         all_latent_variables = torch.concat(all_latent_variables, dim=0).detach().cpu().numpy()
-        #np.save("z_1.npy", all_latent_variables.detach().cpu().numpy())
+        np.save("z_1.npy", all_latent_variables.detach().cpu().numpy())
         np.save(latent_path, all_latent_variables)
     else:
         z = np.load(z)

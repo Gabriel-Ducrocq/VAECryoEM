@@ -2,10 +2,13 @@ import sys
 import os
 path = os.path.abspath("model")
 sys.path.append(path)
+from dataset import ImageDataSet 
 print("AAAA")
 import starfile
 print("BBBB")
 from ctf import CTF
+import utils
+import renderer
 print("CCCC")
 import argparse
 print("DDDDD")
@@ -22,15 +25,95 @@ from torch import Tensor
 import numpy as np
 import matplotlib.pyplot as plt
 from cryostar.utils.dataio import StarfileDataSet, StarfileDatasetConfig, Mask
-
+from cryostar.utils.ctf import parse_ctf_star
+from cryostar.utils.transforms import SpatialGridTranslate
+from cryostar.gmm.gmm import EMAN2Grid as EMAN2GRID_cryostar
+from cryostar.gmm.gmm import batch_projection as batch_projection_cryostar
+from cryostar.gmm.gmm import Gaussian as Gaussian_cryostar
+from cryostar.utils.polymer import Polymer as Polymer_cryostar
+import einops
+from torch.utils.data import DataLoader
+from cryostar.utils.ctf_utils import CTFRelion, CTFCryoDRGN
+from cryostar.utils.fft_utils import primal_to_fourier_2d, fourier_to_primal_2d
+from renderer import apply_ctf
 
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--star_file', type=str, required=True)
 parser_arg.add_argument('--dataset_dir', type=str, required=True)
-parser_arg.add_argument('--ctf_pickle', type=bool, required=False)
-parser_arg.add_argument('--apix', type=bool, required=False)
-parser_arg.add_argument('--nside', type=bool, required=False)
+parser_arg.add_argument('--path_yaml', type=str, required=True)
+parser_arg.add_argument('--apix', type=float, required=True)
+parser_arg.add_argument('--nside', type=float, required=True)
+parser_arg.add_argument('--pdb_path', type=str, required=True)
 
+
+
+def _apply_ctf(batch, real_proj, ctf, freq_mask=None):
+    f_proj = primal_to_fourier_2d(real_proj)
+    f_proj = _apply_ctf_f(batch, f_proj, ctf, freq_mask)
+    # Note: here only use the real part
+    proj = fourier_to_primal_2d(f_proj).real
+    return proj
+
+
+def _apply_ctf_f(batch, f_proj, ctf, freq_mask=None):
+    pred_ctf_params = {k: batch[k] for k in ('defocusU', 'defocusV', 'angleAstigmatism') if k in batch}
+    f_proj = ctf(f_proj, batch['idx'], ctf_params=pred_ctf_params, mode="gt", frequency_marcher=None)
+    if freq_mask is not None:
+        f_proj = f_proj * lp_mask2d
+    return f_proj
+
+
+def infer_ctf_params_from_config(star_file_path, npix, apix):
+    ctf_params = parse_ctf_star(star_file_path, side_shape=npix,
+                                apix=apix)[0].tolist()
+    ctf_params = {
+        "size": npix,
+        "resolution": apix,
+        "kV": ctf_params[5],
+        "cs": ctf_params[6],
+        "amplitudeContrast": ctf_params[7]
+    }
+    return ctf_params
+
+
+def rotation_cryostar(mus, rot_mats: torch.Tensor) -> torch.Tensor:
+    """A quick version of e2gmm projection.
+
+    Parameters
+    ----------
+    gauss: (b/1, num_centers, 3) mus, (b/1, num_centers) sigmas and amplitudes
+    rot_mats: (b, 3, 3)
+    line_grid: (num_pixels, 3) coords, (nx, ) shape
+
+    Returns
+    -------
+    proj: (b, y, x) projections
+    """
+
+    rotated_centers = einops.einsum(rot_mats, mus, "b c31 c32, b nc c32 -> b nc c31")
+    return rotated_centers
+
+
+def get_batch_pose_cryostar(batch, apix):
+	rot_mats = batch["rotmat"]
+	# yx order
+	trans_mats = torch.concat((batch["shiftY"].unsqueeze(1), batch["shiftX"].unsqueeze(1)), dim=1)
+	trans_mats /= apix
+	return rot_mats, trans_mats
+
+
+def _shared_projection_cryostar(pred_struc, rot_mats, gmm_sigmas, gmm_amps, grid):
+	print(pred_struc.shape)
+	print(rot_mats.shape)
+	pred_images = batch_projection_cryostar(
+	    gauss=Gaussian_cryostar(
+	        mus=pred_struc,
+	        sigmas=gmm_sigmas.unsqueeze(0),  # (b, num_centers)
+	        amplitudes=gmm_amps.unsqueeze(0)),
+	    rot_mats=rot_mats,
+	    line_grid=grid.line())
+	pred_images = einops.rearrange(pred_images, 'b y x -> b 1 y x')
+	return pred_images
 
 
 class Lattice_cryoDRGN:
@@ -232,8 +315,31 @@ def compute_ctf_cryodrgn(freqs: torch.Tensor, dfu: torch.Tensor, dfv: torch.Tens
 
 
 
-def run(path_star, path_pickle, path_dataset, apix, nside):
+def run(path_star, path_yaml, path_dataset, pdb_path, apix, nside):
 
+	######## Loading everythingfor cryoSPHERE run.
+	vae, translator_cryosphere, ctf_cryosphere, grid, gmm_repr, optimizer, dataset_cryosphere, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, _ = utils.parse_yaml(path_yaml)
+
+
+	####### Loading everything for cryostar run
+	meta = Polymer_cryostar.from_pdb(pdb_path)
+
+	# for save
+	template_pdb = meta.to_atom_arr()
+
+
+	# ref
+	ref_centers = torch.from_numpy(meta.coord).float()
+	ref_amps = torch.from_numpy(meta.num_electron).float()
+	ref_sigmas = torch.ones_like(ref_amps)
+	ref_sigmas.fill_(2.)
+
+	grid_cryostar = EMAN2GRID_cryostar(side_shape=nside, voxel_size=apix)
+
+	translator_cryostar = SpatialGridTranslate(D=nside, device="cpu")
+	particles_star = starfile.read(path_star)
+	ctf_params = parse_ctf_star(path_star, side_shape=nside,
+	                            apix=apix)
 
 	dataset_cryostar = StarfileDataSet(
 	StarfileDatasetConfig(
@@ -248,7 +354,96 @@ def run(path_star, path_pickle, path_dataset, apix, nside):
 	    ignore_trans=False, ))
 
 
-	dataset_cryosphere = ImageDataSet(apix, nside, particles_star["particles"], path_dataset, down_side_shape=nside)
+	idx = 30
+	####### Creating data loaders
+	data_loader_cryosphere = iter(DataLoader(dataset_cryosphere, batch_size=10,  shuffle=False))
+	data_loader_cryostar = iter(DataLoader(dataset_cryostar,
+                              batch_size=10,
+                              shuffle=False))
+
+	ctf_params = infer_ctf_params_from_config(path_star, nside, apix)
+	#ctf_cryostar = CTFCryoDRGN(**ctf_params, num_particles=len(dataset_cryostar))
+	ctf_cryostar = CTFRelion(**ctf_params, num_particles=len(dataset_cryostar))
+
+	##### Finding the right index
+	for _ in range(idx):
+		next(data_loader_cryostar)
+		next(data_loader_cryosphere)
+
+	idx_cryosphere, true_img_cryosphere, batch_poses, batch_poses_translation = next(data_loader_cryosphere)
+	batch_cryostar = next(data_loader_cryostar)
+
+
+	##### Rotating the structure cryostar
+	rot_mats, trans_mats = get_batch_pose_cryostar(batch_cryostar, apix)
+	rotated_structure_cryostar = rotation_cryostar(ref_centers[None, :, :], rot_mats) 
+
+
+	##### Rotating the structure cryoSphere
+	posed_predicted_structures_cryosphere= renderer.rotate_structure(gmm_repr.mus[None, :, :], batch_poses)
+	img_cryostar = _shared_projection_cryostar(ref_centers[None, :, :], rot_mats, ref_sigmas, ref_amps, grid_cryostar)	
+	print("AMPL", gmm_repr.amplitudes.shape)
+	print("AMPL2", ref_amps.shape)
+	print("SIGMA", gmm_repr.sigmas.shape)
+	print("SIGMA2", ref_sigmas.shape)
+	#img_cryostar = _shared_projection_cryostar(gmm_repr.mus[None, :, :], rot_mats, gmm_repr.sigmas[0], gmm_repr.amplitudes[:, 0], grid_cryostar)
+	###The difference of 0.0002 in images come from the rotated structure excluively:
+	#img_cryostar = renderer.project(rotated_structure_cryostar, ref_sigmas[:, None], ref_amps[:, None], grid)
+
+	img_cryosphere = renderer.project(posed_predicted_structures_cryosphere, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
+	print("Img cryostar shape", img_cryostar.shape)
+	#plt.imshow(img_cryostar[0, 0].detach().numpy(), cmap="gray")
+	#plt.show()
+	#plt.imshow(img_cryosphere[0].detach().numpy(), cmap="gray")
+	#plt.savefig("image.png")
+	#plt.show()
+
+	print("Indexes batch", idx_cryosphere)
+	print("Diff images", torch.max(torch.abs((img_cryostar[0, 0] - img_cryosphere[0]))))
+	print("Diff images per image", torch.max(torch.abs((img_cryostar[0, 0] - img_cryosphere[0]))))
+	print("Diff base_structure", torch.max(torch.abs(ref_centers[None, :, :] - gmm_repr.mus[None, :, :])))
+	print("Diff rotated_structures", torch.max(torch.abs(rotated_structure_cryostar - posed_predicted_structures_cryosphere)))
+
+
+
+	#### CTF:
+	ctf_image_cryosphere = ctf_cryosphere.compute_ctf(idx_cryosphere)
+	pred_ctf_params_cryostar = {k: batch_cryostar[k] for k in ('defocusU', 'defocusV', 'angleAstigmatism') if k in batch_cryostar}
+	B = len(idx_cryosphere)
+	#ctf_image_cryotar = ctf_cryostar.get_ctf(pred_ctf_params_cryostar)
+	ctf_image_cryotar = ctf_cryostar.get_ctf(B, pred_ctf_params_cryostar)
+	plt.imshow(ctf_image_cryotar.detach().numpy(), cmap="gray")
+	plt.show()
+	plt.imshow(-ctf_image_cryosphere[0].detach().numpy(), cmap="gray")
+	plt.show()
+
+	ctf_corrupted_cryosphere = apply_ctf(img_cryosphere, ctf_cryosphere, idx_cryosphere)
+
+	ctf_corrupted_cryostar= _apply_ctf(batch_cryostar, img_cryostar, ctf_cryostar, None)
+
+	print(ctf_corrupted_cryostar.shape, ctf_corrupted_cryosphere.shape)
+	print(ctf_image_cryosphere.shape, ctf_image_cryotar.shape)
+	print("Diff ctf images", torch.max(torch.abs(ctf_image_cryosphere - ctf_image_cryotar[:, :])))
+	print("Diff ctf corrupted", torch.max(torch.abs(ctf_corrupted_cryostar[:, 0, :, :] - ctf_corrupted_cryosphere)))
+	plt.imshow(ctf_corrupted_cryostar[0, 0].detach().numpy(), cmap="gray")
+	plt.show()
+	plt.imshow(ctf_corrupted_cryosphere[0].detach().numpy(), cmap="gray")
+	plt.show()
+
+
+
+
+	#print("\n")
+	#print(dataset_cryostar[idx])
+	#print("\n")
+	#print(dataset_cryosphere[idx])
+	#_, proj, poses, poses_translation = dataset_cryosphere[idx]
+	#print("Diff", torch.max(torch.abs(proj - dataset_cryostar[idx]["proj"])))
+	#print("rotmat", torch.max(torch.abs(poses - dataset_cryostar[idx]["rotmat"])))
+	#print("dfu", torch.max(torch.abs((ctf_cryosphere_obj.dfU - ctf_params[:, 2:3])/ctf_cryosphere_obj.dfU)))
+
+
+
 
 	"""
 	print("A")
@@ -314,20 +509,15 @@ def run(path_star, path_pickle, path_dataset, apix, nside):
 
 if __name__ == '__main__':
 
-	parser_arg.add_argument('--star_file', type=str, required=True)
-parser_arg.add_argument('--dataset_dir', type=str, required=True)
-parser_arg.add_argument('--ctf_pickle', type=bool, required=False)
-parser_arg.add_argument('--apix', type=bool, required=False)
-parser_arg.add_argument('--nside', type=bool, required=False)
-
 	args = parser_arg.parse_args()
 	path_star = args.star_file
-	path_pickle= args.ctf_pickle
+	path_yaml= args.path_yaml
 	path_dataset = args.dataset_dir
 	apix = args.apix
-	nside = args.nside
+	nside = int(args.nside)
+	pdb_path = args.pdb_path
 	print("AAAAAAAAAA")
-	run(path_star, path_pickle, path_dataset, apix, nside)
+	run(path_star, path_yaml, path_dataset, pdb_path, apix, nside)
 
 
 
