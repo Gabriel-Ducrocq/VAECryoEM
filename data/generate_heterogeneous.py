@@ -92,7 +92,6 @@ if not pose_rotation:
     print("Min norm of rotation axis", torch.min(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
     print("Max norm of rotation axis", torch.max(torch.sqrt(torch.sum(normalized_axis**2, dim=-1))))
 
-    #BE CAREFUL IS SET THE ANGLE TO 0 !!!
     angle_rotation = torch.rand((N_images,1), device=device)*torch.pi
     plt.hist(angle_rotation[:, 0].detach().cpu().numpy())
     plt.show()
@@ -106,9 +105,6 @@ if not poses_translation:
     #poses_translation = torch.zeros((N_images, 3), device=device)
     shiftX_angstrom = (torch.rand((N_images, 1), device=device)*2 - 1)*10
     shiftY_angstrom = (torch.rand((N_images, 1), device=device)*2 - 1)*10
-    ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CAREFUL I AM SETTING TO ZERO !!!!!!!!!!!!!!!!!!!!
-    shiftX_angstrom = torch.zeros_like(shiftX_angstrom)
-    shiftY_angstrom = torch.zeros_like(shiftY_angstrom)
     shiftX = shiftX_angstrom /apix
     shiftY = shiftY_angstrom /apix
 else:
