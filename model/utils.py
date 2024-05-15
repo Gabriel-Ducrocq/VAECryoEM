@@ -128,15 +128,16 @@ def parse_yaml(path):
                                                                                      dtype=torch.float32, device=device)    
 
     if experiment_settings["optimizer"]["name"] == "adam":
+        ########### !!!!!!!!!!!!!!!!!!!!!!!!!!!!! TRYING WITH ADAM W !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if "learning_rate_mask" not in experiment_settings["optimizer"]:
-            optimizer = torch.optim.Adam(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
+            optimizer = torch.optim.AdamW(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
         else:
             print("Running different LR for the mask")
             list_param = [{"params": param, "lr":experiment_settings["optimizer"]["learning_rate_mask"]} for name, param in
                           vae.named_parameters() if "mask" in name]
             list_param.append({"params": vae.encoder.parameters(), "lr":experiment_settings["optimizer"]["learning_rate"]})
             list_param.append({"params": vae.decoder.parameters(), "lr":experiment_settings["optimizer"]["learning_rate"]})
-            optimizer = torch.optim.Adam(list_param)
+            optimizer = torch.optim.AdamW(list_param)
     else:
         raise Exception("Optimizer must be Adam")
 
