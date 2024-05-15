@@ -99,7 +99,7 @@ def parse_yaml(path):
 
     filter_aa = True
     grid = EMAN2Grid(Npix_downsize, apix_downsize, device=device)
-    base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"], filter_aa)
+    #base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"], filter_aa)
     centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"], filter_aa)
     ##############                  I AM NOT CENTERING THE DATA ANYMORE !!!!!!!!!!! ############
     center_of_mass = compute_center_of_mass(centering_structure)
