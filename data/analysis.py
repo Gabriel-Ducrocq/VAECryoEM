@@ -7,7 +7,6 @@ import yaml
 import torch
 import utils
 import mrcfile
-import renderer
 import argparse
 import starfile
 import numpy as np
