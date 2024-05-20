@@ -354,7 +354,7 @@ def run(path_star, path_yaml, path_dataset, pdb_path, apix, nside):
 	    ignore_trans=False, ))
 
 
-	idx = 30
+	idx = 10
 	####### Creating data loaders
 	data_loader_cryosphere = iter(DataLoader(dataset_cryosphere, batch_size=10,  shuffle=False))
 	data_loader_cryostar = iter(DataLoader(dataset_cryostar,
@@ -373,7 +373,16 @@ def run(path_star, path_yaml, path_dataset, pdb_path, apix, nside):
 	idx_cryosphere, true_img_cryosphere, batch_poses, batch_poses_translation = next(data_loader_cryosphere)
 	batch_cryostar = next(data_loader_cryostar)
 
-
+	print("\n\n\n")
+	print("TEST", batch_cryostar["proj"])
+	print("TEST2", true_img_cryosphere)
+	print(batch_cryostar["proj"].shape)
+	print(batch_cryostar["proj"][1, 0, 64, 64])
+	print(true_img_cryosphere[1, 64, 64])
+	print("DIFF IMAGES MAX", torch.max(torch.abs((true_img_cryosphere - batch_cryostar["proj"]))))
+	print("DIFF IMAGES MIN", torch.min(torch.abs((true_img_cryosphere - batch_cryostar["proj"]))))
+	plt.hist(torch.abs((true_img_cryosphere - batch_cryostar["proj"])).detach().numpy().flatten(), density=True, bins=15)
+	plt.show()
 	##### Rotating the structure cryostar
 	rot_mats, trans_mats = get_batch_pose_cryostar(batch_cryostar, apix)
 	rotated_structure_cryostar = rotation_cryostar(ref_centers[None, :, :], rot_mats) 
@@ -439,7 +448,9 @@ def run(path_star, path_yaml, path_dataset, pdb_path, apix, nside):
 	#print(dataset_cryosphere[idx])
 	#_, proj, poses, poses_translation = dataset_cryosphere[idx]
 	#print("Diff", torch.max(torch.abs(proj - dataset_cryostar[idx]["proj"])))
-	#print("rotmat", torch.max(torch.abs(poses - dataset_cryostar[idx]["rotmat"])))
+	print("rotmat", torch.max(torch.abs(batch_poses - rot_mats)))
+	print(batch_poses[0])
+	print(rot_mats[0])
 	#print("dfu", torch.max(torch.abs((ctf_cryosphere_obj.dfU - ctf_params[:, 2:3])/ctf_cryosphere_obj.dfU)))
 
 

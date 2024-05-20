@@ -1,5 +1,35 @@
 import torch
 import numpy as np
+from model.renderer import primal_to_fourier_2d, fourier_to_primal_2d 
+
+
+def low_pass_images(self, images, lp_mask2d):
+    f_images = primal_to_fourier_2d(images)
+    f_images = f_images * lp_mask2d
+    images = fourier_to_primal_2d(f_images).real
+    return images
+
+
+def calc_cor_loss(pred_images, gt_images, mask=None):
+    """
+    Compute the cross-correlation for each pair (predicted_image, true) image in a batch. And average them
+    pred_images: torch.tensor(batch_size, side_shape**2) predicted images
+    gt_images: torch.tensor(batch_size, side_shape**2) of true images, translated according to the poses.
+    """
+    pixel_num = pred_images.shape[-2] * pred_images.shape[-1]
+
+    # b, h, w -> b, num_pix
+    pred_images = pred_images.flatten(start_dim=2)
+    gt_images = gt_images.flatten(start_dim=2)
+
+    # b 
+    dots = (pred_images * gt_images).sum(-1)
+    # b -> b 
+    err = -dots / (gt_images.std(-1) + 1e-5) / (pred_images.std(-1) + 1e-5)
+    # b -> 1 value
+    err = err.mean() / pixel_num
+    return err
+
 
 def compute_rmsd(predicted_images, images):
     """
@@ -85,7 +115,10 @@ def compute_loss(predicted_images, images, latent_mean, latent_std, vae, loss_we
     :param predicted_structures: torch.tensor(N_batch, 3*N_residues, 3)
     :return:
     """
-    rmsd = compute_rmsd(predicted_images, images)
+
+    ## !!!!!!!!! REPLACING THE RMSD WITH A CORRELATION COMPUTATION BE CAREFUL !!!!!!!!!!!!!!
+    #rmsd = compute_rmsd(predicted_images, images)
+    rmsd = calc_cor_loss(predicted_images, images)
     KL_prior_latent = compute_KL_prior_latent(latent_mean, latent_std, experiment_settings["epsilon_kl"])
     KL_prior_mask_means = compute_KL_prior_mask(
         vae.mask_parameters, experiment_settings["mask_prior"],

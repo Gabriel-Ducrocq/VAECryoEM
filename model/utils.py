@@ -24,6 +24,17 @@ from biotite.structure.io.pdb import PDBFile
 from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix, axis_angle_to_quaternion, quaternion_apply
 from pytorch3d.transforms import Transform3d
 
+
+
+def low_pass_mask2d(shape, apix=1., bandwidth=2):
+    freq = np.fft.fftshift(np.fft.fftfreq(shape, apix))
+    freq = freq**2
+    freq = np.sqrt(freq[:, None] + freq[None, :])
+
+    mask = np.asarray(freq < 1 / bandwidth, dtype=np.float32)
+    return mask
+    
+
 def compute_center_of_mass(structure):
     """
     Computes the center of mass of a protein
@@ -128,16 +139,15 @@ def parse_yaml(path):
                                                                                      dtype=torch.float32, device=device)    
 
     if experiment_settings["optimizer"]["name"] == "adam":
-        ########### !!!!!!!!!!!!!!!!!!!!!!!!!!!!! TRYING WITH ADAM W !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if "learning_rate_mask" not in experiment_settings["optimizer"]:
-            optimizer = torch.optim.AdamW(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
+            optimizer = torch.optim.Adam(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
         else:
             print("Running different LR for the mask")
             list_param = [{"params": param, "lr":experiment_settings["optimizer"]["learning_rate_mask"]} for name, param in
                           vae.named_parameters() if "mask" in name]
             list_param.append({"params": vae.encoder.parameters(), "lr":experiment_settings["optimizer"]["learning_rate"]})
             list_param.append({"params": vae.decoder.parameters(), "lr":experiment_settings["optimizer"]["learning_rate"]})
-            optimizer = torch.optim.AdamW(list_param)
+            optimizer = torch.optim.Adam(list_param)
     else:
         raise Exception("Optimizer must be Adam")
 
