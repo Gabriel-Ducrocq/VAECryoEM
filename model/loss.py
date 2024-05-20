@@ -3,12 +3,6 @@ import numpy as np
 from model.renderer import primal_to_fourier2d, fourier2d_to_primal 
 
 
-def low_pass_images(self, images, lp_mask2d):
-    f_images = primal_to_fourier_2d(images)
-    f_images = f_images * lp_mask2d
-    images = fourier_to_primal_2d(f_images).real
-    return images
-
 
 def calc_cor_loss(pred_images, gt_images, mask=None):
     """
@@ -16,8 +10,15 @@ def calc_cor_loss(pred_images, gt_images, mask=None):
     pred_images: torch.tensor(batch_size, side_shape**2) predicted images
     gt_images: torch.tensor(batch_size, side_shape**2) of true images, translated according to the poses.
     """
-    pixel_num = pred_images.shape[-2] * pred_images.shape[-1]
+    if mask is not None:
+        pred_images = mask(pred_images)
+        gt_images = mask(gt_images)
+        pixel_num = mask.num_masked
+    else:
+        pixel_num = pred_images.shape[-2] * pred_images.shape[-1]
 
+    pred_images = torch.flatten(pred_images, start_dim=-2, end_dim=-1)
+    gt_images = torch.flatten(gt_images, start_dim=-2, end_dim=-1)
     # b, h, w -> b, num_pix
     #pred_images = pred_images.flatten(start_dim=2)
     #gt_images = gt_images.flatten(start_dim=2)
@@ -28,6 +29,7 @@ def calc_cor_loss(pred_images, gt_images, mask=None):
     err = -dots / (gt_images.std(-1) + 1e-5) / (pred_images.std(-1) + 1e-5)
     # b -> 1 value
     err = err.mean() / pixel_num
+    print("ERR", err)
     return err
 
 
@@ -40,6 +42,8 @@ def compute_rmsd(predicted_images, images):
             the latent variable is categorical. Otherwise None.
     :return: torch.float32, average of rmsd over images
     """
+    predicted_images = torch.flatten(predicted_images, start_dim=-2, end_dim=-1)
+    images = torch.flatten(images, start_dim=-2, end_dim=-1)
     return torch.mean(0.5*torch.mean((predicted_images - images)**2, dim=-1))
 
 def compute_KL_prior_latent(latent_mean, latent_std, epsilon_loss):
@@ -101,7 +105,7 @@ def compute_clashing_distances(new_structures):
     return torch.mean(torch.mean(torch.minimum(distances - 4, torch.zeros_like(distances))**2, dim=-1))
 
 
-def compute_loss(predicted_images, images, latent_mean, latent_std, vae, loss_weights,
+def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, vae, loss_weights,
                  experiment_settings, tracking_dict, predicted_structures = None):
     """
     Compute the entire loss
@@ -118,7 +122,7 @@ def compute_loss(predicted_images, images, latent_mean, latent_std, vae, loss_we
 
     ## !!!!!!!!! REPLACING THE RMSD WITH A CORRELATION COMPUTATION BE CAREFUL !!!!!!!!!!!!!!
     #rmsd = compute_rmsd(predicted_images, images)
-    rmsd = calc_cor_loss(predicted_images, images)
+    rmsd = calc_cor_loss(predicted_images, images, mask_image)
     KL_prior_latent = compute_KL_prior_latent(latent_mean, latent_std, experiment_settings["epsilon_kl"])
     KL_prior_mask_means = compute_KL_prior_mask(
         vae.mask_parameters, experiment_settings["mask_prior"],

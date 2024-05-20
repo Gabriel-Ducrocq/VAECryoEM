@@ -7,6 +7,7 @@ from tqdm import tqdm
 from time import time
 from model import renderer
 from model.loss import compute_loss
+from model.utils import low_pass_images
 from torch.utils.data import DataLoader
 
 import matplotlib.pyplot as plt
@@ -22,7 +23,7 @@ def train(yaml_setting_path, debug_mode):
     :param yaml_setting_path: str, path the yaml containing all the details of the experiment
     :return:
     """
-    vae, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, _ = model.utils.parse_yaml(yaml_setting_path)
+    vae, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, _, lp_mask2d, mask_images = model.utils.parse_yaml(yaml_setting_path)
     if experiment_settings["resume_training"]["model"] != "None":
         name = f"experiment_{experiment_settings['name']}_resume"
     else:
@@ -61,7 +62,8 @@ def train(yaml_setting_path, debug_mode):
             #plt.show()
             #start_net = time()
             flattened_batch_images = batch_images.flatten(start_dim=-2)
-            batch_translated_images = image_translator.transform(batch_images, batch_poses_translation[:, None, :]).flatten(start_dim=-2)
+            batch_translated_images = image_translator.transform(batch_images, batch_poses_translation[:, None, :])
+            lp_batch_translated_images = low_pass_images(batch_translated_images, lp_mask2d)
             latent_variables, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
             mask = vae.sample_mask(batch_images.shape[0])
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
@@ -104,7 +106,7 @@ def train(yaml_setting_path, debug_mode):
             #end_trans = time()
             #print("Tran time", end_trans- start_trans)
             #start_flatten = time()
-            batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
+            #batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
             #end_flatten = time()
             #print("FLATTEN time", end_flatten - start_flatten)
             #batch_predicted_images = dataset.standardize(batch_predicted_images, device=device)
@@ -116,7 +118,8 @@ def train(yaml_setting_path, debug_mode):
             #print("True images mean", torch.mean(batch_images), "True images std", torch.std(batch_images))
             #print("Pred images mean", torch.mean(batch_predicted_images), "Pred images std", torch.std(batch_predicted_images))
             #start_loss = time()
-            loss = compute_loss(batch_predicted_images, batch_translated_images, latent_mean, latent_std, vae,
+            #mask_images
+            loss = compute_loss(batch_predicted_images, lp_batch_translated_images, None, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics)
                                 #predicted_structures=deformed_structures)
 
@@ -151,5 +154,7 @@ if __name__ == '__main__':
     args = parser_arg.parse_args()
     path = args.experiment_yaml
     debug_mode = args.debug
-    train(path, debug_mode)
+    from torch import autograd
+    with autograd.detect_anomaly():
+        train(path, debug_mode)
 

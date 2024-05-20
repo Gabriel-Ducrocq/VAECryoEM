@@ -72,7 +72,6 @@ class ImageDataSet(Dataset):
         try:
             mrc_idx, img_name = particles["rlnImageName"].split("@")
             mrc_idx = int(mrc_idx) - 1
-            print("MRC_IDX CRYSPHERE", mrc_idx, img_name)
             mrc_path = os.path.join(self.particles_path, img_name)
             with mrcfile.mmap(mrc_path, mode="r", permissive=True) as mrc:
                 if mrc.data.ndim > 2:

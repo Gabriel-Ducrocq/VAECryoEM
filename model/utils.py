@@ -26,6 +26,62 @@ from pytorch3d.transforms import Transform3d
 
 
 
+def primal_to_fourier2d(images):
+    """
+    Computes the fourier transform of the images.
+    images: torch.tensor(batch_size, N_pix, N_pix)
+    return fourier transform of the images
+    """
+    r = torch.fft.ifftshift(images, dim=(-2, -1))
+    fourier_images = torch.fft.fftshift(torch.fft.fft2(r, dim=(-2, -1), s=(r.shape[-2], r.shape[-1])), dim=(-2, -1))
+    return fourier_images
+
+def fourier2d_to_primal(fourier_images):
+    """
+    Computes the inverse fourier transform
+    fourier_images: torch.tensor(batch_size, N_pix, N_pix)
+    return fourier transform of the images
+    """
+    f = torch.fft.ifftshift(fourier_images, dim=(-2, -1))
+    r = torch.fft.fftshift(torch.fft.ifft2(f, dim=(-2, -1), s=(f.shape[-2], f.shape[-1])),dim=(-2, -1)).real
+    return r
+
+class Mask(torch.nn.Module):
+
+    def __init__(self, im_size, rad):
+        """
+        Mask applied to the image, to exclude parts of the images that are only noise
+        im_size: integer, number of pixels a side
+        rad: float, radius of the mask
+        """
+        super(Mask, self).__init__()
+
+        mask = torch.lt(torch.linspace(-1, 1, im_size)[None]**2 + torch.linspace(-1, 1, im_size)[:, None]**2, rad**2)
+        # float for pl ddp broadcast compatible
+        self.register_buffer('mask', mask.float())
+        self.num_masked = torch.sum(mask).item()
+
+    def forward(self, x):
+        """
+        Applies the mask to batch of images
+        x: torch.tensor(batch_size, im_size, im_size)
+        """
+        return x * self.mask
+
+
+
+def low_pass_images(images, lp_mask2d):
+    """
+    Low pass filtering of the images.
+    images: torch.tensor(batch_size, side_shape, side_shape)
+    lp_mask2d: torch.tensor(side_shape, side_shape)
+    """
+    f_images = primal_to_fourier2d(images)
+    f_images = f_images * lp_mask2d
+    images = fourier2d_to_primal(f_images).real
+    return images
+
+
 def low_pass_mask2d(shape, apix=1., bandwidth=2):
     freq = np.fft.fftshift(np.fft.fftfreq(shape, apix))
     freq = freq**2
@@ -33,7 +89,7 @@ def low_pass_mask2d(shape, apix=1., bandwidth=2):
 
     mask = np.asarray(freq < 1 / bandwidth, dtype=np.float32)
     return mask
-    
+
 
 def compute_center_of_mass(structure):
     """
@@ -170,9 +226,13 @@ def parse_yaml(path):
     latent_type = experiment_settings["latent_type"]
     assert latent_type in ["continuous", "categorical"]
 
-    
+    lp_mask2d = low_pass_mask2d(Npix_downsize, apix_downsize, experiment_settings["bandwidth"])
+    lp_mask2d = torch.from_numpy(lp_mask2d).float()
+
+    mask = Mask(Npix_downsize, experiment_settings["mask_radius"])
+
     return vae, image_translator, ctf_experiment, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, \
-    scheduler, base_structure
+    scheduler, base_structure, lp_mask2d, mask
 
 
 class SpatialGridTranslate(torch.nn.Module):

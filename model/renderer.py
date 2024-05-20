@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from time import time
 import matplotlib.pyplot as plt
+from model.utils import fourier2d_to_primal, primal_to_fourier2d
 
 
 def project(Gauss_mean, Gauss_sigmas, Gauss_amplitudes, grid):
@@ -94,27 +95,6 @@ def get_posed_structure(Gauss_mean, rotation_matrices, translation_vectors):
     return posed_Gauss_mean
 
 
-def primal_to_fourier2d(images):
-    """
-    Computes the fourier transform of the images.
-    images: torch.tensor(batch_size, N_pix, N_pix)
-    return fourier transform of the images
-    """
-    r = torch.fft.ifftshift(images, dim=(-2, -1))
-    fourier_images = torch.fft.fftshift(torch.fft.fft2(r, dim=(-2, -1), s=(r.shape[-2], r.shape[-1])), dim=(-2, -1))
-    return fourier_images
-
-def fourier2d_to_primal(fourier_images):
-    """
-    Computes the inverse fourier transform
-    fourier_images: torch.tensor(batch_size, N_pix, N_pix)
-    return fourier transform of the images
-    """
-    f = torch.fft.ifftshift(fourier_images, dim=(-2, -1))
-    r = torch.fft.fftshift(torch.fft.ifft2(f, dim=(-2, -1), s=(f.shape[-2], f.shape[-1])),dim=(-2, -1)).real
-    return r
-
-
 def apply_ctf(images, ctf, indexes):
     """
     apply ctf to images.
@@ -126,7 +106,6 @@ def apply_ctf(images, ctf, indexes):
 
     ##### !!!!!!!!!!!!!!!! I AM MULTIPLYING BY -1 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     fourier_images = primal_to_fourier2d(images)
-    #fourier_images *= ctf.compute_ctf(indexes)
     fourier_images *= -ctf.compute_ctf(indexes)
     ctf_corrupted = fourier2d_to_primal(fourier_images)
     return ctf_corrupted
