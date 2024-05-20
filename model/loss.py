@@ -19,8 +19,8 @@ def calc_cor_loss(pred_images, gt_images, mask=None):
     pixel_num = pred_images.shape[-2] * pred_images.shape[-1]
 
     # b, h, w -> b, num_pix
-    pred_images = pred_images.flatten(start_dim=2)
-    gt_images = gt_images.flatten(start_dim=2)
+    #pred_images = pred_images.flatten(start_dim=2)
+    #gt_images = gt_images.flatten(start_dim=2)
 
     # b 
     dots = (pred_images * gt_images).sum(-1)
