@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from model.renderer import primal_to_fourier2d, fourier_to_primal2d 
+from model.renderer import primal_to_fourier2d, fourier2d_to_primal 
 
 
 def low_pass_images(self, images, lp_mask2d):
