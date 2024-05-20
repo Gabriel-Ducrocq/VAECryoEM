@@ -48,7 +48,7 @@ def fourier2d_to_primal(fourier_images):
 
 class Mask(torch.nn.Module):
 
-    def __init__(self, im_size, rad):
+    def __init__(self, im_size, rad, device):
         """
         Mask applied to the image, to exclude parts of the images that are only noise
         im_size: integer, number of pixels a side
@@ -56,7 +56,8 @@ class Mask(torch.nn.Module):
         """
         super(Mask, self).__init__()
 
-        mask = torch.lt(torch.linspace(-1, 1, im_size)[None]**2 + torch.linspace(-1, 1, im_size)[:, None]**2, rad**2)
+        self.device=device
+        mask = torch.lt(torch.linspace(-1, 1, im_size)[None]**2 + torch.linspace(-1, 1, im_size)[:, None]**2, rad**2).to(self.device)
         # float for pl ddp broadcast compatible
         self.register_buffer('mask', mask.float())
         self.num_masked = torch.sum(mask).item()
@@ -227,9 +228,9 @@ def parse_yaml(path):
     assert latent_type in ["continuous", "categorical"]
 
     lp_mask2d = low_pass_mask2d(Npix_downsize, apix_downsize, experiment_settings["bandwidth"])
-    lp_mask2d = torch.from_numpy(lp_mask2d).float()
+    lp_mask2d = torch.from_numpy(lp_mask2d).to(device).float()
 
-    mask = Mask(Npix_downsize, experiment_settings["mask_radius"])
+    mask = Mask(Npix_downsize, experiment_settings["mask_radius"], device)
 
     return vae, image_translator, ctf_experiment, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, \
     scheduler, base_structure, lp_mask2d, mask
