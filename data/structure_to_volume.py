@@ -26,31 +26,33 @@ def structure_to_volume(image_yaml, structure_path, output_path):
 
     apix = image_settings["apix"]
     Npix = image_settings["Npix"]
+    Npix_downsize = image_settings["Npix_downsize"]
+    apix_downsize = apix*Npix/Npix_downsize
 
     filter_aa = True
     base_structure = Polymer.from_pdb(structure_path, filter_aa)
     amplitudes = torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None]
-    grid = EMAN2Grid(Npix, apix, device=device)
+    grid = EMAN2Grid(Npix_downsize, apix_downsize, device=device)
     gmm_repr = Gaussian(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), 
             torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device)*image_settings["sigma_gmm"], 
             amplitudes)
     start = time.time()
     volume = renderer.structure_to_volume(gmm_repr.mus[None, :,:], gmm_repr.sigmas, gmm_repr.amplitudes, grid, device)
     end = time.time()
-    print(f"Time to generate a volume on {Npix} a side:", end-start)
+    print(f"Time to generate a volume on {Npix_downsize} a side:", end-start)
     start = time.time()
     volume = renderer.structure_to_volume(gmm_repr.mus[None, :,:], gmm_repr.sigmas, gmm_repr.amplitudes, grid, device)
     end = time.time()
-    print(f"Time to generate a volume on {Npix} a side again :", end-start)
+    print(f"Time to generate a volume on {Npix_downsize} a side again :", end-start)
     start = time.time()
     volume = renderer.structure_to_volume(gmm_repr.mus[None, :,:], gmm_repr.sigmas, gmm_repr.amplitudes, grid, device)
     end = time.time()
-    print(f"Time to generate a volume on {Npix} a side again2:", end-start)
+    print(f"Time to generate a volume on {Npix_downsize} a side again2:", end-start)
     start = time.time()
     volume = renderer.structure_to_volume(gmm_repr.mus[None, :,:], gmm_repr.sigmas, gmm_repr.amplitudes, grid, device)
     end = time.time()
-    print(f"Time to generate a volume on {Npix} a side again3:", end-start)
-    mrc.MRCFile.write(output_path, np.transpose(volume[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=apix, is_vol=True)
+    print(f"Time to generate a volume on {Npix_downsize} a side again3:", end-start)
+    mrc.MRCFile.write(output_path, np.transpose(volume[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=apix_downsize, is_vol=True)
 
 
 if __name__ == '__main__':
