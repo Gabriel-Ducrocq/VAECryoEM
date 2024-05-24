@@ -37,7 +37,7 @@ def structure_to_volume(image_yaml, structure_path, output_path):
             torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device)*image_settings["sigma_gmm"], 
             amplitudes)
     start = time.time()
-    struct = gmm_repr.mus[None, :, :].repeat(64, 1, 1)
+    struct = gmm_repr.mus[None, :, :].repeat(32, 1, 1)
     volume = renderer.structure_to_volume(struct, gmm_repr.sigmas, gmm_repr.amplitudes, grid, device)
     end = time.time()
     print(f"Time to generate a volume on {Npix_downsize} a side:", end-start)
