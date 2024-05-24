@@ -140,20 +140,36 @@ def parse_yaml(path):
     apix_downsize = Npix * apix /Npix_downsize
     image_translator = SpatialGridTranslate(D=Npix_downsize, device=device)
 
-    if experiment_settings["latent_type"] == "continuous":
-        encoder = MLP(Npix_downsize**2,
-                      experiment_settings["latent_dimension"] * 2,
-                      experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
-                      latent_type="continuous")
-        decoder = MLP(experiment_settings["latent_dimension"], experiment_settings["N_domains"]*6,
-                      experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
-    else:
-        encoder = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
-                      experiment_settings["latent_dimension"],
-                      experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
-                      latent_type="categorical")
-        decoder = MLP(1, experiment_settings["N_domains"]*6,
-                      experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
+    filter_aa = True
+    grid = EMAN2Grid(Npix_downsize, apix_downsize, device=device)
+    base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"], filter_aa)
+    N_chains = len(np.unique(base_structure.chain_id.to_list()))
+    n_segments_per_chain = experiment_settings["segments"]
+    assert len(n_segments_per_chain) == N_chains, "The number of chains input does not match the number of chains in the structure"
+    total_number_segments = sum(n_segments_per_chain.values())
+
+    amplitudes = torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None]
+    gmm_repr = Gaussian(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), 
+                torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device)*image_settings["sigma_gmm"], 
+                amplitudes)
+
+    #if experiment_settings["mask_prior"]["type"] == "uniform":
+    #    experiment_settings["mask_prior"] = compute_mask_prior(experiment_settings["N_residues"],
+    #                                                           experiment_settings["N_domains"], device)
+    #else:
+    #    for mask_prior_key in experiment_settings["mask_prior"].keys():
+    #        experiment_settings["mask_prior"][mask_prior_key]["mean"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["mean"],
+    #                                                                                 dtype=torch.float32, device=device)
+    #        experiment_settings["mask_prior"][mask_prior_key]["std"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["std"],
+    #                                                                                dtype=torch.float32, device=device) 
+
+
+    encoder = MLP(Npix_downsize**2,
+                  experiment_settings["latent_dimension"] * 2,
+                  experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
+                  latent_type="continuous")
+    decoder = MLP(experiment_settings["latent_dimension"], total_number_segments*6,
+                  experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
 
     if experiment_settings["resume_training"]["model"] == "None":
         vae = VAE(encoder, decoder, device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
@@ -162,44 +178,13 @@ def parse_yaml(path):
         vae.to(device)
     else:
         vae = torch.load(experiment_settings["resume_training"]["model"])
-        vae.to(device)
-
-
-    filter_aa = True
-    grid = EMAN2Grid(Npix_downsize, apix_downsize, device=device)
-    base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"], filter_aa)
-    #centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"], filter_aa)
-    ##############                  I AM NOT CENTERING THE DATA ANYMORE !!!!!!!!!!! ############
-    #center_of_mass = compute_center_of_mass(centering_structure)
-    #base_structure.translate_structure(-center_of_mass)
-    #base_structure.translate_structure(-center_of_mass -0.5)
-
-
-
-    #gmm_repr = Gaussian(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), 
-    #            torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device)*image_settings["sigma_gmm"], 
-    #            torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None]) 
-
-    amplitudes = torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None]
-    gmm_repr = Gaussian(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), 
-                torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device)*image_settings["sigma_gmm"], 
-                amplitudes)
-
-    if experiment_settings["mask_prior"]["type"] == "uniform":
-        experiment_settings["mask_prior"] = compute_mask_prior(experiment_settings["N_residues"],
-                                                               experiment_settings["N_domains"], device)
-    else:
-        for mask_prior_key in experiment_settings["mask_prior"].keys():
-            experiment_settings["mask_prior"][mask_prior_key]["mean"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["mean"],
-                                                                                     dtype=torch.float32, device=device)
-            experiment_settings["mask_prior"][mask_prior_key]["std"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["std"],
-                                                                                     dtype=torch.float32, device=device)    
+        vae.to(device)   
 
     if experiment_settings["optimizer"]["name"] == "adam":
         if "learning_rate_mask" not in experiment_settings["optimizer"]:
             optimizer = torch.optim.Adam(vae.parameters(), lr=experiment_settings["optimizer"]["learning_rate"])
         else:
-            print("Running different LR for the mask")
+            print("Running different LR for the segments")
             list_param = [{"params": param, "lr":experiment_settings["optimizer"]["learning_rate_mask"]} for name, param in
                           vae.named_parameters() if "mask" in name]
             list_param.append({"params": vae.encoder.parameters(), "lr":experiment_settings["optimizer"]["learning_rate"]})

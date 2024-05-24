@@ -10,7 +10,8 @@ import mrcfile
 import numpy as np
 from tqdm import tqdm
 from gmm import Gaussian, EMAN2Grid
-from cryodrgn import mrc
+import mrc
+
 from polymer import Polymer
 from Bio.PDB import PDBParser
 from renderer import structure_to_volume

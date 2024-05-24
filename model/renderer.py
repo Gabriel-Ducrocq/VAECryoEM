@@ -2,7 +2,8 @@ import torch
 import numpy as np
 from time import time
 import matplotlib.pyplot as plt
-from model.utils import fourier2d_to_primal, primal_to_fourier2d
+from utils import fourier2d_to_primal, primal_to_fourier2d
+
 
 
 def project(Gauss_mean, Gauss_sigmas, Gauss_amplitudes, grid):
