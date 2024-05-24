@@ -46,6 +46,10 @@ def structure_to_volume(image_yaml, structure_path, output_path):
     volume = renderer.structure_to_volume(gmm_repr.mus[None, :,:], gmm_repr.sigmas, gmm_repr.amplitudes, grid, device)
     end = time.time()
     print(f"Time to generate a volume on {Npix} a side again2:", end-start)
+        start = time.time()
+    volume = renderer.structure_to_volume(gmm_repr.mus[None, :,:], gmm_repr.sigmas, gmm_repr.amplitudes, grid, device)
+    end = time.time()
+    print(f"Time to generate a volume on {Npix} a side again3:", end-start)
     mrc.MRCFile.write(output_path, np.transpose(volume[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=apix, is_vol=True)
 
 
