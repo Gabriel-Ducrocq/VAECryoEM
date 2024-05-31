@@ -330,7 +330,7 @@ def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, op
     wandb.log({key: np.mean(val) for key, val in tracking_metrics.items()})
     wandb.log({"epoch": epoch})
     wandb.log({"lr":optimizer.param_groups[0]['lr']})
-    wandb.log({"pose_rotation_l2_error": np.mean(tracking_metrics["rotation_pose_msd"])})
+    wandb.log({"viewpoint_angle_diff_degrees": np.mean(tracking_metrics["viewpoint_angle_diff_degrees"])})
     hard_mask = np.argmax(mask.detach().cpu().numpy(), axis=-1)
     for l in range(experiment_settings["N_domains"]):
         wandb.log({f"segments/segment_{l}": np.sum(hard_mask[0] == l)})

@@ -106,7 +106,7 @@ def compute_clashing_distances(new_structures):
 
 
 def compute_loss(predicted_images, images, predicted_rotation_matrix_pose, batch_poses,mask_image, latent_mean, latent_std, vae, loss_weights,
-                 experiment_settings, tracking_dict, predicted_structures = None):
+                 experiment_settings, tracking_dict, device, predicted_structures = None):
     """
     Compute the entire loss
     :param predicted_images: torch.tensor(batch_size, N_pix), predicted images
@@ -144,8 +144,19 @@ def compute_loss(predicted_images, images, predicted_rotation_matrix_pose, batch
     tracking_dict["kl_prior_mask_proportions"].append(KL_prior_mask_proportions.detach().cpu().numpy())
     tracking_dict["l2_pen"].append(l2_pen.detach().cpu().numpy())
 
+    tranpose_predicted = torch.transpose(predicted_rotation_matrix_pose, dim0=-1, dim1=-2)
+    tranpose_true= torch.transpose(batch_poses, dim0=-1, dim1=-2)
+    viewpoint = torch.zeros(3, dtype=torch.float32, device=device)
+    viewpoint[-1] = 1
+    viewpoint_predicted = torch.einsum("bkl, l-> bk", tranpose_predicted, viewpoint)
+    viewpoint_true = torch.einsum("bkl, l-> bk", tranpose_true, viewpoint)
+
+    dot_prods = torch.sum(viewpoint_predicted*viewpoint_true, dim=-1)
+    angles = torch.acos(dot_prods)*180/torch.pi
+    angles = torch.mean(angles).detach().cpu().numpy()
+
     predicted_rotation_error = torch.mean(torch.sum((predicted_rotation_matrix_pose - batch_poses)**2, dim=(-2, -1)))
-    tracking_dict["rotation_pose_msd"].append(predicted_rotation_error.detach().cpu().numpy())
+    tracking_dict["viewpoint_angle_diff_degrees"].append(angles)
 
     loss = rmsd + loss_weights["KL_prior_latent"]*KL_prior_latent \
            + loss_weights["KL_prior_mask_mean"]*KL_prior_mask_means \

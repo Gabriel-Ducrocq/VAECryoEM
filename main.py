@@ -48,7 +48,7 @@ def train(yaml_setting_path, debug_mode):
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
         tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
-                            "kl_prior_mask_proportions":[], "l2_pen":[], "rotation_pose_msd":[]}
+                            "kl_prior_mask_proportions":[], "l2_pen":[], "viewpoint_angle_diff_degrees":[]}
 
         #### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DROP LAST !!!!!! ##################################
         data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4, drop_last=True)))
@@ -69,6 +69,9 @@ def train(yaml_setting_path, debug_mode):
             latent_variables, predicted_rotation_pose, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
             predicted_rotation_matrix_pose = rotation_6d_to_matrix(predicted_rotation_pose)
             mask = vae.sample_mask(batch_images.shape[0])
+            if epoch < 30:
+                latent_variables = torch.randn_like(latent_variables, device=device, dtype=torch.float32)
+
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
             #start_old = time()
             #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
@@ -123,7 +126,7 @@ def train(yaml_setting_path, debug_mode):
             #start_loss = time()
             #mask_images
             loss = compute_loss(batch_predicted_images, lp_batch_translated_images, predicted_rotation_matrix_pose, batch_poses, None, latent_mean, latent_std, vae,
-                                experiment_settings["loss_weights"], experiment_settings, tracking_metrics)
+                                experiment_settings["loss_weights"], experiment_settings, tracking_metrics, device=device)
                                 #predicted_structures=deformed_structures)
 
             #end_loss = time()
