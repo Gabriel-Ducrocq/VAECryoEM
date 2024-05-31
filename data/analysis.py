@@ -67,7 +67,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
 
             start_net = time()
             batch_images = batch_images.flatten(start_dim=-2)
-            latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
+            latent_variables, rotation_pose, latent_mean, latent_std = vae.sample_latent(batch_images)
             all_latent_variables.append(latent_variables)
 
             if batch_num == 1000:
