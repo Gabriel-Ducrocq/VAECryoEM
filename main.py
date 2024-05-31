@@ -9,6 +9,7 @@ from model import renderer
 from model.loss import compute_loss
 from model.utils import low_pass_images
 from torch.utils.data import DataLoader
+from pytorch3d.transforms import rotation_6d_to_matrix
 
 import matplotlib.pyplot as plt
 
@@ -47,7 +48,7 @@ def train(yaml_setting_path, debug_mode):
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
         tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
-                            "kl_prior_mask_proportions":[], "l2_pen":[]}
+                            "kl_prior_mask_proportions":[], "l2_pen":[], "rotation_pose_msd":[]}
 
         #### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DROP LAST !!!!!! ##################################
         data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4, drop_last=True)))
@@ -62,9 +63,11 @@ def train(yaml_setting_path, debug_mode):
             #plt.show()
             #start_net = time()
             flattened_batch_images = batch_images.flatten(start_dim=-2)
+            ###### !!!!!!!!!!!!!!!!!!!!          BE CAREFUL FOR NOW I AM ONLY PREDICTING ROTATIONS POSE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ######################
             batch_translated_images = image_translator.transform(batch_images, batch_poses_translation[:, None, :])
             lp_batch_translated_images = low_pass_images(batch_translated_images, lp_mask2d)
-            latent_variables, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
+            latent_variables, predicted_rotation_pose, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
+            predicted_rotation_matrix_pose = rotation_6d_to_matrix(predicted_rotation_pose)
             mask = vae.sample_mask(batch_images.shape[0])
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
             #start_old = time()
@@ -87,7 +90,7 @@ def train(yaml_setting_path, debug_mode):
 
             predicted_structures = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, mask, device)
 
-            posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
+            posed_predicted_structures = renderer.rotate_structure(predicted_structures, predicted_rotation_matrix_pose)
             #end_deforming = time()
             #print("Deforming time", end_deforming - start_deforming)
             #start_proj = time()
@@ -119,7 +122,7 @@ def train(yaml_setting_path, debug_mode):
             #print("Pred images mean", torch.mean(batch_predicted_images), "Pred images std", torch.std(batch_predicted_images))
             #start_loss = time()
             #mask_images
-            loss = compute_loss(batch_predicted_images, lp_batch_translated_images, None, latent_mean, latent_std, vae,
+            loss = compute_loss(batch_predicted_images, lp_batch_translated_images, predicted_rotation_matrix_pose, batch_poses, None, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics)
                                 #predicted_structures=deformed_structures)
 

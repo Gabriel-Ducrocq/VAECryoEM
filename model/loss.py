@@ -105,7 +105,7 @@ def compute_clashing_distances(new_structures):
     return torch.mean(torch.mean(torch.minimum(distances - 4, torch.zeros_like(distances))**2, dim=-1))
 
 
-def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, vae, loss_weights,
+def compute_loss(predicted_images, images, predicted_rotation_matrix_pose, batch_poses,mask_image, latent_mean, latent_std, vae, loss_weights,
                  experiment_settings, tracking_dict, predicted_structures = None):
     """
     Compute the entire loss
@@ -143,6 +143,9 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
     tracking_dict["kl_prior_mask_std"].append(KL_prior_mask_stds.detach().cpu().numpy())
     tracking_dict["kl_prior_mask_proportions"].append(KL_prior_mask_proportions.detach().cpu().numpy())
     tracking_dict["l2_pen"].append(l2_pen.detach().cpu().numpy())
+
+    predicted_rotation_error = torch.mean(torch.sum((predicted_rotation_matrix_pose - batch_poses)**2, dim=(-2, -1)))
+    tracking_dict["rotation_pose_msd"].append(predicted_rotation_error.detach().cpu().numpy())
 
     loss = rmsd + loss_weights["KL_prior_latent"]*KL_prior_latent \
            + loss_weights["KL_prior_mask_mean"]*KL_prior_mask_means \

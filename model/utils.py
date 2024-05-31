@@ -140,23 +140,26 @@ def parse_yaml(path):
     apix_downsize = Npix * apix /Npix_downsize
     image_translator = SpatialGridTranslate(D=Npix_downsize, device=device)
 
-    if experiment_settings["latent_type"] == "continuous":
-        encoder = MLP(Npix_downsize**2,
-                      experiment_settings["latent_dimension"] * 2,
-                      experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
-                      latent_type="continuous")
-        decoder = MLP(experiment_settings["latent_dimension"], experiment_settings["N_domains"]*6,
-                      experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
-    else:
-        encoder = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
-                      experiment_settings["latent_dimension"],
-                      experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
-                      latent_type="categorical")
-        decoder = MLP(1, experiment_settings["N_domains"]*6,
-                      experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
+    encoder_representation = MLP(Npix_downsize**2,
+                  experiment_settings["representation_dimension"],
+                  experiment_settings["encoder_representation"]["hidden_dimensions"], network_type="decoder", device=device,
+                  latent_type="continuous")
+
+    encoder_rotation = MLP(experiment_settings["latent_dimension"] + experiment_settings["representation_dimension"],
+                  6,
+                  experiment_settings["encoder_rotation"]["hidden_dimensions"], network_type="decoder", device=device,
+                  latent_type="continuous")
+
+    encoder_latent = MLP(experiment_settings["representation_dimension"],
+                  experiment_settings["latent_dimension"] * 2,
+                  experiment_settings["encoder_latent"]["hidden_dimensions"], network_type="encoder", device=device,
+                  latent_type="continuous")
+
+    decoder = MLP(experiment_settings["latent_dimension"], experiment_settings["N_domains"]*6,
+                  experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
 
     if experiment_settings["resume_training"]["model"] == "None":
-        vae = VAE(encoder, decoder, device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
+        vae = VAE(encoder_latent, encoder_representation, encoder_rotation, decoder, device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
                   tau_mask=experiment_settings["tau_mask"], mask_start_values=experiment_settings["mask_start"],
                   latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"])
         vae.to(device)
@@ -327,9 +330,10 @@ def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, op
     wandb.log({key: np.mean(val) for key, val in tracking_metrics.items()})
     wandb.log({"epoch": epoch})
     wandb.log({"lr":optimizer.param_groups[0]['lr']})
+    wandb.log({"pose_rotation_l2_error": np.mean(tracking_metrics["rotation_pose_msd"])})
     hard_mask = np.argmax(mask.detach().cpu().numpy(), axis=-1)
     for l in range(experiment_settings["N_domains"]):
-        wandb.log({f"mask_{l}": np.sum(hard_mask[0] == l)})
+        wandb.log({f"segments/segment_{l}": np.sum(hard_mask[0] == l)})
 
     torch.save(vae, experiment_settings["folder_path"] + "models/full_model" + str(epoch))
 

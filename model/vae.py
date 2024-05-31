@@ -3,11 +3,13 @@ import numpy as np
 
 
 class VAE(torch.nn.Module):
-    def __init__(self, encoder, decoder, device, mask_start_values, N_domains=6, N_residues=1006, tau_mask=0.05,
+    def __init__(self, encoder_latent, encoder_representation, encoder_rotation, decoder, device, mask_start_values, N_domains=6, N_residues=1006, tau_mask=0.05,
                  latent_dim = None, latent_type="continuous"):
         super(VAE, self).__init__()
         assert latent_type in ["continuous", "categorical"]
-        self.encoder = encoder
+        self.encoder_representation = encoder_representation
+        self.encoder_latent = encoder_latent
+        self.encoder_rotation = encoder_rotation
         self.decoder = decoder
         self.device = device
         self.N_domains = N_domains
@@ -93,22 +95,17 @@ class VAE(torch.nn.Module):
         :param images: torch.tensor(N_batch, N_pix_x, N_pix_y)
         :return: torch.tensor(N_batch, latent_dim) latent variables,
                 torch.tensor(N_batch, latent_dim) latent_mean,
-                torch.tensor(N_batch, latent_dim) latent std if latent_type is "continuous"
-                else
-                torch.tensor(N_batch, 1) sampled latent variable per batch
-                torch.tensor(N_batch, latent_dim) log probabilities of the multinomial.
+                torch.tensor(N_batch, latent_dim) latent std
         """
-        if self.latent_type == "continuous":
-            latent_mean, latent_std = self.encoder(images)
-            latent_variables = latent_mean + torch.randn_like(latent_mean, dtype=torch.float32, device=self.device)\
-                                *latent_std
+        representation = self.encoder_representation(images)
+        latent_mean, latent_std = self.encoder_latent(representation)
+        latent_variables = latent_mean + torch.randn_like(latent_mean, dtype=torch.float32, device=self.device)\
+                            *latent_std
 
-            return latent_variables, latent_mean, latent_std
-        else:
-            log_distribution_latent = self.encoder(images)
-            distribution_latent = torch.softmax(log_distribution_latent, dim=-1)
-            latent_variable = torch.multinomial(distribution_latent, 1)
-            return latent_variable, log_distribution_latent, None
+        input_to_pose_network = torch.concat([latent_variables, representation], dim=1)
+        rotation_pose = self.encoder_rotation(input_to_pose_network)
+
+        return latent_variables, rotation_pose, latent_mean, latent_std
 
     def decode(self, latent_variables):
         """
