@@ -54,6 +54,7 @@ def train(yaml_setting_path, debug_mode):
         data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4, drop_last=True)))
         start_tot = time()
         for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
+            start_batch = time()
             #start = time()
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
@@ -97,7 +98,10 @@ def train(yaml_setting_path, debug_mode):
             #end_deforming = time()
             #print("Deforming time", end_deforming - start_deforming)
             #start_proj = time()
+            start = time()
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
+            end = time()
+            print("Time to projection:", end-start)
             #proj_base = renderer.project(gmm_repr.mus[None, :, :], gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             #plt.imshow(proj_base[0].detach().cpu())
             #plt.savefig("true_image.png")
@@ -140,6 +144,8 @@ def train(yaml_setting_path, debug_mode):
             #print("Gradient time", end_gradient - start_gradient)
             #end = time()
             #print("Iteration duration:", end-start)
+            end_batch = time()
+            print("time batch", end_batch - start_batch)
 
 
         end_tot = time()
