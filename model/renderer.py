@@ -59,8 +59,8 @@ def project_fourier(Gauss_mean, Gauss_sigmas, Gauss_amplitudes, grid_freq):
     sqrt_amp = amplitudes = torch.sqrt(Gauss_amplitudes)[:, 0]
     quadratic_part = torch.exp(- 2*torch.pi**2*grid_freq[None, None, :]**2*sigmas[None, :, None]**2)*sqrt_amp[None, :, None]
     fourier_x = torch.exp(-2*torch.pi*1j*torch.einsum("b a , l -> b a l", Gauss_mean[:, :, 0], grid_freq))*quadratic_part
-    ## !!!!!!!!!!!!!!!!!!!!!!          I ALREADY COMPUTED THE SECOND FACTOR, IN PRINCIPLE I DO NOT HAVE TO RECOMPUTE IT !!!!!!!!!!!!!!!!!!!
     fourier_y = torch.exp(-2*torch.pi*1j*torch.einsum("b a , l -> b a l", Gauss_mean[:, :, 1], grid_freq))*quadratic_part
+    print("FOURIER X", fourier_x.shape)
     images_fourier = torch.einsum("b a p, b a q -> b q p", fourier_x, fourier_y)*factor[0]
 
     #torch.exp(-2*1j*torch.pi*mu*t - 2*torch.pi**2*std**2*t**2)
