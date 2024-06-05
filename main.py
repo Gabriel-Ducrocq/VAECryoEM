@@ -9,6 +9,7 @@ from model import renderer
 from model.loss import compute_loss
 from model.utils import low_pass_images
 from torch.utils.data import DataLoader
+import einops
 
 import matplotlib.pyplot as plt
 
@@ -91,7 +92,32 @@ def train(yaml_setting_path, debug_mode):
             #end_deforming = time()
             #print("Deforming time", end_deforming - start_deforming)
             #start_proj = time()
-            predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
+            start_real = time()
+            predicted_images  = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
+            end_real = time()
+            print("Time real", end_real - start_real)
+            print("Percentage of freqs kept:", np.mean((torch.sqrt(torch.sum(ctf.freqs**2, dim=1)) < 1/4.0).numpy()))
+            print("Number of freqs kept:", np.sum((torch.sqrt(torch.sum(ctf.freqs**2, dim=1)) < 1/4.0).numpy()))
+            freqs_proj = torch.fft.fftshift(torch.fft.fftfreq(dataset.down_side_shape, dataset.down_apix))[:57]
+            start_fourier = time()
+            predicted_images_fourier = renderer.project_fourier(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, freqs_proj)
+            end_fourier = time()
+            print("Time fourier", end_fourier - start_fourier)
+
+            pred_images_ifft = torch.fft.ifftshift(torch.fft.ifft2(torch.fft.fftshift(predicted_images_fourier)))
+
+            plt.imshow(torch.fft.ifftshift(torch.fft.fft2(torch.fft.fftshift(predicted_images)))[0].detach().numpy().real)
+            plt.show()
+            print(pred_images_ifft[0].detach().numpy())
+            plt.imshow(predicted_images_fourier[0].detach().numpy().real)
+            plt.show()
+
+
+            plt.imshow(predicted_images[0].detach().numpy())
+            plt.show()
+            print(pred_images_ifft[0].detach().numpy())
+            plt.imshow(pred_images_ifft[0].detach().numpy().real)
+            plt.show()
             #proj_base = renderer.project(gmm_repr.mus[None, :, :], gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             #plt.imshow(proj_base[0].detach().cpu())
             #plt.savefig("true_image.png")

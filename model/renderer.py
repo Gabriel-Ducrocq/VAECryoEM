@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from time import time
 import matplotlib.pyplot as plt
+import einops
 
 def primal_to_fourier2d(images):
     """
@@ -41,6 +42,44 @@ def project(Gauss_mean, Gauss_sigmas, Gauss_amplitudes, grid):
     proj_y = torch.exp(-(Gauss_mean[:, :, None, 1] - grid.line_coords[None, None, :])**2/sigmas[None, :, None, 0])*sqrt_amp[None, :, :]
     images = torch.einsum("b a p, b a q -> b q p", proj_x, proj_y)
     return images
+
+
+def project_fourier(Gauss_mean, Gauss_sigmas, Gauss_amplitudes, grid_freq):
+    """
+    Project a volumes represented by a GMM into a 2D images, by integrating along the z axis
+    Gauss_mean: torch.tensor(batch_size, N_atoms, 3)
+    Gauss_sigmas: torch.tensor(N_atoms, 1)
+    Gauss_amplitudes: torch.tensor(N_atoms, 1)
+    grid: grid object
+    where N_atoms is the number of atoms in the structure.
+    return images: torch.tensor(batch_size, N_pix, N_pix)
+    """
+    sigmas = Gauss_sigmas[:, 0]
+    factor = torch.sqrt(2*sigmas**2*torch.pi)
+    sqrt_amp = amplitudes = torch.sqrt(Gauss_amplitudes)[:, 0]
+    quadratic_part = torch.exp(- 2*torch.pi**2*grid_freq[None, None, :]**2*sigmas[None, :, None]**2)*sqrt_amp[None, :, None]
+    fourier_x = torch.exp(-2*torch.pi*1j*torch.einsum("b a , l -> b a l", Gauss_mean[:, :, 0], grid_freq))*quadratic_part
+    ## !!!!!!!!!!!!!!!!!!!!!!          I ALREADY COMPUTED THE SECOND FACTOR, IN PRINCIPLE I DO NOT HAVE TO RECOMPUTE IT !!!!!!!!!!!!!!!!!!!
+    fourier_y = torch.exp(-2*torch.pi*1j*torch.einsum("b a , l -> b a l", Gauss_mean[:, :, 1], grid_freq))*quadratic_part
+    images_fourier = torch.einsum("b a p, b a q -> b q p", fourier_x, fourier_y)*factor[0]
+
+    #torch.exp(-2*1j*torch.pi*mu*t - 2*torch.pi**2*std**2*t**2)
+    #sigmas = Gauss_sigmas**2
+    #factor = torch.sqrt(2*sigmas*torch.pi)
+    #amplitudes = torch.sqrt(Gauss_amplitudes[:, 0])*factor[0]
+    #quadratic_part is of size l
+    #quadratic_part = torch.exp(-2*torch.pi**2*grid_freq**2*sigmas)
+    #imaginary_part is of size (batch, n_atoms, 2, n_freqs)
+    #imaginary_part = torch.exp(-2*torch.pi*1j*torch.einsum("b a k, l -> b a k l", Gauss_mean[:, :, :2], grid_freq))
+    #values_axis = torch.einsum("b a k l, a, a l -> b k l", imaginary_part, amplitudes, quadratic_part)
+    #images_fourier = torch.einsum("b p, b q -> b q p", values_axis[:, 0, :], values_axis[:, 1, :])*factor
+    #### THE FACTOR WILL BE SQUARED, THE AMPLITUDES TO, THAT IS WRONG !!!!!
+    #values_axis = einops.einsum(imaginary_part, amplitudes + 0*1j, quadratic_part + 0*1j, "b a k l, a, a l -> b a k l" )
+    #print(values_axis.shape)
+    #print(factor.shape)
+    ### I AM CONSIDERING ONLY ONE STD ACCROSS RESIDUES !!!
+    #images_fourier = einops.einsum(values_axis[:, 0, :], values_axis[:, 1, :], "b a p, b a q -> b q p")*factor[0]
+    return images_fourier
 
 def ctf_corrupt(images, ctf, device):
     """

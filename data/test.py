@@ -1,56 +1,53 @@
-import os
-
-import protein.main
-import yaml
 import torch
-import utils_data as utils
-import argparse
-import numpy as np
-from tqdm import tqdm
-from Bio.PDB import PDBParser
-import Bio.PDB as bpdb
 import matplotlib.pyplot as plt
-from pytorch3d.transforms import axis_angle_to_matrix
 
-class ResSelect(bpdb.Select):
-    def accept_residue(self, res):
-        if res.get_resname() == "LBV":
-            return False
-        else:
-            return True
+mu = -1*torch.ones(1)
+std = 1*torch.ones(1)
+denom = torch.sqrt(2*std**2*torch.pi)
+def pdf(t):
+    return torch.exp(-0.5*(t-mu)**2/std**2)/denom
 
+def pdf_freqs(t):
+    return torch.exp(-2*1j*torch.pi*mu*t - 2*torch.pi**2*std**2*t**2)
 
-parser_arg = argparse.ArgumentParser()
-parser_arg.add_argument('--folder_experiment', type=str, required=True)
-args = parser_arg.parse_args()
-folder_experiment = args.folder_experiment
+#def pdf_freqs(t):
+#    return torch.exp(-1j*mu*t - 0.5*std**2*t**2)
 
 
-with open(f"{folder_experiment}/parameters.yaml", "r") as file:
-    experiment_settings = yaml.safe_load(file)
+voxel_size = 1
+side_n_pixels = 10
+origin = -side_n_pixels//2 * voxel_size
+
+x = torch.linspace(origin, (side_n_pixels - 1) * voxel_size + origin, side_n_pixels)
+freqs = torch.fft.fftshift(torch.fft.fftfreq(side_n_pixels, voxel_size))
+
+y = torch.stack([pdf(xx) for xx in x], dim=0)[:, 0]
+image_real = torch.einsum("p, q -> p q", y , y)
+plt.imshow(image_real.detach().numpy())
+plt.show()
+#y = torch.fft.fftshift(torch.fft.fft(torch.fft.ifftshift(y)))
+y_freqs = torch.stack([pdf_freqs(ff) for ff in freqs], dim=0)[:, 0]
+image_fourier = torch.einsum("p, q -> p q", y_freqs, y_freqs)
+image_pred = torch.fft.fftshift(torch.fft.ifft2(torch.fft.fftshift(image_fourier)).real)
+plt.imshow(image_pred.detach().numpy())
+plt.show()
+#y_freqs = torch.fft.fftshift(torch.fft.ifft(torch.fft.ifftshift(y_freqs)))
+print(torch.abs(y_freqs.real - y.real)/torch.abs(y.real))
+plt.plot(torch.abs(y_freqs.real - y.real)/torch.abs(y_freqs.real).detach().numpy())
+plt.show()
+error_real = torch.abs(y.real - y_freqs.real)/torch.abs(y_freqs.real)
+error_imag = torch.abs(y.imag - y_freqs.imag)/torch.abs(y_freqs.imag)
+print("Error real", torch.abs(y.real - y_freqs.real)/torch.abs(y_freqs.real))
+print("Error imag", torch.abs(y.imag - y_freqs.imag)/torch.abs(y_freqs.imag))
+plt.plot(error_real.detach().numpy())
+plt.show()
+
+plt.plot(error_imag.detach().numpy())
+plt.show()
 
 
-parser = PDBParser(PERMISSIVE=0)
-base_structure = parser.get_structure("A", experiment_settings["base_structure_path"])
-center_vector = utils.compute_center_of_mass(base_structure)
-io = bpdb.PDBIO()
-## Save structure while removing biliverdin
-io.set_structure(base_structure)
-io.save(f"{folder_experiment}temp.pdb", ResSelect())
 
-#trans = np.array([ 9.333321  , -0.45512402, -9.019102  ], dtype=np.float32)
-#trans[1] =-6
-#utils.center_protein(base_structure, -trans)
-#utils.save_structure(base_structure, f"{folder_experiment}/base_structure_shifted_by_12_angstrom.pdb")
-translation_per_residues = np.load(f"{folder_experiment}all_translation_per_residue.npy")
-rotation_per_residues = np.load(f"{folder_experiment}all_rotations_per_residue.npy")
-temp_structure = parser.get_structure("A", f"{folder_experiment}temp.pdb")
-utils.center_protein(temp_structure, center_vector[0])
-#protein.main.rotate_residues(temp_structure, rotation_per_residues[403], np.eye(3, 3))
-protein.main.translate_residues(temp_structure, translation_per_residues[403])
-utils.center_protein(temp_structure, -center_vector[0])
-utils.save_structure(temp_structure, f"{folder_experiment}only_translation_based_structure_404.pdb")
-#utils.save_structure(temp_structure, f"{folder_experiment}rotation_and_translation_based_structure_404.pdb")
+
 
 
 
