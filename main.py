@@ -106,18 +106,23 @@ def train(yaml_setting_path, debug_mode):
 
             pred_images_ifft = torch.fft.ifftshift(torch.fft.ifft2(torch.fft.fftshift(predicted_images_fourier)))
 
-            plt.imshow(torch.fft.ifftshift(torch.fft.fft2(torch.fft.fftshift(predicted_images)))[0].detach().numpy().real)
-            plt.show()
-            print(pred_images_ifft[0].detach().numpy())
-            plt.imshow(predicted_images_fourier[0].detach().numpy().real)
-            plt.show()
+            #plt.imshow(torch.fft.ifftshift(torch.fft.fft2(torch.fft.fftshift(predicted_images)))[0].detach().numpy().real)
+            #plt.show()
+            #print(pred_images_ifft[0].detach().numpy())
+            #plt.imshow(predicted_images_fourier[0].detach().numpy().real)
+            #plt.show()
 
 
-            plt.imshow(predicted_images[0].detach().numpy())
-            plt.show()
-            print(pred_images_ifft[0].detach().numpy())
-            plt.imshow(pred_images_ifft[0].detach().numpy().real)
-            plt.show()
+            #plt.imshow(predicted_images[0].detach().numpy())
+            #plt.show()
+            #print(pred_images_ifft[0].detach().numpy())
+            #plt.imshow(pred_images_ifft[0].detach().numpy().real)
+            #plt.show()
+
+
+
+
+            
             #proj_base = renderer.project(gmm_repr.mus[None, :, :], gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             #plt.imshow(proj_base[0].detach().cpu())
             #plt.savefig("true_image.png")
