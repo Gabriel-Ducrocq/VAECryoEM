@@ -54,7 +54,6 @@ def project_fourier(Gauss_mean, Gauss_sigmas, Gauss_amplitudes, grid_freq):
     where N_atoms is the number of atoms in the structure.
     return images: torch.tensor(batch_size, N_pix, N_pix)
     """
-    print("GRID FREQ", grid_freq)
     sigmas = Gauss_sigmas[:, 0]
     factor = torch.sqrt(2*sigmas**2*torch.pi)
     sqrt_amp = amplitudes = torch.sqrt(Gauss_amplitudes)[:, 0]
