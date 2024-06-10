@@ -132,8 +132,8 @@ def train(yaml_setting_path, debug_mode):
             #start_ctf = time()
 
 
-            batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
-            #batch_predicted_images = renderer.apply_ctf(pred_images_ifft, ctf, indexes)
+            #batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
+            batch_predicted_images = renderer.apply_ctf(pred_images_ifft, ctf, indexes)
             print("\n\n")
 
 
