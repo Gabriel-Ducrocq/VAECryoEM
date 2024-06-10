@@ -74,10 +74,15 @@ def project_fourier(Gauss_mean, Gauss_sigmas, Gauss_amplitudes, grid_freq):
     print("Time quadratic", end_quadratic - start_quadratic)
     start_x = time()
     fourier_x = torch.exp(-2*torch.pi*1j*torch.einsum("b a , l -> b a l", Gauss_mean[:, :, 0], grid_freq))*quadratic_part
+    #inside = -2*torch.pi*torch.einsum("b a , l -> b a l", Gauss_mean[:, :, 0], grid_freq)
+    #fourier_x_cos = torch.cos(inside)
+    #fourier_x_sin = torch.sin(inside)
+    #fourier_x = (fourier_x_cos - fourier_x_sin)*quadratic_part
     end_x = time()
     print("Time x", end_x - start_x)
     start_y = time()
     fourier_y = torch.exp(-2*torch.pi*1j*torch.einsum("b a , l -> b a l", Gauss_mean[:, :, 1], grid_freq))*quadratic_part
+    #fourier_y = torch.cos(-2*torch.pi*torch.einsum("b a , l -> b a l", Gauss_mean[:, :, 1], grid_freq))*quadratic_part
     end_y = time()
     print("Time y", end_y - start_y)
     start_image = time()
