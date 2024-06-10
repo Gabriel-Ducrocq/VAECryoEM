@@ -114,11 +114,11 @@ def train(yaml_setting_path, debug_mode):
             #plt.show()
 
 
-            plt.imshow(predicted_images[0].detach().numpy())
-            plt.show()
+            #plt.imshow(predicted_images[0].detach().numpy())
+            #plt.show()
             #print(pred_images_ifft[0].detach().numpy())
-            plt.imshow(pred_images_ifft[0].detach().numpy().real)
-            plt.show()
+            #plt.imshow(pred_images_ifft[0].detach().numpy().real)
+            #plt.show()
 
 
 
