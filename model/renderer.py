@@ -38,9 +38,19 @@ def project(Gauss_mean, Gauss_sigmas, Gauss_amplitudes, grid):
     sigmas = 2*Gauss_sigmas**2
     sqrt_amp = torch.sqrt(Gauss_amplitudes)
     #Both proj_x and proj_y are (batch_size, N_atoms, N_pix)
+    print("PROJECT REAL")
+    start_x = time()
     proj_x = torch.exp(-(Gauss_mean[:, :, None, 0] - grid.line_coords[None, None, :])**2/sigmas[None, :, None,  0])*sqrt_amp[None, :, :]
+    end_x = time()
+    print("Time x", end_x - start_x)
+    start_y = time()
     proj_y = torch.exp(-(Gauss_mean[:, :, None, 1] - grid.line_coords[None, None, :])**2/sigmas[None, :, None, 0])*sqrt_amp[None, :, :]
+    end_y = time()
+    print("Time y", end_y - start_y)
+    start_image = time()
     images = torch.einsum("b a p, b a q -> b q p", proj_x, proj_y)
+    end_image = time()
+    print("Time image", end_image - start_image)
     return images
 
 
@@ -54,14 +64,26 @@ def project_fourier(Gauss_mean, Gauss_sigmas, Gauss_amplitudes, grid_freq):
     where N_atoms is the number of atoms in the structure.
     return images: torch.tensor(batch_size, N_pix, N_pix)
     """
+    print("PROJECT FOURIER")
     sigmas = Gauss_sigmas[:, 0]
     factor = torch.sqrt(2*sigmas**2*torch.pi)
     sqrt_amp = amplitudes = torch.sqrt(Gauss_amplitudes)[:, 0]
+    start_quadratic = time()
     quadratic_part = torch.exp(- 2*torch.pi**2*grid_freq[None, None, :]**2*sigmas[None, :, None]**2)*sqrt_amp[None, :, None]
+    end_quadratic = time()
+    print("Time quadratic", end_quadratic - start_quadratic)
+    start_x = time()
     fourier_x = torch.exp(-2*torch.pi*1j*torch.einsum("b a , l -> b a l", Gauss_mean[:, :, 0], grid_freq))*quadratic_part
+    end_x = time()
+    print("Time x", end_x - start_x)
+    start_y = time()
     fourier_y = torch.exp(-2*torch.pi*1j*torch.einsum("b a , l -> b a l", Gauss_mean[:, :, 1], grid_freq))*quadratic_part
-    print("FOURIER X", fourier_x.shape)
+    end_y = time()
+    print("Time y", end_y - start_y)
+    start_image = time()
     images_fourier = torch.einsum("b a p, b a q -> b q p", fourier_x, fourier_y)*factor[0]
+    end_image = time()
+    print("Time image", end_image - start_image)
 
     #torch.exp(-2*1j*torch.pi*mu*t - 2*torch.pi**2*std**2*t**2)
     #sigmas = Gauss_sigmas**2
