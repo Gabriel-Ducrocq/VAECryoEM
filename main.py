@@ -92,21 +92,21 @@ def train(yaml_setting_path, debug_mode):
             #end_deforming = time()
             #print("Deforming time", end_deforming - start_deforming)
             #start_proj = time()
-            start_real = time()
+            #start_real = time()
             predicted_images  = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
-            end_real = time()
-            print("Time real", end_real - start_real)
+            #end_real = time()
+            #print("Time real", end_real - start_real)
             #print("Percentage of freqs kept:", np.mean((torch.sqrt(torch.sum(ctf.freqs**2, dim=1)) < 1/4.0).detach().cpu().numpy()))
             #print("Number of freqs kept:", np.sum((torch.sqrt(torch.sum(ctf.freqs**2, dim=1)) < 1/4.0).detach().cpu().numpy()))
-            freqs_proj = torch.fft.fftshift(torch.fft.fftfreq(128, dataset.down_apix, device=device))[:2]
-            print("SHAPE", freqs_proj.shape)
+            #freqs_proj = torch.fft.fftshift(torch.fft.fftfreq(128, dataset.down_apix, device=device))[:2]
+            #print("SHAPE", freqs_proj.shape)
 
-            start_fourier = time()
-            predicted_images_fourier = renderer.project_fourier(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, freqs_proj)
-            end_fourier = time()
-            print("Time fourier", end_fourier - start_fourier)
+            #start_fourier = time()
+            #predicted_images_fourier = renderer.project_fourier(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, freqs_proj)
+            #end_fourier = time()
+            #print("Time fourier", end_fourier - start_fourier)
 
-            pred_images_ifft = torch.fft.ifftshift(torch.fft.ifft2(torch.fft.fftshift(predicted_images_fourier))).real
+            #pred_images_ifft = torch.fft.ifftshift(torch.fft.ifft2(torch.fft.fftshift(predicted_images_fourier))).real
 
             #plt.imshow(torch.fft.ifftshift(torch.fft.fft2(torch.fft.fftshift(predicted_images)))[0].detach().numpy().real)
             #plt.show()
@@ -167,11 +167,11 @@ def train(yaml_setting_path, debug_mode):
             #print("Loss time", end_loss - start_loss)
             #print("Epoch:",  epoch, "Batch number:", batch_num, "Loss:", loss, "device:", device)
             #start_gradient = time()
-            start_backward = time()
+            #start_backward = time()
             loss.backward()
             optimizer.step()
-            end_backward = time()
-            print("TIME BACKWARD", end_backward - start_backward)
+            #end_backward = time()
+            #print("TIME BACKWARD", end_backward - start_backward)
             optimizer.zero_grad()
             #end_gradient = time()
             #print("Gradient time", end_gradient - start_gradient)
