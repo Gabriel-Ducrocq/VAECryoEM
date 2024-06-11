@@ -99,6 +99,7 @@ def train(yaml_setting_path, debug_mode):
             #print("Percentage of freqs kept:", np.mean((torch.sqrt(torch.sum(ctf.freqs**2, dim=1)) < 1/4.0).detach().cpu().numpy()))
             #print("Number of freqs kept:", np.sum((torch.sqrt(torch.sum(ctf.freqs**2, dim=1)) < 1/4.0).detach().cpu().numpy()))
             freqs_proj = torch.fft.fftshift(torch.fft.fftfreq(128, dataset.down_apix, device=device))[:2]
+            print("SHAPE", freqs_proj.shape)
 
             start_fourier = time()
             predicted_images_fourier = renderer.project_fourier(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, freqs_proj)
