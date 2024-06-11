@@ -105,8 +105,11 @@ if not poses_translation:
     #poses_translation = torch.zeros((N_images, 3), device=device)
     shiftX_angstrom = (torch.rand((N_images, 1), device=device)*2 - 1)*10
     shiftY_angstrom = (torch.rand((N_images, 1), device=device)*2 - 1)*10
+    shiftX_angstrom = torch.zeros_like(shiftX_angstrom, device=device)
+    shiftY_angstrom = torch.zeros_like(shiftY_angstrom, device=device)
     shiftX = shiftX_angstrom /apix
     shiftY = shiftY_angstrom /apix
+
 else:
     poses_translation = torch.load(poses_translation)
 
@@ -118,7 +121,7 @@ print("Max shiftY in Å", torch.max(shiftY_angstrom))
 poses_translations = torch.concatenate([shiftY, shiftX], dim=1)
 
 #Finding the center of mass to center the protein
-center_vector = np.mean(centering_structure.coord, axis=0)
+#center_vector = np.mean(centering_structure.coord, axis=0)
 ## !!!!!!!!!!!!!!!!!!    BE CAREFUL I AM NOT TRANSLATING A LITTLE BIT !!!!!!!!!!!!!!!!!!
 #center_vector += 0.5*apix
 
@@ -127,7 +130,8 @@ from time import time
 
 if is_homogeneous:
     print("Using the target structure:", target_structure_path)
-    backbone = torch.tensor(target_structure.coord - center_vector, dtype=torch.float32, device=device)
+    #backbone = torch.tensor(target_structure.coord - center_vector, dtype=torch.float32, device=device)
+    backbone = torch.tensor(target_structure.coord, dtype=torch.float32, device=device)
     backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
 
 if not is_homogeneous:
