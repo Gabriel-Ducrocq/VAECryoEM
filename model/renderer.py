@@ -89,6 +89,7 @@ def project_fourier(Gauss_mean, Gauss_sigmas, Gauss_amplitudes, grid_freq):
     images_fourier = torch.einsum("b a p, b a q -> b q p", fourier_x, fourier_y)*factor[0]
     end_image = time()
     print("Time image", end_image - start_image)
+    print("IMAGES FOURIER", images_fourier.shape)
 
     #torch.exp(-2*1j*torch.pi*mu*t - 2*torch.pi**2*std**2*t**2)
     #sigmas = Gauss_sigmas**2
