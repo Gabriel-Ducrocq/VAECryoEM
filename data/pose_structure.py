@@ -37,20 +37,20 @@ def pose_structure(yaml_setting_path, output_folder):
     _, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, base_structure, lp_mask2d, mask_images  = utils.parse_yaml(yaml_setting_path)
     data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=4))
     for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
-	    print("Batch number:", batch_num)
-	    start = time()
-	    batch_images = batch_images.to(device)
-	    batch_poses = batch_poses.to(device)
-	    batch_poses_translation = batch_poses_translation.to(device)
-	    indexes = indexes.to(device)
-	    structs = gmm_repr.mus[None, :, :].repeat(batch_size, 1, 1)
+		print("Batch number:", batch_num)
+		start = time()
+		batch_images = batch_images.to(device)
+		batch_poses = batch_poses.to(device)
+		batch_poses_translation = batch_poses_translation.to(device)
+		indexes = indexes.to(device)
+		structs = gmm_repr.mus[None, :, :].repeat(batch_size, 1, 1)
 		posed_structs = renderer.rotate_structure(structs, batch_poses)
 
 
 		for i, pred_struct in enumerate(posed_structs):
-		    print("Saving structure", i+1)
-		    base_structure.coord = pred_struct.detach().cpu().numpy()
-		    base_structure.to_pdb(os.path.join(structures_path, f"structure_z_{batch_num*batch_size + i}.pdb"))
+			print("Saving structure", i+1)
+			base_structure.coord = pred_struct.detach().cpu().numpy()
+			base_structure.to_pdb(os.path.join(structures_path, f"structure_z_{batch_num*batch_size + i}.pdb"))
 
 
 if __name__ == '__main__':
