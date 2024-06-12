@@ -29,14 +29,14 @@ filter_aa = True
 
 
 def pose_structure(yaml_setting_path, output_folder):
-    """
-    train a VAE network
-    :param yaml_setting_path: str, path the yaml containing all the details of the experiment
-    :return:
-    """
-    _, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, base_structure, lp_mask2d, mask_images  = utils.parse_yaml(yaml_setting_path)
-    data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=4))
-    for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
+	"""
+	train a VAE network
+	:param yaml_setting_path: str, path the yaml containing all the details of the experiment
+	:return:
+	"""
+	_, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, base_structure, lp_mask2d, mask_images  = utils.parse_yaml(yaml_setting_path)
+	data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=4))
+	for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
 		print("Batch number:", batch_num)
 		start = time()
 		batch_images = batch_images.to(device)
