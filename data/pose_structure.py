@@ -56,7 +56,7 @@ def pose_structure(yaml_setting_path, output_folder):
 if __name__ == '__main__':
     parser_arg = argparse.ArgumentParser()
     parser_arg.add_argument('--experiment_yaml', type=str, required=True)
-    parser_arg.add_argument('--ouput_folder', type=str, required=True)
+    parser_arg.add_argument('--output_folder', type=str, required=True)
     args = parser_arg.parse_args()
     path = args.experiment_yaml
     output_folder = args.output_folder
