@@ -60,5 +60,5 @@ if __name__ == '__main__':
     args = parser_arg.parse_args()
     path = args.experiment_yaml
     output_folder = args.output_folder
-    analyze(path, output_folder)
+    pose_structure(path, output_folder)
 
