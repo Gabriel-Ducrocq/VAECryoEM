@@ -51,7 +51,7 @@ def pose_structure(yaml_setting_path, output_folder):
 		for i, pred_struct in enumerate(posed_structs):
 			print("Saving structure", i+1)
 			base_structure.coord = pred_struct.detach().cpu().numpy()
-			base_structure.to_pdb(os.path.join(structures_path, f"structure_z_{batch_num*batch_size + i}.pdb"))
+			base_structure.to_pdb(os.path.join(output_folder, f"structure_z_{batch_num*batch_size + i}.pdb"))
 
 
 if __name__ == '__main__':
