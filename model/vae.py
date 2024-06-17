@@ -18,74 +18,39 @@ class VAE(torch.nn.Module):
 
         self.residues = torch.arange(0, self.N_residues, 1, dtype=torch.float32, device=device)[:, None]
 
-        if mask_start_values["type"] == "uniform":
-            bound_0 = self.N_residues/N_domains
-            self.mask_means_mean = torch.nn.Parameter(data=torch.tensor(np.array([bound_0/2 + i*bound_0 for i in range(N_domains)]), dtype=torch.float32, device=device)[None, :],
-                                                      requires_grad=True)
-            self.mask_means_std = torch.nn.Parameter(data= torch.tensor(np.ones(N_domains)*10.0, dtype=torch.float32, device=device)[None,:],
-                                                    requires_grad=True)
-            self.mask_std_mean = torch.nn.Parameter(data= torch.tensor(np.ones(N_domains)*bound_0, dtype=torch.float32, device=device)[None,:],
-                                                    requires_grad=True)
-
-            self.mask_std_std = torch.nn.Parameter(
-                data=torch.tensor(np.ones(N_domains) * 10.0, dtype=torch.float32, device=device)[None, :],
-                requires_grad=True)
-
-            self.mask_proportions_mean = torch.nn.Parameter(
-                data=torch.tensor(np.ones(N_domains) * 0, dtype=torch.float32, device=device)[None, :],
-                requires_grad=True)
-
-            self.mask_proportions_std = torch.nn.Parameter(
-                data=torch.tensor(np.ones(N_domains), dtype=torch.float32, device=device)[None, :],
-                requires_grad=True)
-
-        else:
-            self.mask_means_mean = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_mean"]["mean"], dtype=torch.float32,device=device)[None, :],
-                                                    requires_grad=True)
-
-            self.mask_means_std = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_mean"]["std"], dtype=torch.float32, device=device)[None, :],
+        assert mask_start_values["type"] == "uniform", "Currently, only uniform initialization of the segmentation available."
+        bound_0 = self.N_residues/N_domains
+        self.segments_means = torch.nn.Parameter(data=torch.tensor(np.array([bound_0/2 + i*bound_0 for i in range(N_domains)]), dtype=torch.float32, device=device)[None, :],
                                                   requires_grad=True)
 
-            self.mask_std_mean = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_std"]["mean"], dtype=torch.float32, device=device)[None, :],
-                                                  requires_grad=True)
+        self.segments_std = torch.nn.Parameter(data= torch.tensor(np.ones(N_domains)*bound_0, dtype=torch.float32, device=device)[None,:],
+                                                requires_grad=True)
 
-            self.mask_std_std = torch.nn.Parameter(data=torch.tensor(mask_start_values["clusters_std"]["std"], dtype=torch.float32, device=device)[None, :],
-                                                  requires_grad=True)
 
-            self.mask_proportions_mean = torch.nn.Parameter(torch.tensor(mask_start_values["clusters_proportions"]["mean"], dtype=torch.float32, device=device)[None, :],
-                                                          requires_grad=True)
+        self.segments_proportions = torch.nn.Parameter(
+            data=torch.tensor(np.ones(N_domains) * 0, dtype=torch.float32, device=device)[None, :],
+            requires_grad=True)
 
-            self.mask_proportions_std = torch.nn.Parameter(torch.tensor(mask_start_values["clusters_proportions"]["std"], dtype=torch.float32, device=device)[None, :],
-                               requires_grad=True)
 
-        self.mask_parameters = {"means":{"mean":self.mask_means_mean, "std":self.mask_means_std},
-                                   "stds":{"mean":self.mask_std_mean, "std":self.mask_std_std},
-                                   "proportions":{"mean":self.mask_proportions_mean, "std":self.mask_proportions_std}}
-
+        self.segments_parameters = {"means":self.segments_means, "stds":self.segments_std, "proportions":self.segments_proportions}
         self.elu = torch.nn.ELU()
+
     def sample_mask(self, N_batch):
         """
         Samples a mask
         :return: torch.tensor(N_batch, N_residues, N_domains) values of the mask
         """
-        #cluster_proportions = torch.randn(self.N_domains, device=self.device)*self.mask_proportions_std + self.mask_proportions_mean
-        #cluster_means = torch.randn(self.N_domains, device=self.device)*self.mask_means_std + self.mask_means_mean
-        #cluster_std = self.elu(torch.randn(self.N_domains, device=self.device)*self.mask_std_std + self.mask_std_mean) + 1
-        #proportions = torch.softmax(cluster_proportions, dim=1)
-        #log_num = -0.5*(self.residues - cluster_means)**2/cluster_std**2 + \
-        #      torch.log(proportions)
-
-        #mask = torch.softmax(log_num/self.tau_mask, dim=1)
-        cluster_proportions = torch.randn((N_batch, self.N_domains),
-                                          device=self.device) * self.mask_proportions_std+ self.mask_proportions_mean
-        cluster_means = torch.randn((N_batch, self.N_domains), device=self.device) * self.mask_means_std+ self.mask_means_mean
-        cluster_std = self.elu(torch.randn((N_batch, self.N_domains), device=self.device)*self.mask_std_std + self.mask_std_mean) + 1
+        cluster_proportions = self.segments_proportions.repeat(N_batch, 1)
+        cluster_means = self.segments_means.repeat(N_batch, 1)
+        cluster_std = self.segments_std.repeat(N_batch, 1)
         proportions = torch.softmax(cluster_proportions, dim=-1)
+
         log_num = -0.5*(self.residues[None, :, :] - cluster_means[:, None, :])**2/cluster_std[:, None, :]**2 + \
               torch.log(proportions[:, None, :])
 
-        mask = torch.softmax(log_num / self.tau_mask, dim=-1)
-        return mask
+        segmentation = torch.softmax(log_num / self.tau_mask, dim=-1)
+
+        return segmentation
 
     def sample_latent(self, images):
         """

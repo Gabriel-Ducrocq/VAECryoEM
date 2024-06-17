@@ -29,7 +29,6 @@ def calc_cor_loss(pred_images, gt_images, mask=None):
     err = -dots / (gt_images.std(-1) + 1e-5) / (pred_images.std(-1) + 1e-5)
     # b -> 1 value
     err = err.mean() / pixel_num
-    print("ERR", err)
     return err
 
 
@@ -58,19 +57,6 @@ def compute_KL_prior_latent(latent_mean, latent_std, epsilon_loss):
     return torch.mean(-0.5 * torch.sum(1 + torch.log(latent_std ** 2 + eval(epsilon_loss)) \
                                            - latent_mean ** 2 \
                                            - latent_std ** 2, dim=1))
-
-
-def compute_KL_prior_mask(mask_parameters, mask_prior, variable, epsilon_kl):
-    """
-    Compute the Dkl loss between the prior and the approximated posterior distribution
-    :param mask_parameters: dictionnary, containing the tensor of mask parameters
-    :param mask_prior: dictionnary, containing the tensor of mask prior
-    :return: torch.float32,  Dkl loss
-    """
-    assert variable in ["means", "stds", "proportions"]
-    return torch.sum(-1/2 + torch.log(mask_prior[variable]["std"]/mask_parameters[variable]["std"] + eval(epsilon_kl)) \
-    + (1/2)*(mask_parameters[variable]["std"]**2 +
-    (mask_prior[variable]["mean"] - mask_parameters[variable]["mean"])**2)/mask_prior[variable]["std"]**2)
 
 
 
@@ -119,18 +105,8 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
     :param predicted_structures: torch.tensor(N_batch, 3*N_residues, 3)
     :return:
     """
-
-    ## !!!!!!!!! REPLACING THE RMSD WITH A CORRELATION COMPUTATION BE CAREFUL !!!!!!!!!!!!!!
-    #rmsd = compute_rmsd(predicted_images, images)
     rmsd = calc_cor_loss(predicted_images, images, mask_image)
     KL_prior_latent = compute_KL_prior_latent(latent_mean, latent_std, experiment_settings["epsilon_kl"])
-    KL_prior_mask_means = compute_KL_prior_mask(
-        vae.mask_parameters, experiment_settings["mask_prior"],
-        "means", epsilon_kl=experiment_settings["epsilon_kl"])
-    KL_prior_mask_stds = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
-                                               "stds", epsilon_kl=experiment_settings["epsilon_kl"])
-    KL_prior_mask_proportions = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
-                                               "proportions", epsilon_kl=experiment_settings["epsilon_kl"])
     l2_pen = compute_l2_pen(vae)
     clashing_loss = 0
     if predicted_structures is not None:
@@ -139,15 +115,9 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
 
     tracking_dict["rmsd"].append(rmsd.detach().cpu().numpy())
     tracking_dict["kl_prior_latent"].append(KL_prior_latent.detach().cpu().numpy())
-    tracking_dict["kl_prior_mask_mean"].append(KL_prior_mask_means.detach().cpu().numpy())
-    tracking_dict["kl_prior_mask_std"].append(KL_prior_mask_stds.detach().cpu().numpy())
-    tracking_dict["kl_prior_mask_proportions"].append(KL_prior_mask_proportions.detach().cpu().numpy())
     tracking_dict["l2_pen"].append(l2_pen.detach().cpu().numpy())
 
     loss = rmsd + loss_weights["KL_prior_latent"]*KL_prior_latent \
-           + loss_weights["KL_prior_mask_mean"]*KL_prior_mask_means \
-           + loss_weights["KL_prior_mask_std"] * KL_prior_mask_stds \
-           + loss_weights["KL_prior_mask_proportions"] * KL_prior_mask_proportions \
            + loss_weights["l2_pen"] * l2_pen + loss_weights["clashing"]*clashing_loss
 
     return loss
