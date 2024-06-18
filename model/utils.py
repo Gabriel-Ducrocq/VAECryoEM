@@ -114,6 +114,23 @@ def center_protein(structure, center_vector):
 
     return structure
 
+def compute_chain_coord(pol, device):
+    """
+    Get the residue coordinates for each chain
+    :param pol: Polymer object
+    returns: dictionnary of torch.tensor(N_atom_chains, 3) for each chain
+    """
+    atom_positions = {}
+    N_residues = {}
+    chain_ids = sorted(np.unique(pol.chain_id).tolist())
+    N_chains = len(chain_ids)
+    for n_chain in chain_ids:
+        atom_positions[f"chain_{n_chain}"] = torch.tensor(pol.coord[pol.chain_id == n_chain], dtype=torch.float32, device=device)
+        N_residues[f"chain_{n_chain}"] = atom_positions[f"chain_{n_chain}"].shape[0]
+
+    return N_chains, atom_positions, N_residues, chain_ids
+
+
 
 def parse_yaml(path):
     """
@@ -140,60 +157,35 @@ def parse_yaml(path):
     apix_downsize = Npix * apix /Npix_downsize
     image_translator = SpatialGridTranslate(D=Npix_downsize, device=device)
 
-    if experiment_settings["latent_type"] == "continuous":
-        encoder = MLP(Npix_downsize**2,
-                      experiment_settings["latent_dimension"] * 2,
-                      experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
-                      latent_type="continuous")
-        decoder = MLP(experiment_settings["latent_dimension"], experiment_settings["N_domains"]*6,
-                      experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
-    else:
-        encoder = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
-                      experiment_settings["latent_dimension"],
-                      experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
-                      latent_type="categorical")
-        decoder = MLP(1, experiment_settings["N_domains"]*6,
-                      experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
+    filter_aa = True
+    grid = EMAN2Grid(Npix_downsize, apix_downsize, device=device)
+    base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"], filter_aa)
+    amplitudes = torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None]
+
+    N_chains, chain_atom_positions, N_residues, chain_ids = compute_chain_coord(base_structure, device)
+
+    gmm_repr = Gaussian(chain_atom_positions, 
+                torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device)*image_settings["sigma_gmm"], 
+                amplitudes)
+
+    encoder = MLP(Npix_downsize**2,
+                  experiment_settings["latent_dimension"] * 2,
+                  experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
+                  latent_type="continuous")
+
+    total_N_domains = sum(experiment_settings["N_domains"].values())
+    decoder = MLP(experiment_settings["latent_dimension"], total_N_domains*6,
+                  experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
 
     if experiment_settings["resume_training"]["model"] == "None":
-        vae = VAE(encoder, decoder, device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
+        vae = VAE(encoder, decoder, device, N_chains=N_chains ,N_domains = experiment_settings["N_domains"], N_residues= N_residues,
                   tau_mask=experiment_settings["tau_mask"], mask_start_values=experiment_settings["mask_start"],
-                  latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"])
+                  latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"], chain_ids=chain_ids)
         vae.to(device)
     else:
         vae = torch.load(experiment_settings["resume_training"]["model"])
         vae.to(device)
 
-
-    filter_aa = True
-    grid = EMAN2Grid(Npix_downsize, apix_downsize, device=device)
-    base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"], filter_aa)
-    #centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"], filter_aa)
-    ##############                  I AM NOT CENTERING THE DATA ANYMORE !!!!!!!!!!! ############
-    #center_of_mass = compute_center_of_mass(centering_structure)
-    #base_structure.translate_structure(-center_of_mass)
-    #base_structure.translate_structure(-center_of_mass -0.5)
-
-
-
-    #gmm_repr = Gaussian(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), 
-    #            torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device)*image_settings["sigma_gmm"], 
-    #            torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None]) 
-
-    amplitudes = torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None]
-    gmm_repr = Gaussian(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), 
-                torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device)*image_settings["sigma_gmm"], 
-                amplitudes)
-
-    if experiment_settings["mask_prior"]["type"] == "uniform":
-        experiment_settings["mask_prior"] = compute_mask_prior(experiment_settings["N_residues"],
-                                                               experiment_settings["N_domains"], device)
-    else:
-        for mask_prior_key in experiment_settings["mask_prior"].keys():
-            experiment_settings["mask_prior"][mask_prior_key]["mean"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["mean"],
-                                                                                     dtype=torch.float32, device=device)
-            experiment_settings["mask_prior"][mask_prior_key]["std"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["std"],
-                                                                                     dtype=torch.float32, device=device)    
 
     if experiment_settings["optimizer"]["name"] == "adam":
         if "learning_rate_mask" not in experiment_settings["optimizer"]:
@@ -284,34 +276,7 @@ class SpatialGridTranslate(torch.nn.Module):
         return sampled[:, 0, :, :]
 
 
-def compute_mask_prior(N_residues, N_domains, device):
-    """
-    Computes the mask prior if "uniform" is set in the yaml file
-    :param N_residues: integer, number of residues
-    :param N_domains: integer, number of domains
-    :param device: str, device to use
-    :return:
-    """
-    bound_0 = N_residues / N_domains
-    mask_means_mean = torch.tensor(np.array([bound_0 / 2 + i * bound_0 for i in range(N_domains)]), dtype=torch.float32,
-                          device=device)[None, :]
 
-    mask_means_std = torch.tensor(np.ones(N_domains) * 10.0, dtype=torch.float32, device=device)[None, :]
-
-    mask_stds_mean = torch.tensor(np.ones(N_domains) * bound_0, dtype=torch.float32, device=device)[None, :]
-
-    mask_stds_std = torch.tensor(np.ones(N_domains) * 10.0, dtype=torch.float32, device=device)[None, :]
-
-    mask_proportions_mean = torch.tensor(np.ones(N_domains) * 0, dtype=torch.float32, device=device)[None, :]
-
-    mask_proportions_std = torch.tensor(np.ones(N_domains), dtype=torch.float32, device=device)[None, :]
-
-    mask_prior = {}
-    mask_prior["means"] = {"mean":mask_means_mean, "std":mask_means_std}
-    mask_prior["stds"] = {"mean":mask_stds_mean, "std":mask_stds_std}
-    mask_prior["proportions"] = {"mean":mask_proportions_mean, "std":mask_proportions_std}
-
-    return mask_prior
 
 def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, optimizer):
     """
@@ -433,61 +398,93 @@ def compute_rotations_per_residue_einops(quaternions, mask, device):
     return overall_rotation_matrices
 
 
-def rotate_residues_einops(atom_positions, quaternions, mask, device):
+def rotate_residues_einops(atom_positions, quaternions, segments, device):
     """
     Computes the rotation matrix corresponding to each domain for each residue, where the angle of rotation has been
     weighted by the mask value of the corresponding domain.
-    :param positions: torch.tensor(N_residues, 3)
+    :param positions: dictionnary of atom positions per chain torch.tensor(N_residues_chains, 3)
     :param quaternions: tensor (N_batch, N_domains, 4) of non normalized quaternions defining rotations
     :param mask: tensor (N_batch, N_residues, N_domains)
     :return: tensor (N_batch, N_residues, 3, 3) rotation matrix for each residue
     """
+    chain_atom_positions = {}
+    chains = sorted("".join(atom_positions.keys()).split("_"))
+    chains.remove("chain")
+    for n_chains in chains:
+        N_residues = segments[f"chain_{n_chains}"].shape[1]
+        batch_size = quaternions[f"chain_{n_chains}"].shape[0]
+        N_domains = segments[f"chain_{n_chains}"].shape[-1]
+        # NOTE: no need to normalize the quaternions, quaternion_to_axis does it already.
+        rotation_per_domains_axis_angle = quaternion_to_axis_angle(quaternions[f"chain_{n_chains}"])
+        #The below tensor is [N_batch, N_residues, N_domains, 3]
+        segments_rotation_per_domains_axis_angle = segments[f"chain_{n_chains}"][:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
+        segments_rotation_per_domains_quaternions = axis_angle_to_quaternion(segments_rotation_per_domains_axis_angle)
+        print(segments_rotation_per_domains_quaternions[:, :, 0, :].shape)
+        new_atom_positions = quaternion_apply(segments_rotation_per_domains_quaternions[:, :, 0, :], atom_positions[f"chain_{n_chains}"])
+        for dom in range(1, N_domains):
+            new_atom_positions = quaternion_apply(segments_rotation_per_domains_quaternions[:, :, dom, :], new_atom_positions)
 
-    N_residues = mask.shape[1]
-    batch_size = quaternions.shape[0]
-    N_domains = mask.shape[-1]
+        chain_atom_positions[f"chain_{n_chains}"] = new_atom_positions
+
+    return chain_atom_positions
+
     # NOTE: no need to normalize the quaternions, quaternion_to_axis does it already.
-    rotation_per_domains_axis_angle = quaternion_to_axis_angle(quaternions)
+    #rotation_per_domains_axis_angle = quaternion_to_axis_angle(quaternions)
     #The below tensor is [N_batch, N_residues, N_domains, 3]
-    mask_rotation_per_domains_axis_angle = mask[:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
-    mask_rotation_per_domains_quaternions = axis_angle_to_quaternion(mask_rotation_per_domains_axis_angle)
+    #mask_rotation_per_domains_axis_angle = mask[:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
+    #mask_rotation_per_domains_quaternions = axis_angle_to_quaternion(mask_rotation_per_domains_axis_angle)
     #T = Transform3d(dtype=torch.float32, device = device)
-    atom_positions = quaternion_apply(mask_rotation_per_domains_quaternions[:, :, 0, :], atom_positions)
-    for dom in range(1, N_domains):
-        atom_positions = quaternion_apply(mask_rotation_per_domains_quaternions[:, :, dom, :], atom_positions)
+    #atom_positions = quaternion_apply(mask_rotation_per_domains_quaternions[:, :, 0, :], atom_positions)
+    #for dom in range(1, N_domains):
+    #    atom_positions = quaternion_apply(mask_rotation_per_domains_quaternions[:, :, dom, :], atom_positions)
 
-    return atom_positions
+    #return atom_positions
 
 
 
-def compute_translations_per_residue(translation_vectors, mask):
+def compute_translations_per_residue(translation_vectors, segments):
     """
     Computes one translation vector per residue based on the mask
-    :param translation_vectors: torch.tensor (Batch_size, N_domains, 3) translations for each domain
-    :param mask: torch.tensor(N_batch, N_residues, N_domains) weights of the attention mask
-    :return: translation per residue torch.tensor(batch_size, N_residues, 3)
+    :param translation_vectors: dictionnary of torch.tensor (Batch_size, N_domains_chain, 3) translations for each domain
+    :param segments: translation_vectors: dictionnary of torch.tensor(N_batch, N_residues_chains, N_domains_chains) weights of the attention segments
+    :return: translation_vectors: dictionnary of translation per residue per chain torch.tensor(batch_size, N_residues_chains, 3)
     """
     #### How is it possible to compute this product given the two tensor size
-    translation_per_residue = torch.einsum("bij, bjk -> bik", mask, translation_vectors)
-    return translation_per_residue
+    N_chains = len(segments)
+    chains_translations = {}
+    chains = sorted("".join(segments.keys()).split("_"))
+    chains.remove("chain")
+    for n_chain in chains:
+        translation_per_residue = torch.einsum("bij, bjk -> bik", segments[f"chain_{n_chain}"], translation_vectors[f"chain_{n_chain}"])
+        chains_translations[f"chain_{n_chain}"] = translation_per_residue
+
+    return chains_translations
 
 
-def deform_structure_bis(atom_positions, translation_per_residue, quaternions, mask, device):
+def deform_structure_bis(atom_positions, translation_per_residue, quaternions, segments, device):
     """
     Note that the reference frame absolutely needs to be the SAME for all the residues (placed in the same spot),
      otherwise the rotation will NOT be approximately rigid !!!
-    :param positions: torch.tensor(N_residues, 3)
-    :param translation_vectors: translations vectors:
-            tensor (Batch_size, N_residues, 3)
-    :param rotations_per_residue: tensor (N_batch, N_residues, 3, 3) of rotation matrices per residue
+    :param positions: dictionnary of positions of atom for each chain: torch.tensor(N_residues_chain, 3)
+    :param translation_vectors: dictionnary of translations vectors per chain: tensor (Batch_size, N_residues_chains, 3)
+    :param rotations_per_residue: dictionnary of rotation matrices per domain for each chain: tensor (N_batch, N_domains_chains, 3, 3)
     :return: tensor (Batch_size, 3*N_residues, 3) corresponding to translated structure, tensor (3*N_residues, 3)
             of translation vectors
     """
     ## We displace the structure, using an interleave because there are 3 consecutive atoms belonging to one
     ## residue.
     ##We compute the rotated residues, where this axis of rotation is at the origin.
-    transformed_atom_positions = rotate_residues_einops(atom_positions, quaternions, mask, device)
-    new_atom_positions = transformed_atom_positions + translation_per_residue
+    transformed_atom_positions = rotate_residues_einops(atom_positions, quaternions, segments, device)
+    new_atom_positions = []
+    N_chains = len(segments)
+    chains_translations = {}
+    chains = sorted("".join(segments.keys()).split("_"))
+    chains.remove("chain")
+    for n_chain in chains:
+        chain_new_atom_positions = transformed_atom_positions[f"chain_{n_chain}"]  + translation_per_residue[f"chain_{n_chain}"]
+        new_atom_positions.append(chain_new_atom_positions) 
+
+    new_atom_positions = torch.concatenate(new_atom_positions, dim=1)
     return new_atom_positions
 
 
