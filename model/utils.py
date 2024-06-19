@@ -278,10 +278,10 @@ class SpatialGridTranslate(torch.nn.Module):
 
 
 
-def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, optimizer):
+def monitor_training(segments, tracking_metrics, epoch, experiment_settings, vae, optimizer):
     """
     Monitors the training process through wandb and saving masks and models
-    :param mask:
+    :param segments:
     :param tracking_metrics:
     :param epoch:
     :param experiment_settings:
@@ -291,9 +291,14 @@ def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, op
     wandb.log({key: np.mean(val) for key, val in tracking_metrics.items()})
     wandb.log({"epoch": epoch})
     wandb.log({"lr":optimizer.param_groups[0]['lr']})
-    hard_mask = np.argmax(mask.detach().cpu().numpy(), axis=-1)
-    for l in range(experiment_settings["N_domains"]):
-        wandb.log({f"mask_{l}": np.sum(hard_mask[0] == l)})
+    N_chains = len(segments)
+    chains_translations = {}
+    chains = sorted("".join(segments.keys()).split("_"))
+    chains.remove("chain")
+    for n_chain in chains:
+        hard_mask = np.argmax(segments[f"chain_{n_chain}"].detach().cpu().numpy(), axis=-1)
+        for l in range(experiment_settings["N_domains"][f"chain_{n_chain}"]):
+            wandb.log({f"chain_{n_chain}/segment_{l}": np.sum(hard_mask[0] == l)})
 
     torch.save(vae, experiment_settings["folder_path"] + "models/full_model" + str(epoch))
 
