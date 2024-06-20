@@ -17,7 +17,10 @@ class VAE(torch.nn.Module):
         self.latent_dim = latent_dim
         self.N_chains = N_chains
         self.residues = {}
-        self.segments_parameters = {}
+        #self.segments_parameters = torch.nn.ParameterDict({})
+        self.segments_means = torch.nn.ParameterDict({})
+        self.segments_std = torch.nn.ParameterDict({})
+        self.segments_proportions = torch.nn.ParameterDict({})
         self.total_n_domains = sum(self.N_domains.values())
         self.chain_ids = chain_ids
 
@@ -35,8 +38,11 @@ class VAE(torch.nn.Module):
                 data=torch.tensor(np.ones(N_domains[f"chain_{n_chain}"]) * 0, dtype=torch.float32, device=device)[None, :],
                 requires_grad=True)
 
+            self.segments_means[f"chain_{n_chain}"] = segments_means
+            self.segments_std[f"chain_{n_chain}"] = segments_std
+            self.segments_proportions[f"chain_{n_chain}"] = segments_proportions
             self.residues[f"chain_{n_chain}"] = torch.arange(0, self.N_residues[f"chain_{n_chain}"], 1, dtype=torch.float32, device=device)[:, None]
-            self.segments_parameters[f"chain_{n_chain}"] = {"means":segments_means, "stds":segments_std, "proportions":segments_proportions}
+            #self.segments_parameters[f"chain_{n_chain}"] = {"means":segments_means, "stds":segments_std, "proportions":segments_proportions}
 
         self.elu = torch.nn.ELU()
 
@@ -47,9 +53,12 @@ class VAE(torch.nn.Module):
         """
         chain_segments = {}
         for n_chain in self.chain_ids:
-            cluster_proportions = self.segments_parameters[f"chain_{n_chain}"]["proportions"].repeat(N_batch, 1)
-            cluster_means = self.segments_parameters[f"chain_{n_chain}"]["means"].repeat(N_batch, 1)
-            cluster_std = self.segments_parameters[f"chain_{n_chain}"]["stds"].repeat(N_batch, 1)
+            cluster_proportions = self.segments_proportions[f"chain_{n_chain}"]
+            cluster_means = self.segments_means[f"chain_{n_chain}"]
+            cluster_std = self.segments_std[f"chain_{n_chain}"]
+            #cluster_proportions = self.segments_parameters[f"chain_{n_chain}"]["proportions"].repeat(N_batch, 1)
+            #cluster_means = self.segments_parameters[f"chain_{n_chain}"]["means"].repeat(N_batch, 1)
+            #cluster_std = self.segments_parameters[f"chain_{n_chain}"]["stds"].repeat(N_batch, 1)
             proportions = torch.softmax(cluster_proportions, dim=-1)
 
             log_num = -0.5*(self.residues[f"chain_{n_chain}"][None, :, :] - cluster_means[:, None, :])**2/cluster_std[:, None, :]**2 + \
