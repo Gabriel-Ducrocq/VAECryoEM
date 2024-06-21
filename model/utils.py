@@ -458,8 +458,7 @@ def compute_translations_per_residue(translation_vectors, segments):
     #### How is it possible to compute this product given the two tensor size
     N_chains = len(segments)
     chains_translations = {}
-    print(segments.keys())
-    chains = sorted("".join(segments.keys()).split("_"))
+    chains = sorted("_".join(segments.keys()).split("_"))
     chains.remove("chain")
     print(chains)
     for n_chain in chains:
