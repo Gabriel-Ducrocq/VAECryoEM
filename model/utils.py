@@ -458,9 +458,10 @@ def compute_translations_per_residue(translation_vectors, segments):
     #### How is it possible to compute this product given the two tensor size
     N_chains = len(segments)
     chains_translations = {}
+    print(segments.keys())
     chains = sorted("".join(segments.keys()).split("_"))
-    print(chains)
     chains.remove("chain")
+    print(chains)
     for n_chain in chains:
         translation_per_residue = torch.einsum("bij, bjk -> bik", segments[f"chain_{n_chain}"], translation_vectors[f"chain_{n_chain}"])
         chains_translations[f"chain_{n_chain}"] = translation_per_residue
