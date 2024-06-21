@@ -124,9 +124,9 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
             #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             #rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
             translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
-            predicted_structures = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, segments, device)
-            predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
-                                                               rotation_per_residue)
+            predicted_structures = utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, segments, device)
+            #predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
+            #                                                   rotation_per_residue)
 
             for i, pred_struct in enumerate(predicted_structures):
                 print("Saving structure", i+1)
