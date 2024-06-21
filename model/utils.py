@@ -459,7 +459,7 @@ def compute_translations_per_residue(translation_vectors, segments):
     N_chains = len(segments)
     chains_translations = {}
     chains = sorted("_".join(segments.keys()).split("_"))
-    chains.remove("chain")
+    chains = list(filter(lambda x: x != "chain", chains))
     print(chains)
     for n_chain in chains:
         translation_per_residue = torch.einsum("bij, bjk -> bik", segments[f"chain_{n_chain}"], translation_vectors[f"chain_{n_chain}"])
