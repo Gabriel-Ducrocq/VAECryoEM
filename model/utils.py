@@ -294,8 +294,8 @@ def monitor_training(segments, tracking_metrics, epoch, experiment_settings, vae
     wandb.log({"lr":optimizer.param_groups[0]['lr']})
     N_chains = len(segments)
     chains_translations = {}
-    chains = sorted("".join(segments.keys()).split("_"))
-    chains.remove("chain")
+    chains = sorted("_".join(segments.keys()).split("_"))
+    chains = list(filter(lambda x: x != "chain", chains))
     for n_chain in chains:
         hard_mask = np.argmax(segments[f"chain_{n_chain}"].detach().cpu().numpy(), axis=-1)
         for l in range(experiment_settings["N_domains"][f"chain_{n_chain}"]):
@@ -414,8 +414,8 @@ def rotate_residues_einops(atom_positions, quaternions, segments, device):
     :return: tensor (N_batch, N_residues, 3, 3) rotation matrix for each residue
     """
     chain_atom_positions = {}
-    chains = sorted("".join(atom_positions.keys()).split("_"))
-    chains.remove("chain")
+    chains = sorted("_".join(atom_positions.keys()).split("_"))
+    chains = list(filter(lambda x: x != "chain", chains))
     for n_chains in chains:
         N_residues = segments[f"chain_{n_chains}"].shape[1]
         batch_size = quaternions[f"chain_{n_chains}"].shape[0]
@@ -460,7 +460,6 @@ def compute_translations_per_residue(translation_vectors, segments):
     chains_translations = {}
     chains = sorted("_".join(segments.keys()).split("_"))
     chains = list(filter(lambda x: x != "chain", chains))
-    print(chains)
     for n_chain in chains:
         translation_per_residue = torch.einsum("bij, bjk -> bik", segments[f"chain_{n_chain}"], translation_vectors[f"chain_{n_chain}"])
         chains_translations[f"chain_{n_chain}"] = translation_per_residue
@@ -485,8 +484,8 @@ def deform_structure_bis(atom_positions, translation_per_residue, quaternions, s
     new_atom_positions = []
     N_chains = len(segments)
     chains_translations = {}
-    chains = sorted("".join(segments.keys()).split("_"))
-    chains.remove("chain")
+    chains = sorted("_".join(segments.keys()).split("_"))
+    chains = list(filter(lambda x: x != "chain", chains))
     for n_chain in chains:
         chain_new_atom_positions = transformed_atom_positions[f"chain_{n_chain}"]  + translation_per_residue[f"chain_{n_chain}"]
         new_atom_positions.append(chain_new_atom_positions) 
