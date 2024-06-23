@@ -45,7 +45,7 @@ filter_aa = True
 
 
 
-def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
+def analyze(yaml_setting_path, model_path, latent_path, structures_path, z, batch_size_user):
     """
     train a VAE network
     :param yaml_setting_path: str, path the yaml containing all the details of the experiment
@@ -110,6 +110,9 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
     else:
         z = np.load(z)
         dataset_z = torch.utils.data.TensorDataset(torch.tensor(z))
+        if batch_size_user:
+            batch_size = batch_size_user
+            
         data_loader = tqdm(iter(DataLoader(dataset_z, batch_size=batch_size, shuffle=False, num_workers = 4)))
         for batch_num, z in enumerate(data_loader):
             print(len(z))
@@ -144,13 +147,15 @@ if __name__ == '__main__':
     parser_arg.add_argument("--latent_path", type=str, required=True)
     parser_arg.add_argument("--structures_path", type=str, required=True)
     parser_arg.add_argument("--z", type=str, required=False)
+    parser_arg.add_argument("--batch_size", type=int, required=False)
     args = parser_arg.parse_args()
     structures_path = args.structures_path
     latent_path = args.latent_path
     model_path = args.model
     path = args.experiment_yaml
     z = args.z
-    analyze(path, model_path, latent_path, structures_path, z)
+    batch_size = args.batch_size
+    analyze(path, model_path, latent_path, structures_path, z, batch_size)
 
 
 
