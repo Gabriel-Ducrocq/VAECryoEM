@@ -20,7 +20,7 @@ from Bio.PDB import PDBParser
 from dataset import ImageDataSet
 from gmm import Gaussian, EMAN2Grid
 from torch.utils.data import DataLoader
-from pytorch3d.transforms import quaternion_to_axis_angle, quaternions_to_matrix
+from pytorch3d.transforms import quaternion_to_axis_angle, quaternion_to_matrix
 
 class ResSelect(bpdb.Select):
     def accept_residue(self, res):
@@ -122,7 +122,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
             #latent_var[:z.shape[0]] = z
             mask = vae.sample_mask(z.shape[0])
             quaternions_per_domain, translations_per_domain = vae.decode(z)
-            all_quat.append(quaternions_to_matrix(quaternions_per_domain[:, 0, :]))
+            all_quat.append(quaternion_to_matrix(quaternions_per_domain[:, 0, :]))
             #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
             translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
