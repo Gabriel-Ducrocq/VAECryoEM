@@ -20,7 +20,7 @@ from Bio.PDB import PDBParser
 from dataset import ImageDataSet
 from gmm import Gaussian, EMAN2Grid
 from torch.utils.data import DataLoader
-from pytorch3d.transforms import quaternion_to_axis_angle
+from pytorch3d.transforms import quaternion_to_axis_angle, quaternions_to_matrix
 
 class ResSelect(bpdb.Select):
     def accept_residue(self, res):
@@ -111,6 +111,7 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
         z = np.load(z)
         dataset_z = torch.utils.data.TensorDataset(torch.tensor(z))
         data_loader = tqdm(iter(DataLoader(dataset_z, batch_size=batch_size, shuffle=False, num_workers = 4)))
+        all_quat = []
         for batch_num, z in enumerate(data_loader):
             print(len(z))
             z = z[0].to(device)
@@ -121,16 +122,22 @@ def analyze(yaml_setting_path, model_path, latent_path, structures_path, z):
             #latent_var[:z.shape[0]] = z
             mask = vae.sample_mask(z.shape[0])
             quaternions_per_domain, translations_per_domain = vae.decode(z)
+            all_quat.append(quaternions_to_matrix(quaternions_per_domain[:, 0, :]))
             #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
             rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
             translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
             predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
                                                                rotation_per_residue)
 
-            for i, pred_struct in enumerate(predicted_structures):
-                print("Saving structure", i+1)
-                base_structure.coord = pred_struct.detach().cpu().numpy()
-                base_structure.to_pdb(os.path.join(structures_path, f"structure_z_{batch_num*batch_size + i}.pdb"))
+            #for i, pred_struct in enumerate(predicted_structures):
+            #    print("Saving structure", i+1)
+            #    base_structure.coord = pred_struct.detach().cpu().numpy()
+            #    base_structure.to_pdb(os.path.join(structures_path, f"structure_z_{batch_num*batch_size + i}.pdb"))
+
+
+        all_quat = torch.concat(all_quat, dim=0).detach().cpu().numpy()
+        np.save("all_rot_mat.npy", all_quat)
+
 
 
 
