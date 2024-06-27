@@ -87,10 +87,8 @@ def train(yaml_setting_path, debug_mode):
             #                                                   rotation_per_residue)
 
             predicted_structures = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, mask, device)
-
-            ### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! I REMOVED THE POSE TO TRY INFERENCE, BE CAREFUL !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            #posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
-            posed_predicted_structures = predicted_structures
+            posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
+            #posed_predicted_structures = predicted_structures
 
 
             #end_deforming = time()
