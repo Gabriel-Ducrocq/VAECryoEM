@@ -124,7 +124,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=10, dime
         plt.xlabel(f"PC {dim}, variance {pca.explained_variance_ratio_[dim]} ")
         plt.ylabel(f"PC {dim+1}, variance variance {pca.explained_variance_ratio_[dim+1]}")
         plt.savefig(os.path.join(structures_path, f"pc{dim}/pca.png"))
-        plt.show()
+        plt.close()
         z_dim = torch.tensor(all_trajectories[dim], dtype=torch.float32, device=device)
         mask = vae.sample_mask(z_dim.shape[0])
         quaternions_per_domain, translations_per_domain = vae.decode(z_dim)
