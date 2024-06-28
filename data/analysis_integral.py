@@ -45,7 +45,7 @@ def concat_and_save(tens, path):
     return concatenated
 
 
-def compute_traversals(z, dimensions = [0, 1, 2], numpoints=10, compound=False):
+def compute_traversals(z, dimensions = [0, 1, 2], numpoints=10):
     pca = PCA()
     z_pca = pca.fit_transform(z)
     all_trajectories = []
@@ -117,9 +117,10 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
     all_trajectories, all_trajectories_pca, z_pca, pca = compute_traversals(all_latent_variables[::thinning], dimensions=dimensions, numpoints=numpoints)
     sns.set_style("white")
     for dim in dimensions:
-        os.makedirs(os.path.join(structures_path, f"pc{dim}/"), exist_ok=False)
+        os.makedirs(os.path.join(structures_path, f"pc{dim}/"), exist_ok=True)
         sns.kdeplot(x=z_pca[:, dim], y=z_pca[:, dim+1], fill=True)
-        plt.scatter(x=all_trajectories[dim][:, dim], y=all_trajectories[dim][:, dim+1], c="red")
+        print("TRJACTORIES", all_trajectories_pca[dim][:, dim])
+        plt.scatter(x=all_trajectories_pca[dim][:, dim], y=all_trajectories_pca[dim][:, dim+1], c="red")
         plt.title("PCA of the latent space")
         plt.xlabel(f"PC {dim}, variance {pca.explained_variance_ratio_[dim]} ")
         plt.ylabel(f"PC {dim+1}, variance variance {pca.explained_variance_ratio_[dim+1]}")
