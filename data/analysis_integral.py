@@ -108,7 +108,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=10, dime
 
 
         all_latent_variables = torch.concat(all_latent_variables, dim=0).detach().cpu().numpy()
-        np.save(latent_path, all_latent_variables)
+        np.save(f"{structures_path}z_cryosphere.npy", all_latent_variables)
     else:
         all_latent_variables = z
 
