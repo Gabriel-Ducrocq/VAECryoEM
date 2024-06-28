@@ -18,6 +18,7 @@ import Bio.PDB as bpdb
 from Bio.PDB import PDBIO
 from polymer import Polymer
 from Bio.PDB import PDBParser
+import matplotlib.pyplot as plt
 from dataset import ImageDataSet
 from gmm import Gaussian, EMAN2Grid
 from sklearn.decomposition import PCA
