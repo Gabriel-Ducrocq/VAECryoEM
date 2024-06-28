@@ -114,6 +114,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=10, dime
 
     all_trajectories, all_trajectories_pca = compute_traversals(all_latent_variables[::thinning], dimensions=dimensions, numpoints=numpoints)
     for dim in dimensions:
+        os.mkdir(os.path.join(structures_path, f"pc{dim}/"))
         z_dim = torch.tensor(all_trajectories[dim], dtype=torch.float32, device=device)
         mask = vae.sample_mask(z_dim.shape[0])
         quaternions_per_domain, translations_per_domain = vae.decode(z_dim)
@@ -125,7 +126,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=10, dime
         for i, pred_struct in enumerate(predicted_structures):
             print("Saving structure", i+1, "from pc", dim)
             base_structure.coord = pred_struct.detach().cpu().numpy()
-            base_structure.to_pdb(os.path.join(structures_path, f"pc{i}/structure_z_{i}.pdb"))
+            base_structure.to_pdb(os.path.join(structures_path, f"pc{dim}/structure_z_{i}.pdb"))
 
 
 
