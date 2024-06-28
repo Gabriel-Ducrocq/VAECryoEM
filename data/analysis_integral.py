@@ -83,7 +83,7 @@ filter_aa = True
 
 
 
-def analyze(yaml_setting_path, model_path, structures_path, z, thinning=10, dimensions=[0, 1, 2], numpoints=10):
+def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimensions=[0, 1, 2], numpoints=10):
     """
     train a VAE network
     :param yaml_setting_path: str, path the yaml containing all the details of the experiment
