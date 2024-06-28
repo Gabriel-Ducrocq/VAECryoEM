@@ -116,7 +116,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=10, dime
     all_trajectories, all_trajectories_pca, z_pca, pca = compute_traversals(all_latent_variables[::thinning], dimensions=dimensions, numpoints=numpoints)
     sns.set_style("white")
     for dim in dimensions:
-        os.mkdir(os.path.join(structures_path, f"pc{dim}/"))
+        os.mkdirs(os.path.join(structures_path, f"pc{dim}/"), exist_ok=False)
         sns.kdeplot(x=z_pca[:, dim], y=z_pca[:, dim+1], fill=True)
         plt.title("PCA of the latent space")
         plt.xlabel(f"PC {dim}, variance {pca.explained_variance_ratio_[dim]} ")
