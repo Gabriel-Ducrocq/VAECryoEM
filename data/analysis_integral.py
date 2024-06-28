@@ -152,7 +152,7 @@ if __name__ == '__main__':
     parser_arg.add_argument("--z", type=str, required=False)
     parser_arg.add_argument("--thinning", type=int, required=False)
     parser_arg.add_argument("--num_points", type=int, required=False)
-    parser_arg.add_argument('--dimensions','--list', nargs='+', help='<Required> PC dimensions along which we compute the trajectories. If not set, use pc 1, 2, 3', required=False)
+    parser_arg.add_argument('--dimensions','--list', nargs='+', type=int, help='<Required> PC dimensions along which we compute the trajectories. If not set, use pc 1, 2, 3', required=False)
     args = parser_arg.parse_args()
     structures_path = args.structures_path
     model_path = args.model
