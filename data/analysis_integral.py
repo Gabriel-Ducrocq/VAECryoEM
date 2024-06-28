@@ -11,6 +11,7 @@ import argparse
 import starfile
 import numpy as np
 from ctf import CTF
+import seaborn as sns
 from time import time
 from tqdm import tqdm
 import Bio.PDB as bpdb
@@ -55,7 +56,7 @@ def compute_traversals(z, dimensions = [0, 1, 2], numpoints=10, compound=False):
             all_trajectories.append(nearest_points)
             all_trajectories_pca.append(traj_pca)
         
-    return all_trajectories, all_trajectories_pca
+    return all_trajectories, all_trajectories_pca, z_pca, pca
 
 
 
@@ -112,9 +113,16 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=10, dime
     else:
         all_latent_variables = z
 
-    all_trajectories, all_trajectories_pca = compute_traversals(all_latent_variables[::thinning], dimensions=dimensions, numpoints=numpoints)
+    all_trajectories, all_trajectories_pca, z_pca, pca = compute_traversals(all_latent_variables[::thinning], dimensions=dimensions, numpoints=numpoints)
+    sns.set_style("white")
     for dim in dimensions:
         os.mkdir(os.path.join(structures_path, f"pc{dim}/"))
+        sns.kdeplot(x=z_pca[:, dim], y=z_pca[:, dim+1], fill=True)
+        plt.title("PCA of the latent space")
+        plt.xlabel(f"PC {dim}, variance {pca.explained_variance_ratio_[dim]} ")
+        plt.ylabel(f"PC {dim+1}, variance variance {pca.explained_variance_ratio_[dim+1]}")
+        plt.savefig(os.path.join(structures_path, f"pc{dim}/pca.png"))
+        plt.show()
         z_dim = torch.tensor(all_trajectories[dim], dtype=torch.float32, device=device)
         mask = vae.sample_mask(z_dim.shape[0])
         quaternions_per_domain, translations_per_domain = vae.decode(z_dim)
