@@ -119,7 +119,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
 
     all_trajectories, all_trajectories_pca, z_pca, pca = compute_traversals(all_latent_variables[::thinning], dimensions=dimensions, numpoints=numpoints)
     sns.set_style("white")
-    for dim in dimensions:
+    for dim in dimensions[:-1]:
         os.makedirs(os.path.join(structures_path, f"pc{dim}/"), exist_ok=True)
         sns.kdeplot(x=z_pca[:, dim], y=z_pca[:, dim+1], fill=True)
         print("TRJACTORIES", all_trajectories_pca[dim][:,:])
