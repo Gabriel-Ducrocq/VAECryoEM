@@ -116,7 +116,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=10, dime
     for dim in dimensions:
         z_dim = torch.tensor(all_trajectories[dim], dtype=torch.float32, device=device)
         mask = vae.sample_mask(z_dim.shape[0])
-        quaternions_per_domain, translations_per_domain = vae.decode(z)
+        quaternions_per_domain, translations_per_domain = vae.decode(z_dim)
         rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
         translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
         predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
