@@ -112,7 +112,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=10, dime
     else:
         all_latent_variables = z
 
-    all_trajectories, all_trajectories_pca = compute_traversals(z[::thinning], dimensions=dimensions, numpoints=numpoints)
+    all_trajectories, all_trajectories_pca = compute_traversals(all_latent_variables[::thinning], dimensions=dimensions, numpoints=numpoints)
     for dim in dimensions:
         z_dim = torch.tensor(all_trajectories[dim], dtype=torch.float32, device=device)
         mask = vae.sample_mask(z_dim.shape[0])
