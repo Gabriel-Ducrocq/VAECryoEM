@@ -97,6 +97,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
     if z is None:
         for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
             print("Batch number:", batch_num)
+            print("dimensions", dimensions)
             start = time()
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
@@ -122,8 +123,8 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
         print("TRJACTORIES", all_trajectories_pca[dim][:,:])
         plt.scatter(x=all_trajectories_pca[dim][:, dim], y=all_trajectories_pca[dim][:, dim+1], c="red")
         plt.title("PCA of the latent space")
-        plt.xlabel(f"PC {dim}, variance {pca.explained_variance_ratio_[dim]} ")
-        plt.ylabel(f"PC {dim+1}, variance variance {pca.explained_variance_ratio_[dim+1]}")
+        plt.xlabel(f"PC {dim+1}, variance {pca.explained_variance_ratio_[dim]} ")
+        plt.ylabel(f"PC {dim+2}, variance variance {pca.explained_variance_ratio_[dim+1]}")
         plt.savefig(os.path.join(structures_path, f"pc{dim}/pca.png"))
         plt.close()
         z_dim = torch.tensor(all_trajectories[dim], dtype=torch.float32, device=device)
@@ -154,8 +155,9 @@ if __name__ == '__main__':
     structures_path = args.structures_path
     model_path = args.model
     path = args.experiment_yaml
+    dimensions = args.dimensions
     z = args.z
-    analyze(path, model_path, structures_path, z)
+    analyze(path, model_path, structures_path, z, dimensions=dimensions)
 
 
 
