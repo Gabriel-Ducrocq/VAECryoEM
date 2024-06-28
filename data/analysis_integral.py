@@ -70,6 +70,8 @@ def get_nearest_point(data, query):
     return data[ind], ind
 
 def graph_traversal(z_pca, dim, numpoints=10):
+    print(z_pca.shape)
+    print("dim", dim)
     z_pca_dim = z_pca[:, dim]
     start = np.percentile(z_pca_dim, 5)
     stop = np.percentile(z_pca_dim, 95)
