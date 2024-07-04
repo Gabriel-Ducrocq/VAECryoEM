@@ -133,6 +133,7 @@ def parse_yaml(path):
         device = "cpu"
 
 
+    print("DEVICE:", device)
     particles_path = experiment_settings["particles_path"]
     apix = image_settings["apix"]
     Npix = image_settings["Npix"]
