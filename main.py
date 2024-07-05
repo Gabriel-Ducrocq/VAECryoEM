@@ -24,7 +24,7 @@ def train(yaml_setting_path, debug_mode):
     :param yaml_setting_path: str, path the yaml containing all the details of the experiment
     :return:
     """
-    vae, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, _, lp_mask2d, mask_images = model.utils.parse_yaml(yaml_setting_path)
+    vae, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, base_structure, lp_mask2d, mask_images = model.utils.parse_yaml(yaml_setting_path)
     if experiment_settings["resume_training"]["model"] != "None":
         name = f"experiment_{experiment_settings['name']}_resume"
     else:
@@ -162,8 +162,8 @@ def train(yaml_setting_path, debug_mode):
             #start_loss = time()
             #mask_images
             loss = compute_loss(batch_predicted_images, lp_batch_translated_images, None, latent_mean, latent_std, vae,
-                                experiment_settings["loss_weights"], experiment_settings, tracking_metrics)
-                                #predicted_structures=deformed_structures)
+                                experiment_settings["loss_weights"], experiment_settings, tracking_metrics,
+                                predicted_structures=predicted_structures, base_structure)
 
             #end_loss = time()
             #print("Loss time", end_loss - start_loss)
