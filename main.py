@@ -162,8 +162,7 @@ def train(yaml_setting_path, debug_mode):
             #start_loss = time()
             #mask_images
             loss = compute_loss(batch_predicted_images, lp_batch_translated_images, None, latent_mean, latent_std, vae,
-                                experiment_settings["loss_weights"], experiment_settings, tracking_metrics,
-                                predicted_structures=predicted_structures, base_structure)
+                                experiment_settings["loss_weights"], experiment_settings, tracking_metrics, predicted_structures=predicted_structures, true_structure=base_structure)
 
             #end_loss = time()
             #print("Loss time", end_loss - start_loss)

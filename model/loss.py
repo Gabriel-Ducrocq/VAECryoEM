@@ -125,7 +125,7 @@ def compute_clashing_distances(new_structures):
 
 
 def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, vae, loss_weights,
-                 experiment_settings, tracking_dict, predicted_structures = None, true_structure):
+                 experiment_settings, tracking_dict, predicted_structures = None, true_structure=None):
     """
     Compute the entire loss
     :param predicted_images: torch.tensor(batch_size, N_pix), predicted images
