@@ -38,7 +38,7 @@ def compute_continuity_loss(predicted_structures, true_structure, device):
     true_structure: Polymer object
     """
     chain_ids = true_structure.chain_id
-    unique_chain_ids = np.unique(chain_ids)
+    print(chain_ids)
     keep_dist = chain_ids[1:] - chain_ids[:-1] == 0
     loss = 0
     chain_pred_distances = torch.sum((predicted_structures[:, 1:] - predicted_structures[:, :-1])**2, dim=-1)[:, keep_dist]
