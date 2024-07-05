@@ -44,10 +44,11 @@ def compute_continuity_loss(predicted_structures, true_structure, device):
         pred_chain = predicted_structures[:, chain_id == chain_ids]
         chain_pred_distances = torch.sum((pred_chain[:, 1:, :] - pred_chain[:, :-1, :])**2, dim=-1)
 
-        true_chain = torch.tensor(true_structure.coord[chain_id == chain_ids, :], dtype=torch.float32, device=device)
-        chain_true_distance = torch.sum((true_chain[1:, :] - true_chain[:-1, :])**2, dim=-1)
-        loss += torch.sum((chain_pred_distances - chain_true_distance[None, :])**2)
+        #true_chain = torch.tensor(true_structure.coord[chain_id == chain_ids, :], dtype=torch.float32, device=device)
+        #chain_true_distance = torch.sum((true_chain[1:, :] - true_chain[:-1, :])**2, dim=-1)
+        #loss += torch.sum((chain_pred_distances - chain_true_distance[None, :])**2)
 
+    return torch.sum(chain_pred_distances)
     return loss/(predicted_structures.shape[1]-1)
 
 
@@ -147,7 +148,7 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
         vae.mask_parameters, experiment_settings["mask_prior"],
         "means", epsilon_kl=experiment_settings["epsilon_kl"])
 
-    #continuity_loss = compute_continuity_loss(predicted_structures, true_structure, device)
+    continuity_loss = compute_continuity_loss(predicted_structures, true_structure, device)
     KL_prior_mask_stds = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
                                                "stds", epsilon_kl=experiment_settings["epsilon_kl"])
     KL_prior_mask_proportions = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
@@ -164,13 +165,13 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
     tracking_dict["kl_prior_mask_std"].append(KL_prior_mask_stds.detach().cpu().numpy())
     tracking_dict["kl_prior_mask_proportions"].append(KL_prior_mask_proportions.detach().cpu().numpy())
     tracking_dict["l2_pen"].append(l2_pen.detach().cpu().numpy())
-    #tracking_dict["continuity_loss"].append(continuity_loss.detach().cpu().numpy())
+    tracking_dict["continuity_loss"].append(continuity_loss.detach().cpu().numpy())
 
     loss = rmsd + loss_weights["KL_prior_latent"]*KL_prior_latent \
            + loss_weights["KL_prior_mask_mean"]*KL_prior_mask_means \
            + loss_weights["KL_prior_mask_std"] * KL_prior_mask_stds \
            + loss_weights["KL_prior_mask_proportions"] * KL_prior_mask_proportions \
            + loss_weights["l2_pen"] * l2_pen + loss_weights["clashing"]*clashing_loss#\
-           #+ loss_weights["continuity_loss"]*continuity_loss
+           + loss_weights["continuity_loss"]*continuity_loss
 
     return loss
