@@ -329,7 +329,7 @@ def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, op
     wandb.log({"lr":optimizer.param_groups[0]['lr']})
     hard_mask = np.argmax(mask.detach().cpu().numpy(), axis=-1)
     for l in range(experiment_settings["N_domains"]):
-        wandb.log({f"mask_{l}": np.sum(hard_mask[0] == l)})
+        wandb.log({f"segments/mask_{l}": np.sum(hard_mask[0] == l)})
 
     torch.save(vae, experiment_settings["folder_path"] + "models/full_model" + str(epoch))
 
