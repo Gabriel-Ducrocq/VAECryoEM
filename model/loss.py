@@ -32,7 +32,7 @@ def calc_cor_loss(pred_images, gt_images, mask=None):
     print("ERR", err)
     return err
 
-def compute_continuity_loss(predicted_structures, true_structure):
+def compute_continuity_loss(predicted_structures, true_structure, device):
     """
     predicted_structures: tensor(N_batch, N_atoms, 3) predicted structure
     true_structure: Polymer object
@@ -44,7 +44,7 @@ def compute_continuity_loss(predicted_structures, true_structure):
         pred_chain = predicted_structures[:, chain_id == chain_ids]
         chain_pred_distances = torch.sum((pred_chain[:, 1:, :] - pred_chain[:, :-1, :])**2, dim=-1)
 
-        true_chain = true_structure.coord[chain_id == chain_ids, :]
+        true_chain = torch.tensor(true_structure.coord[chain_id == chain_ids, :], dtype=torch.float32, device=device)
         chain_true_distance = torch.sum((true_chain[1:, :] - true_chain[:-1, :])**2, dim=-1)
         loss += torch.sum((chain_pred_distances - true_chain[None, :])**2)
 
@@ -125,7 +125,7 @@ def compute_clashing_distances(new_structures):
 
 
 def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, vae, loss_weights,
-                 experiment_settings, tracking_dict, predicted_structures = None, true_structure=None):
+                 experiment_settings, tracking_dict, predicted_structures = None, true_structure=None, device=None):
     """
     Compute the entire loss
     :param predicted_images: torch.tensor(batch_size, N_pix), predicted images
@@ -147,7 +147,7 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
         vae.mask_parameters, experiment_settings["mask_prior"],
         "means", epsilon_kl=experiment_settings["epsilon_kl"])
 
-    continuity_loss = compute_continuity_loss(predicted_structures, true_structure)
+    continuity_loss = compute_continuity_loss(predicted_structures, true_structure, device)
     KL_prior_mask_stds = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
                                                "stds", epsilon_kl=experiment_settings["epsilon_kl"])
     KL_prior_mask_proportions = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
