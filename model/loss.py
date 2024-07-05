@@ -45,6 +45,7 @@ def compute_continuity_loss(predicted_structures, true_structure, device):
         chain_pred_distances = torch.sum((pred_chain[:, 1:, :] - pred_chain[:, :-1, :])**2, dim=-1)
 
         true_chain = torch.tensor(true_structure.coord[chain_id == chain_ids, :], dtype=torch.float32, device=device)
+        print("DIM TRUE CHAINS", true_chain.shape)
         chain_true_distance = torch.sum((true_chain[1:, :] - true_chain[:-1, :])**2, dim=-1)
         loss += torch.sum((chain_pred_distances - true_chain[None, :])**2)
 
