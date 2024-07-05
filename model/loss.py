@@ -32,7 +32,7 @@ def calc_cor_loss(pred_images, gt_images, mask=None):
     print("ERR", err)
     return err
 
-def compute_continuity_loss(predicted_structures, true_structure).
+def compute_continuity_loss(predicted_structures, true_structure):
     """
     predicted_structures: tensor(N_batch, N_atoms, 3) predicted structure
     true_structure: Polymer object
