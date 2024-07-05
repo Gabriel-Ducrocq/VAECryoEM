@@ -39,10 +39,12 @@ def compute_continuity_loss(predicted_structures, true_structure, device):
     """
     chain_ids = true_structure.chain_id
     unique_chain_ids = np.unique(chain_ids)
+    keep_dist = chain_ids[1:] - chain_ids[:-1] == 0
     loss = 0
-    for chain_id in chain_ids:
-        pred_chain = predicted_structures[:, chain_id == chain_ids]
-        chain_pred_distances = torch.sum((pred_chain[:, 1:, :] - pred_chain[:, :-1, :])**2, dim=-1)
+    chain_pred_distances = torch.sum((predicted_structures[:, 1:] - predicted_structures[:, :-1])**2, dim=-1)[:, keep_dist]
+    #for chain_id in chain_ids:
+    #    pred_chain = predicted_structures[:, chain_id == chain_ids]
+    #    chain_pred_distances = torch.sum((pred_chain[:, 1:, :] - pred_chain[:, :-1, :])**2, dim=-1)
 
         #true_chain = torch.tensor(true_structure.coord[chain_id == chain_ids, :], dtype=torch.float32, device=device)
         #chain_true_distance = torch.sum((true_chain[1:, :] - true_chain[:-1, :])**2, dim=-1)
