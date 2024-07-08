@@ -101,22 +101,24 @@ def compute_l2_pen(network):
 
     return l2_pen
 
-def compute_clashing_distances(new_structures):
+def compute_clashing_distances(new_structures, device):
     """
     Computes the clashing distance loss. The cutoff is set to 4Å for non contiguous residues and the distance above this cutoff
     are not penalized
-    Computes the distances between all C_\alpha atoms
-    :param new_structures: torch.tensor(N_batch, 3*N_residues, 3), atom positions
+    Computes the distances between all the atoms
+    :param new_structures: torch.tensor(N_batch, N_residues, 3), atom positions
     :return: torch.tensor(1, ) of the averaged clashing distance for distance inferior to 4Å,
     reaverage over the batch dimension
     """
-    c_alphas = new_structures[:, ::3, :]
-    N_residues = c_alphas.shape[1]
+    N_residues = new_structures.shape[1]
     #distances is torch.tensor(N_batch, N_residues, N_residues)
-    distances = torch.cdist(c_alphas, c_alphas)
-    triu_indices = torch.triu_indices(N_residues, N_residues, 1)
-    distances = distances[:, triu_indices[0], triu_indices[1]]
-    return torch.mean(torch.mean(torch.minimum(distances - 4, torch.zeros_like(distances))**2, dim=-1))
+    distances = torch.cdist(new_structures, new_structures)
+    triu_indices = torch.triu_indices(N_residues, N_residues, offet=2, device=device)
+    distances = distances[:, triu_indices[0], triu_indices[1]].flatten(1, 2)
+    number_clash_per_sample = torch.sum(distances < 4, dim=-1)
+    distances = torch.minimum((distances - 4), torch.zeros_like(distances))**2
+    average_clahing = torch.sum(distances, dim=-1)/number_clash_per_sample
+    return torch.mean(average_clahing)
 
 
 def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, vae, loss_weights,
@@ -143,14 +145,13 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
         "means", epsilon_kl=experiment_settings["epsilon_kl"])
 
     continuity_loss = compute_continuity_loss(predicted_structures, true_structure, device)
+    clashing_loss = compute_clashing_distances(predicted_structures)
     KL_prior_mask_stds = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
                                                "stds", epsilon_kl=experiment_settings["epsilon_kl"])
     KL_prior_mask_proportions = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
                                                "proportions", epsilon_kl=experiment_settings["epsilon_kl"])
     l2_pen = compute_l2_pen(vae)
-    clashing_loss = 0
-    if predicted_structures is not None:
-        clashing_loss = compute_clashing_distances(predicted_structures)
+
 
 
     tracking_dict["rmsd"].append(rmsd.detach().cpu().numpy())
@@ -160,12 +161,13 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
     tracking_dict["kl_prior_mask_proportions"].append(KL_prior_mask_proportions.detach().cpu().numpy())
     tracking_dict["l2_pen"].append(l2_pen.detach().cpu().numpy())
     tracking_dict["continuity_loss"].append(continuity_loss.detach().cpu().numpy())
+    tracking_dict["clashing_loss"].append(clashing_loss.detach().cpu().numpy())
 
     loss = rmsd + loss_weights["KL_prior_latent"]*KL_prior_latent \
            + loss_weights["KL_prior_mask_mean"]*KL_prior_mask_means \
            + loss_weights["KL_prior_mask_std"] * KL_prior_mask_stds \
            + loss_weights["KL_prior_mask_proportions"] * KL_prior_mask_proportions \
-           + loss_weights["l2_pen"] * l2_pen + loss_weights["clashing"]*clashing_loss\
+           + loss_weights["l2_pen"] * l2_pen + loss_weights["clashing_loss"]*clashing_loss\
            + loss_weights["continuity_loss"]*continuity_loss
 
     return loss
