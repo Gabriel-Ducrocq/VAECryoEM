@@ -145,7 +145,7 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
         "means", epsilon_kl=experiment_settings["epsilon_kl"])
 
     continuity_loss = compute_continuity_loss(predicted_structures, true_structure, device)
-    clashing_loss = compute_clashing_distances(predicted_structures)
+    clashing_loss = compute_clashing_distances(predicted_structures, device)
     KL_prior_mask_stds = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
                                                "stds", epsilon_kl=experiment_settings["epsilon_kl"])
     KL_prior_mask_proportions = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
