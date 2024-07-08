@@ -113,7 +113,7 @@ def compute_clashing_distances(new_structures, device):
     N_residues = new_structures.shape[1]
     #distances is torch.tensor(N_batch, N_residues, N_residues)
     distances = torch.cdist(new_structures, new_structures)
-    triu_indices = torch.triu_indices(N_residues, N_residues, offet=2, device=device)
+    triu_indices = torch.triu_indices(N_residues, N_residues, offset=2, device=device)
     distances = distances[:, triu_indices[0], triu_indices[1]].flatten(1, 2)
     number_clash_per_sample = torch.sum(distances < 4, dim=-1)
     distances = torch.minimum((distances - 4), torch.zeros_like(distances))**2
