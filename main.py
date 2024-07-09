@@ -47,7 +47,7 @@ def train(yaml_setting_path, debug_mode):
 
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
-        tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "l2_pen":[], "continuity_loss":[], "clahing_loss":[]}
+        tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "l2_pen":[], "continuity_loss":[], "clashing_loss":[]}
 
         #### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DROP LAST !!!!!! ##################################
         data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4, drop_last=True)))
