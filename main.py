@@ -24,7 +24,7 @@ def train(yaml_setting_path, debug_mode):
     :param yaml_setting_path: str, path the yaml containing all the details of the experiment
     :return:
     """
-    vae, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, _, lp_mask2d, mask_images = model.utils.parse_yaml(yaml_setting_path)
+    vae, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, base_structure, lp_mask2d, mask_images = model.utils.parse_yaml(yaml_setting_path)
     if experiment_settings["resume_training"]["model"] != "None":
         name = f"experiment_{experiment_settings['name']}_resume"
     else:
@@ -47,7 +47,7 @@ def train(yaml_setting_path, debug_mode):
 
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
-        tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "l2_pen":[]}
+        tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "l2_pen":[], "continuity_loss":[], "clahing_loss":[]}
 
         #### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DROP LAST !!!!!! ##################################
         data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4, drop_last=True)))
@@ -70,13 +70,9 @@ def train(yaml_setting_path, debug_mode):
             posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
             predicted_images  = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
-            print("\n\n")
-
-            if not experiment_settings["clashing_loss"]:
-                deformed_structures = None
 
             loss = compute_loss(batch_predicted_images, lp_batch_translated_images, None, latent_mean, latent_std, vae,
-                                experiment_settings["loss_weights"], experiment_settings, tracking_metrics)
+                                experiment_settings["loss_weights"], experiment_settings, tracking_metrics, predicted_structures, base_structure, device)
 
             loss.backward()
             optimizer.step()
