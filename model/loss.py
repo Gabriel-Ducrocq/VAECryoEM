@@ -121,6 +121,12 @@ def compute_clashing_distances(new_structures, device):
     return torch.mean(average_clahing)
 
 
+pip install dynamight -vvv | grep 'adding'
+  adding 'mypkg-0.1.dist-info/METADATA'
+  adding 'mypkg-0.1.dist-info/WHEEL'
+  adding 'mypkg-0.1.dist-info/top_level.txt'
+  adding 'mypkg-0.1.dist-info/RECORD'
+
 def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, vae, loss_weights,
                  experiment_settings, tracking_dict, predicted_structures = None, true_structure=None, device=None):
     """
