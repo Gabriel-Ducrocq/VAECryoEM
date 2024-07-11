@@ -110,10 +110,19 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             batch_images = batch_images.flatten(start_dim=-2)
             latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
             all_latent_variables.append(latent_variables)
+            if batch_num == 781:
+                all_latent_variables = torch.concat(all_latent_variables, dim=0).detach().cpu().numpy()
+                np.save(f"{structures_path}z_cryosphere_1.npy", all_latent_variables)
+                all_latent_variables = []
+
 
 
         all_latent_variables = torch.concat(all_latent_variables, dim=0).detach().cpu().numpy()
-        np.save(f"{structures_path}z_cryosphere.npy", all_latent_variables)
+        np.save(f"{structures_path}z_cryosphere_2.npy", all_latent_variables)
+        all_latent_variables = 0
+        z1 = np.load(f"{structures_path}z_cryosphere_1.npy", all_latent_variables)
+        z2 = np.load(f"{structures_path}z_cryosphere_2.npy", all_latent_variables)
+        all_latent_variables = np.concatenate([z1, z2], axis=0)
     else:
         all_latent_variables = z
 
