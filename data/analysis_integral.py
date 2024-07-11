@@ -140,8 +140,6 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
         quaternions_per_domain, translations_per_domain = vae.decode(z_dim)
         translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, segments)
         predicted_structures = utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, segments, device)
-        predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
-                                                           rotation_per_residue)
 
         for i, pred_struct in enumerate(predicted_structures):
             print("Saving structure", i+1, "from pc", dim)
