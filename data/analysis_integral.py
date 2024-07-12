@@ -153,6 +153,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
                 base_structure.to_pdb(os.path.join(structures_path, f"pc{dim}/structure_z_{i}.pdb"))
 
     else:
+            print(all_latent_variables)
             all_latent_variables= torch.tensor(all_latent_variables, dtype=torch.float32, device=device)
             latent_variables_loader = iter(DataLoader(all_latent_variables, shuffle=False, batch_size=batch_size))
             for batch_num, z in enumerate(latent_variables_loader):  
