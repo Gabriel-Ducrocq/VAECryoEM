@@ -190,7 +190,10 @@ if __name__ == '__main__':
     model_path = args.model
     path = args.experiment_yaml
     dimensions = args.dimensions
-    z = np.load(args.z)
+    z = None
+    if args.z is not None:
+        z = np.load(args.z)
+        
     generate_structures = args.generate_structures
     analyze(path, model_path, structures_path, z, dimensions=dimensions, generate_structures=generate_structures)
 
