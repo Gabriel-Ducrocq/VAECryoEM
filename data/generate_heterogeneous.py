@@ -131,7 +131,7 @@ from time import time
 
 if is_homogeneous:
     print("Using the target structure:", target_structure_path)
-    #backbone = torch.tensor(target_structure.coord - center_vector, dtype=torch.float32, device=device)
+    #backbone = torch.tensor(target_structure.coord, dtype=torch.float32, device=device)
     backbone = torch.tensor(target_structure.coord, dtype=torch.float32, device=device)
     backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
 
@@ -192,8 +192,7 @@ print("Mean variance accross images", mean_variance)
 #print("Adding Gaussian noise with variance", noise_var)
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
 
-######################## I REMOVE THE NOISE FROM THE IMAGE ######################
-#all_images += torch.randn((N_images, Npix, Npix))*torch.sqrt(noise_var)
+all_images += torch.randn((N_images, Npix, Npix))*torch.sqrt(noise_var)
 print("Saving images in MRC format")
 print(size_prot)
 if len(size_prot) > 1:
