@@ -46,6 +46,7 @@ with open(f"{folder_experiment}/images.yaml", "r") as file:
     image_settings = yaml.safe_load(file)
 
 
+ctf_yaml = image_settings["ctf"]
 headers = ["dfU", "dfV", "dfang", "accelerating_voltage", "spherical_aberration", "amplitude_contrast_ratio"]
 ctf_vals = [[ctf_yaml[header]]*N_images for header in headers]
 ctf_vals = np.array([[Npix]*N_images] + [[apix]*N_images] + ctf_vals)
