@@ -133,7 +133,7 @@ all_images = []
 base_structure.coord -= center_vector
 for i in tqdm(range(N_struct)):
 	#Saving the generated structure.
-	base_structure.coord[(base_structure.chain_id==chain_id) & (base_structure.res_id >= residue_start) & (base_structure.res_id <=residue_end)] = np.einsum("n m, l m -> l n", conformation_matrix_torch[i],
+	base_structure.coord[(base_structure.chain_id==chain_id) & (base_structure.res_id >= residue_start) & (base_structure.res_id <=residue_end)] = np.einsum("n m, l m -> l n", conformation_matrix_np[i],
 																		base_structure.coord[(base_structure.chain_id==chain_id) & (base_structure.res_id >= residue_start) & (base_structure.res_id <=residue_end)])
 
 	pdb.to_pdb(f"{folder_experiment}ground_truth/structures/structure_{i+1}.pdb")
