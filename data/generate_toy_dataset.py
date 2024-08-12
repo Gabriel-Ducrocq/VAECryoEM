@@ -46,6 +46,7 @@ with open(f"{folder_experiment}/images.yaml", "r") as file:
     image_settings = yaml.safe_load(file)
 
 
+N_images = N_struct*N_pose_per_structure
 ctf_yaml = image_settings["ctf"]
 headers = ["dfU", "dfV", "dfang", "accelerating_voltage", "spherical_aberration", "amplitude_contrast_ratio"]
 ctf_vals = [[ctf_yaml[header]]*N_images for header in headers]
@@ -55,7 +56,6 @@ print("CTF VALS", ctf_vals.shape)
 ctf = CTF(*ctf_vals, device=device)
 grid = EMAN2Grid(Npix, apix, device)
 image_translator = utils.SpatialGridTranslate(D=Npix, device=device)
-N_images = N_struct*N_pose_per_structure
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 parser = PDBParser(PERMISSIVE=0)
 N_pix = image_settings["N_pixels_per_axis"][0]
