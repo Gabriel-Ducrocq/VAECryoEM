@@ -125,13 +125,12 @@ np.save(f"{folder_experiment}poses_translation.npy", poses_translation_py)
 torch.save(poses, f"{folder_experiment}poses")
 torch.save(poses_translation, f"{folder_experiment}poses_translation")
 
-base_structure = polymer.Polymer.from_pdb(base_structure_path)
-center_vector = np.mean(base_structure.coord, axis=0)
-backbone = base_structure.coord - center_vector
 
 all_images = []
-base_structure.coord -= center_vector
 for i in tqdm(range(N_struct)):
+	base_structure = polymer.Polymer.from_pdb(base_structure_path)
+	center_vector = np.mean(base_structure.coord, axis=0)
+	backbone = base_structure.coord - center_vector
 	#Saving the generated structure.
 	base_structure.coord[(base_structure.chain_id==chain_id) & (base_structure.res_id >= residue_start) & (base_structure.res_id <=residue_end)] = np.einsum("n m, l m -> l n", conformation_matrix_np[i],
 																		base_structure.coord[(base_structure.chain_id==chain_id) & (base_structure.res_id >= residue_start) & (base_structure.res_id <=residue_end)])
@@ -143,7 +142,7 @@ for i in tqdm(range(N_struct)):
 	backbone_torch = torch.tensor(backbone, dtype=torch.float32, device=device)
 	backbone_torch = torch.concatenate([backbone_torch[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
 	# Duplicating the deformed backbone and projecting it.
-	amplitudes = torch.tensor(poly.num_electron, dtype=torch.float32, device=device)[:, None]
+	amplitudes = torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None]
 	posed_backbones = rotate_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
 	batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
 	batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
