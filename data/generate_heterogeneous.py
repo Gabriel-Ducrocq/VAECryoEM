@@ -160,8 +160,7 @@ for i in tqdm(range(n_iter)):
     amplitudes = torch.tensor(poly.num_electron, dtype=torch.float32, device=device)[:, None]
     posed_backbones = rotate_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
     batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
-    ##################### I DO NOT APPLY CTF !!!!!!!!!!!! ####################
-    #batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
+    batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
     batch_ctf_corrupted_images = batch_images
     ###  !!!!!!!!!!!!! We multiply by -1 so that when we correct for the translation in the cryoSPHERE run, we dont get 2x translation but 0 tranlations !
     batch_poses_translation = - poses_translations[i*N_pose_per_structure:(i+1)*N_pose_per_structure]
@@ -189,7 +188,7 @@ mean_variance = torch.mean(torch.var(all_images, dim=(-2, -1)))
 print("Mean variance accross images", mean_variance)
 noise_var = mean_variance/image_settings["SNR"]
 print("Mean variance accross images", mean_variance)
-#print("Adding Gaussian noise with variance", noise_var)
+print("Adding Gaussian noise with variance", noise_var)
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
 
 all_images += torch.randn((N_images, Npix, Npix))*torch.sqrt(noise_var)

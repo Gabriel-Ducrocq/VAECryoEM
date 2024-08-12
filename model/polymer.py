@@ -109,9 +109,6 @@ class Polymer:
             nonlocal pos
             for chain in struc.chain_iter(tmp_arr):
                 for tmp_res in struc.residue_iter(chain):
-                    if tmp_res.res_id[0] in [23, 24, 25]:
-                        print(tmp_res)
-
                     _update_res(tmp_res, kind)
 
         pos = 0
