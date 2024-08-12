@@ -136,7 +136,7 @@ for i in tqdm(range(N_struct)):
 	base_structure.coord[(base_structure.chain_id==chain_id) & (base_structure.res_id >= residue_start) & (base_structure.res_id <=residue_end)] = np.einsum("n m, l m -> l n", conformation_matrix_np[i],
 																		base_structure.coord[(base_structure.chain_id==chain_id) & (base_structure.res_id >= residue_start) & (base_structure.res_id <=residue_end)])
 
-	pdb.to_pdb(f"{folder_experiment}ground_truth/structures/structure_{i+1}.pdb")
+	base_structure.to_pdb(f"{folder_experiment}ground_truth/structures/structure_{i+1}.pdb")
 	#utils.rotate_domain_pdb_structure(struct_centered, residue_start, residue_end, conformation_matrix_np[i])
 	#utils.save_structure(struct_centered, f"{folder_experiment}ground_truth/structures/structure_{i+1}.pdb")
 
