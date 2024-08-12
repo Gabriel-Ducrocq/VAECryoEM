@@ -6,6 +6,7 @@ import utils as utils_model
 import yaml
 import torch
 import pickle
+import polymer
 import warnings
 import argparse
 import numpy as np
@@ -22,6 +23,7 @@ from pytorch3d.transforms import axis_angle_to_matrix
 
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--base_structure', type=str, required=True)
+parser_arg.add_argument('--chain_id', type=str, required=True)
 parser_arg.add_argument('--residue_start', type=int, required=True)
 parser_arg.add_argument('--residue_end', type=int, required=True)
 parser_arg.add_argument('--folder_experiment', type=str, required=True)
@@ -31,6 +33,7 @@ args = parser_arg.parse_args()
 base_structure_path = args.base_structure
 residue_start = args.residue_start
 residue_end = args.residue_end
+chain_id = args.chain_id
 folder_experiment = args.folder_experiment
 N_struct = args.N_struct
 N_pose_per_structure = args.N_pose_per_struct
@@ -108,30 +111,65 @@ np.save(f"{folder_experiment}poses_translation.npy", poses_translation_py)
 torch.save(poses, f"{folder_experiment}poses")
 torch.save(poses_translation, f"{folder_experiment}poses_translation")
 
-all_images = []
-for i in tqdm(range(N_struct)):
-	base_structure = parser.get_structure("A", base_structure_path)
-	center_vector = utils.compute_center_of_mass(base_structure)
-	backbone = utils_model.get_backbone(base_structure) - center_vector
+base_structure = polymer.Polymer.from_pdb(base_structure_path)
+center_vector = np.mean(centering_structure.coord, axis=0)
+backbone = utils_model.get_backbone(base_structure) - center_vector
 
+all_images = []
+base_structure.coord -= center_vector
+for i in tqdm(range(N_struct)):
 	#Saving the generated structure.
-	struct_centered = utils.center_protein(base_structure, center_vector[0])
-	utils.rotate_domain_pdb_structure(struct_centered, residue_start, residue_end, conformation_matrix_np[i])
-	utils.save_structure(struct_centered, f"{folder_experiment}ground_truth/structures/structure_{i+1}.pdb")
+	base_structure.coord[(base_structure.chain_id==chain_id) & (base_structure.res_id >= residue_start) & (base_structure.res_id <=residue_end)] = np.einsum("n m, l m -> l n", conformation_matrix_torch[i],
+																		base_structure.coord[(base_structure.chain_id==chain_id) & (base_structure.res_id >= residue_start) & (base_structure.res_id <=residue_end)])
+
+	pdb.to_pdb(f"{folder_experiment}ground_truth/structures/structure_{i+1}.pdb")
+	#utils.rotate_domain_pdb_structure(struct_centered, residue_start, residue_end, conformation_matrix_np[i])
+	#utils.save_structure(struct_centered, f"{folder_experiment}ground_truth/structures/structure_{i+1}.pdb")
 
 	backbone_torch = torch.tensor(backbone, dtype=torch.float32, device=device)
-	#Deforming the structure once for 15 poses
-	backbone_torch[residue_start*3:residue_end*3, :] = torch.transpose(torch.matmul(conformation_matrix_torch[i], torch.transpose(backbone_torch[residue_start*3:residue_end*3, :], dim0=0, dim1=1)), 
-																dim0=0, dim1=1)
-
-	# Duplicating the deformed backbone and projecting it.
 	backbone_torch = torch.concatenate([backbone_torch[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
-	batch_images = renderer.compute_x_y_values_all_atoms(backbone_torch, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
-	plt.imshow(batch_images[0].detach().cpu().numpy())
-	plt.show()
-	all_images.append(batch_images.detach().cpu())
+	# Duplicating the deformed backbone and projecting it.
+	amplitudes = torch.tensor(poly.num_electron, dtype=torch.float32, device=device)[:, None]
+    posed_backbones = rotate_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
+    batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
+    batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
+    batch_poses_translation = - poses_translations[i*N_pose_per_structure:(i+1)*N_pose_per_structure]
+    batch_translated_images = image_translator.transform(batch_ctf_corrupted_images, batch_poses_translation[:, None, :])
+    all_images.append(batch_translated_images.detach().cpu())
+	#Deforming the structure once for 15 poses
+	#backbone_torch[residue_start*3:residue_end*3, :] = torch.transpose(torch.matmul(conformation_matrix_torch[i], torch.transpose(backbone_torch[residue_start*3:residue_end*3, :], dim0=0, dim1=1)), 
+	#															dim0=0, dim1=1)
 
 
+	#batch_images = renderer.compute_x_y_values_all_atoms(backbone_torch, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure], poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
+	#plt.imshow(batch_images[0].detach().cpu().numpy())
+	#plt.show()
+	#all_images.append(batch_images.detach().cpu())
+
+
+
+all_images = torch.concat(all_images, dim=0)
+print("Images shape", all_images.shape)
+mean_variance = torch.mean(torch.var(all_images, dim=(-2, -1)))
+print("Mean variance accross images", mean_variance)
+noise_var = mean_variance/image_settings["SNR"]
+print("Mean variance accross images", mean_variance)
+print("Adding Gaussian noise with variance", noise_var)
+torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
+
+all_images += torch.randn((N_images, Npix, Npix))*torch.sqrt(noise_var)
+print("Saving images in MRC format")
+print(size_prot)
+if len(size_prot) > 1:
+    print("Some proteins have different residue numbers :", faulty_indexes)
+
+mrc.MRCFile.write(f"{folder_experiment}particles.mrcs", all_images.detach().cpu().numpy(), Apix=apix, is_vol=False)
+print("Saving poses and ctf in star format.")
+output_path = f"{folder_experiment}particles.star"
+create_star_file(poses.detach().cpu().numpy(), shiftX.detach().cpu().numpy(), shiftY.detach().cpu().numpy(), "particles.mrcs",
+ N_images, Npix, apix, image_settings["ctf"], output_path)
+
+"""
 all_images = torch.concat(all_images, dim=0)
 mean_variance = torch.mean(torch.var(all_images, dim=(-2, -1)))
 print("Mean variance accross images", mean_variance)
@@ -145,4 +183,4 @@ torch.save(all_images, f"{folder_experiment}ImageDataSet")
 mrc.write(f"{folder_experiment}ImageDataSet.mrcs", np.transpose(all_images.detach().cpu().numpy(), axes=(0, 2, 1)), Apix=1.0, is_vol=False)
 with open(f"{folder_experiment}poses.pkl", "wb") as f:
 	pickle.dump((poses_py, poses_translation_py[:, :2]), f)
-
+"""
