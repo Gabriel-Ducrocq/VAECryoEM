@@ -16,8 +16,8 @@ import utils_data as utils
 from Bio.PDB import PDBParser
 import matplotlib.pyplot as plt
 from Bio import BiopythonWarning
-from renderer import Renderer, RendererFourier
 from pytorch3d.transforms import axis_angle_to_matrix
+from renderer import project, rotate_structure, apply_ctf
 
 
 
@@ -60,6 +60,14 @@ renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"
                     device=device, use_ctf=image_settings["renderer"]["use_ctf"], std = image_settings["renderer"]["std_volume"] if "std_volume" in image_settings["renderer"] else 1)
 
 
+headers = ["dfU", "dfV", "dfang", "accelerating_voltage", "spherical_aberration", "amplitude_contrast_ratio"]
+ctf_vals = [[ctf_yaml[header]]*N_images for header in headers]
+ctf_vals = np.array([[Npix]*N_images] + [[apix]*N_images] + ctf_vals)
+
+print("CTF VALS", ctf_vals.shape)
+ctf = CTF(*ctf_vals, device=device)
+grid = EMAN2Grid(Npix, apix, device)
+image_translator = utils.SpatialGridTranslate(D=Npix, device=device)
 N_images = N_struct*N_pose_per_structure
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 parser = PDBParser(PERMISSIVE=0)
