@@ -126,7 +126,7 @@ torch.save(poses, f"{folder_experiment}poses")
 torch.save(poses_translation, f"{folder_experiment}poses_translation")
 
 base_structure = polymer.Polymer.from_pdb(base_structure_path)
-center_vector = np.mean(centering_structure.coord, axis=0)
+center_vector = np.mean(base_structure.coord, axis=0)
 backbone = utils_model.get_backbone(base_structure) - center_vector
 
 all_images = []
