@@ -64,6 +64,7 @@ with open(f"{folder_experiment}/images.yaml", "r") as file:
     image_settings = yaml.safe_load(file)
 
 
+sigma_gmm = image_settings["sigma_gmm"]
 apix = image_settings["apix"]
 Npix = image_settings["Npix"]
 N_images = N_struct*N_pose_per_structure
