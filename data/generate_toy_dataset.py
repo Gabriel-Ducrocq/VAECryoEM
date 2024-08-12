@@ -143,7 +143,7 @@ for i in tqdm(range(N_struct)):
 	backbone_torch = torch.concatenate([backbone_torch[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
 	# Duplicating the deformed backbone and projecting it.
 	amplitudes = torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None]
-	posed_backbones = rotate_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
+	posed_backbones = rotate_structure(backbone_torch, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
 	batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
 	batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
 	batch_poses_translation = - poses_translations[i*N_pose_per_structure:(i+1)*N_pose_per_structure]
