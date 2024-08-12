@@ -78,7 +78,6 @@ grid = EMAN2Grid(Npix, apix, device)
 image_translator = utils.SpatialGridTranslate(D=Npix, device=device)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 parser = PDBParser(PERMISSIVE=0)
-N_pix = image_settings["N_pixels_per_axis"][0]
 
 #Generate rotations for conformations
 rotation_axis = np.array([[0, 1, 0] for _ in range(N_struct)])
