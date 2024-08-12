@@ -46,6 +46,8 @@ with open(f"{folder_experiment}/images.yaml", "r") as file:
     image_settings = yaml.safe_load(file)
 
 
+apix = image_settings["apix"]
+Npix = image_settings["Npix"]
 N_images = N_struct*N_pose_per_structure
 ctf_yaml = image_settings["ctf"]
 headers = ["dfU", "dfV", "dfang", "accelerating_voltage", "spherical_aberration", "amplitude_contrast_ratio"]
