@@ -10,6 +10,7 @@ import polymer
 import warnings
 import argparse
 import numpy as np
+from ctf import CTF
 from tqdm import tqdm
 from cryodrgn import mrc
 import utils_data as utils
