@@ -24,24 +24,6 @@ from biotite.structure.io.pdb import PDBFile
 from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix, axis_angle_to_quaternion, quaternion_apply
 from pytorch3d.transforms import Transform3d
 
-import yaml
-import torch
-import utils
-import pickle
-import argparse
-from ctf import CTF
-import numpy as np
-from tqdm import tqdm
-from polymer import Polymer
-from Bio.PDB import PDBParser
-import matplotlib.pyplot as plt
-from Bio import BiopythonWarning
-from gmm import Gaussian, EMAN2Grid
-from convert_to_star import create_star_file
-from pytorch3d.transforms import axis_angle_to_matrix
-from renderer import project, rotate_structure, apply_ctf
-
-
 
 def primal_to_fourier2d(images):
     """
