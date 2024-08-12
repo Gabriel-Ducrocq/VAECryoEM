@@ -45,20 +45,6 @@ with open(f"{folder_experiment}/parameters.yaml", "r") as file:
 with open(f"{folder_experiment}/images.yaml", "r") as file:
     image_settings = yaml.safe_load(file)
 
-pixels_x = np.linspace(image_settings["image_lower_bounds"][0], image_settings["image_upper_bounds"][0],
-                       num=image_settings["N_pixels_per_axis"][0]).reshape(1, -1)
-
-pixels_y = np.linspace(image_settings["image_lower_bounds"][1], image_settings["image_upper_bounds"][1],
-                       num=image_settings["N_pixels_per_axis"][1]).reshape(1, -1)
-
-renderer = Renderer(pixels_x, pixels_y, N_atoms=experiment_settings["N_residues"] * 3,
-                    dfU=image_settings["renderer"]["dfU"], dfV=image_settings["renderer"]["dfV"],
-                    dfang=image_settings["renderer"]["dfang"],
-                    spherical_aberration=image_settings["renderer"]["spherical_aberration"],
-                    accelerating_voltage=image_settings["renderer"]["accelerating_voltage"],
-                    amplitude_contrast_ratio=image_settings["renderer"]["amplitude_contrast_ratio"],
-                    device=device, use_ctf=image_settings["renderer"]["use_ctf"], std = image_settings["renderer"]["std_volume"] if "std_volume" in image_settings["renderer"] else 1)
-
 
 headers = ["dfU", "dfV", "dfang", "accelerating_voltage", "spherical_aberration", "amplitude_contrast_ratio"]
 ctf_vals = [[ctf_yaml[header]]*N_images for header in headers]
