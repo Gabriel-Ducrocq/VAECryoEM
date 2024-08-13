@@ -134,6 +134,8 @@ def parse_yaml(path):
 
     print("DEVICE:", device)
     particles_path = experiment_settings["particles_path"]
+    amortized = experiment_settings["amortized"]
+    N_images = experiment_settings["N_images"]
     apix = image_settings["apix"]
     Npix = image_settings["Npix"]
     Npix_downsize = image_settings["Npix_downsize"]
@@ -158,7 +160,7 @@ def parse_yaml(path):
     if experiment_settings["resume_training"]["model"] == "None":
         vae = VAE(encoder, decoder, device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
                   tau_mask=experiment_settings["tau_mask"], mask_start_values=experiment_settings["mask_start"],
-                  latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"])
+                  latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"], N_images = N_images, amortized=amortized)
         vae.to(device)
     else:
         vae = torch.load(experiment_settings["resume_training"]["model"])
@@ -232,7 +234,7 @@ def parse_yaml(path):
     mask = Mask(Npix_downsize, experiment_settings["mask_radius"], device)
 
     return vae, image_translator, ctf_experiment, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, \
-    scheduler, base_structure, lp_mask2d, mask
+    scheduler, base_structure, lp_mask2d, mask, amortized
 
 
 class SpatialGridTranslate(torch.nn.Module):

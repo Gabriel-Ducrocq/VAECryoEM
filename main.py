@@ -24,7 +24,7 @@ def train(yaml_setting_path, debug_mode):
     :param yaml_setting_path: str, path the yaml containing all the details of the experiment
     :return:
     """
-    vae, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, base_structure, lp_mask2d, mask_images = model.utils.parse_yaml(yaml_setting_path)
+    vae, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, base_structure, lp_mask2d, mask_images, amortized = model.utils.parse_yaml(yaml_setting_path)
     if experiment_settings["resume_training"]["model"] != "None":
         name = f"experiment_{experiment_settings['name']}_resume"
     else:
@@ -65,7 +65,11 @@ def train(yaml_setting_path, debug_mode):
             flattened_batch_images = batch_images.flatten(start_dim=-2)
             batch_translated_images = image_translator.transform(batch_images, batch_poses_translation[:, None, :])
             lp_batch_translated_images = low_pass_images(batch_translated_images, lp_mask2d)
-            latent_variables, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
+            if not amortized:
+                latent_variables, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
+            else:
+                latent_variables, latent_mean, latent_std = vae.sample_latent(None, indexes)
+
             mask = vae.sample_mask(batch_images.shape[0])
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
             #start_old = time()

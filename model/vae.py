@@ -4,7 +4,7 @@ import numpy as np
 
 class VAE(torch.nn.Module):
     def __init__(self, encoder, decoder, device, mask_start_values, N_domains=6, N_residues=1006, tau_mask=0.05,
-                 latent_dim = None, latent_type="continuous"):
+                 latent_dim = None, latent_type="continuous", amortized=True, N_images=None):
         super(VAE, self).__init__()
         assert latent_type in ["continuous", "categorical"]
         self.encoder = encoder
@@ -15,6 +15,8 @@ class VAE(torch.nn.Module):
         self.tau_mask = tau_mask
         self.latent_type = latent_type
         self.latent_dim = latent_dim
+        self.N_images = N_images
+        self.amortized = amortized
 
         self.residues = torch.arange(0, self.N_residues, 1, dtype=torch.float32, device=device)[:, None]
 
@@ -63,6 +65,12 @@ class VAE(torch.nn.Module):
                                    "proportions":{"mean":self.mask_proportions_mean, "std":self.mask_proportions_std}}
 
         self.elu = torch.nn.ELU()
+
+        if amortized:
+            assert N_images, "If using a non amortized version of the code, the number of images must be specified"
+            self.latent_variables_mean = torch.nn.Parameter(torch.zeros(N_images, self.latent_dim, dtype=torch.float32, device=device), requires_grad=True)
+            self.latent_variables_std = torch.nn.Parameter(torch.ones(N_images, self.latent_dim, dtype=torch.float32, device=device), requires_grad=False)
+
     def sample_mask(self, N_batch):
         """
         Samples a mask
@@ -87,28 +95,27 @@ class VAE(torch.nn.Module):
         mask = torch.softmax(log_num / self.tau_mask, dim=-1)
         return mask
 
-    def sample_latent(self, images):
+    def sample_latent(self, images, indexes=None):
         """
         Samples latent variables given an image
         :param images: torch.tensor(N_batch, N_pix_x, N_pix_y)
+        :param indexes: torch.tensor(N_batch, dtype=torch.int) the indexes of images in the batch
         :return: torch.tensor(N_batch, latent_dim) latent variables,
                 torch.tensor(N_batch, latent_dim) latent_mean,
-                torch.tensor(N_batch, latent_dim) latent std if latent_type is "continuous"
-                else
-                torch.tensor(N_batch, 1) sampled latent variable per batch
-                torch.tensor(N_batch, latent_dim) log probabilities of the multinomial.
+                torch.tensor(N_batch, latent_dim) latent std
+
         """
-        if self.latent_type == "continuous":
+        if self.amortized:
+            assert indexes, "If using a non-amortized version of the code, the indexes of the images must be provided"
+            latent_variables = torch.randn_like(self.latent_variables_mean, dtype=torch.float32, device=self.device)*self.latent_variables_std[indexes, :] + self.latent_variables_mean[indexes, :]
+            return latent_variables, self.latent_variables_mean[indexes, :], self.latent_variables_std[indexes, :] 
+        else:
             latent_mean, latent_std = self.encoder(images)
             latent_variables = latent_mean + torch.randn_like(latent_mean, dtype=torch.float32, device=self.device)\
                                 *latent_std
 
             return latent_variables, latent_mean, latent_std
-        else:
-            log_distribution_latent = self.encoder(images)
-            distribution_latent = torch.softmax(log_distribution_latent, dim=-1)
-            latent_variable = torch.multinomial(distribution_latent, 1)
-            return latent_variable, log_distribution_latent, None
+
 
     def decode(self, latent_variables):
         """
