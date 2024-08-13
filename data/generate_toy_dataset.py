@@ -191,7 +191,7 @@ if len(size_prot) > 1:
 mrc.MRCFile.write(f"{folder_experiment}particles.mrcs", all_images.detach().cpu().numpy(), Apix=apix, is_vol=False)
 print("Saving poses and ctf in star format.")
 output_path = f"{folder_experiment}particles.star"
-create_star_file(poses.detach().cpu().numpy(), shiftX.detach().cpu().numpy(), shiftY.detach().cpu().numpy(), "particles.mrcs",
+create_star_file(poses.detach().cpu().numpy(), shiftX[:, None].detach().cpu().numpy(), shiftY[:, None].detach().cpu().numpy(), "particles.mrcs",
  N_images, Npix, apix, image_settings["ctf"], output_path)
 
 """
