@@ -38,23 +38,19 @@ def project(Gauss_mean, Gauss_sigmas, Gauss_amplitudes, grid):
     sigmas = 2*Gauss_sigmas**2
     sqrt_amp = torch.sqrt(Gauss_amplitudes)
     #Both proj_x and proj_y are (batch_size, N_atoms, N_pix)
-    print("PROJECT REAL")
-    start_x = time()
-    print(Gauss_mean[:, :, None, 0].shape)
-    print(grid.line_coords[None, None, :].shape)
-    print(sigmas[None, :, None,  0].shape)
-    print(sqrt_amp[None, :, :].shape)
+    #print("PROJECT REAL")
+    #start_x = time()
     proj_x = torch.exp(-(Gauss_mean[:, :, None, 0] - grid.line_coords[None, None, :])**2/sigmas[None, :, None,  0])*sqrt_amp[None, :, :]
-    end_x = time()
-    print("Time x", end_x - start_x)
-    start_y = time()
+    #end_x = time()
+    #print("Time x", end_x - start_x)
+    #start_y = time()
     proj_y = torch.exp(-(Gauss_mean[:, :, None, 1] - grid.line_coords[None, None, :])**2/sigmas[None, :, None, 0])*sqrt_amp[None, :, :]
-    end_y = time()
-    print("Time y", end_y - start_y)
-    start_image = time()
+    #end_y = time()
+    #print("Time y", end_y - start_y)
+    #start_image = time()
     images = torch.einsum("b a p, b a q -> b q p", proj_x, proj_y)
-    end_image = time()
-    print("Time image", end_image - start_image)
+    #end_image = time()
+    #print("Time image", end_image - start_image)
     return images
 
 
