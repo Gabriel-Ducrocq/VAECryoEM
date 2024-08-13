@@ -136,8 +136,8 @@ all_images = []
 for i in tqdm(range(N_struct)):
 	base_structure = polymer.Polymer.from_pdb(base_structure_path)
 	if len(poly) not in size_prot:
-        size_prot.append(len(base_structure))
-        faulty_indexes.append(i)
+		size_prot.append(len(base_structure))
+		faulty_indexes.append(i)
 
 	center_vector = np.mean(base_structure.coord, axis=0)
 	backbone = base_structure.coord - center_vector
