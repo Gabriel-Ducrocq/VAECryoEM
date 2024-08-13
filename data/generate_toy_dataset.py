@@ -1,5 +1,6 @@
 import os
 import sys
+import mrc
 path = os.path.abspath("model")
 sys.path.append(path)
 import utils as utils_model
@@ -12,7 +13,7 @@ import argparse
 import numpy as np
 from ctf import CTF
 from tqdm import tqdm
-from cryodrgn import mrc
+#from cryodrgn import mrc
 import utils_data as utils
 from Bio.PDB import PDBParser
 import matplotlib.pyplot as plt
