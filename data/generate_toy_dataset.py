@@ -135,7 +135,7 @@ size_prot = []
 all_images = []
 for i in tqdm(range(N_struct)):
 	base_structure = polymer.Polymer.from_pdb(base_structure_path)
-	if len(poly) not in size_prot:
+	if len(base_structure) not in size_prot:
 		size_prot.append(len(base_structure))
 		faulty_indexes.append(i)
 
