@@ -132,6 +132,7 @@ torch.save(poses, f"{folder_experiment}poses")
 torch.save(poses_translation, f"{folder_experiment}poses_translation")
 
 size_prot = []
+faulty_indexes = []
 all_images = []
 for i in tqdm(range(N_struct)):
 	base_structure = polymer.Polymer.from_pdb(base_structure_path)
