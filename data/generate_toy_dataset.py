@@ -111,6 +111,10 @@ axis_angle_poses = normalized_axis*angle_rotation_poses
 poses = axis_angle_to_matrix(axis_angle_poses)
 #poses = torch.repeat_interleave(torch.eye(3,3)[None, :, :], 150000, 0)
 poses_translation = torch.rand((N_images, 3), device=device)*20 - 10
+poses_translation = torch.zeros_like(poses_translation, dtype=torch.float32, device=device)
+poses_translation = poses_translation[:, :2]
+shiftX = poses_translation[:, 0] /apix
+shiftY = poses_translation[:, 1] /apix
 #poses_translation = torch.zeros((N_images, 3), device=device)
 
 
