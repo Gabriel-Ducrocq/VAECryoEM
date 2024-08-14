@@ -340,7 +340,7 @@ def compute_mask_prior(N_residues, N_domains, device):
 
     return mask_prior
 
-def monitor_training(segments, tracking_metrics, epoch, experiment_settings, vae, optimizer):
+def monitor_training(segments, tracking_metrics, epoch, experiment_settings, vae, optimizers):
     """
     Monitors the training process through wandb and saving masks and models
     :param mask:
@@ -362,7 +362,7 @@ def monitor_training(segments, tracking_metrics, epoch, experiment_settings, vae
         for l in range(experiment_settings["N_domains"][f"chain_{n_chain}"]):
             wandb.log({f"chain_{n_chain}/segment_{l}": np.sum(hard_mask[0] == l)})
 
-    torch.save(vae, experiment_settings["folder_path"] + "models/full_model" + str(epoch))
+    torch.save(vae, experiment_settings["model_output"] + "full_model" + str(epoch))
 
 def get_atom_positions(residue, name):
     x = residue["CA"].get_coord()
