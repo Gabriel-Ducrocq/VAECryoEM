@@ -312,24 +312,31 @@ def compute_mask_prior(N_residues, N_domains, device):
     :param device: str, device to use
     :return:
     """
-    bound_0 = N_residues / N_domains
-    mask_means_mean = torch.tensor(np.array([bound_0 / 2 + i * bound_0 for i in range(N_domains)]), dtype=torch.float32,
-                          device=device)[None, :]
-
-    mask_means_std = torch.tensor(np.ones(N_domains) * 10.0, dtype=torch.float32, device=device)[None, :]
-
-    mask_stds_mean = torch.tensor(np.ones(N_domains) * bound_0, dtype=torch.float32, device=device)[None, :]
-
-    mask_stds_std = torch.tensor(np.ones(N_domains) * 10.0, dtype=torch.float32, device=device)[None, :]
-
-    mask_proportions_mean = torch.tensor(np.ones(N_domains) * 0, dtype=torch.float32, device=device)[None, :]
-
-    mask_proportions_std = torch.tensor(np.ones(N_domains), dtype=torch.float32, device=device)[None, :]
-
+    N_chains = len(N_domains)
+    chains_translations = {}
+    chains = sorted("_".join(segments.keys()).split("_"))
+    chains = list(filter(lambda x: x != "chain", chains))
     mask_prior = {}
-    mask_prior["means"] = {"mean":mask_means_mean, "std":mask_means_std}
-    mask_prior["stds"] = {"mean":mask_stds_mean, "std":mask_stds_std}
-    mask_prior["proportions"] = {"mean":mask_proportions_mean, "std":mask_proportions_std}
+    for n_chain in chains:
+        bound_0 = N_residues[f"chain_{n_chain}"] / N_domains[f"chain_{n_chain}"]
+        mask_means_mean = torch.tensor(np.array([bound_0 / 2 + i * bound_0 for i in range(N_domains[f"chain_{n_chain}"])]), dtype=torch.float32,
+                              device=device)[None, :]
+
+        mask_means_std = torch.tensor(np.ones(N_domains[f"chain_{n_chain}"]) * 10.0, dtype=torch.float32, device=device)[None, :]
+
+        mask_stds_mean = torch.tensor(np.ones(N_domains[f"chain_{n_chain}"]) * bound_0, dtype=torch.float32, device=device)[None, :]
+
+        mask_stds_std = torch.tensor(np.ones(N_domains[f"chain_{n_chain}"]) * 10.0, dtype=torch.float32, device=device)[None, :]
+
+        mask_proportions_mean = torch.tensor(np.ones(N_domains[f"chain_{n_chain}"]) * 0, dtype=torch.float32, device=device)[None, :]
+
+        mask_proportions_std = torch.tensor(np.ones(N_domains[f"chain_{n_chain}"]), dtype=torch.float32, device=device)[None, :]
+
+        mask_prior[f"chain_{n_chain}"] = {}
+
+        mask_prior[f"chain_{n_chain}"]["means"] = {"mean":mask_means_mean, "std":mask_means_std}
+        mask_prior[f"chain_{n_chain}"]["stds"] = {"mean":mask_stds_mean, "std":mask_stds_std}
+        mask_prior[f"chain_{n_chain}"]["proportions"] = {"mean":mask_proportions_mean, "std":mask_proportions_std}
 
     return mask_prior
 
