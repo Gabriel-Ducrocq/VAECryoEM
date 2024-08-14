@@ -314,7 +314,7 @@ def compute_mask_prior(N_residues, N_domains, device):
     """
     N_chains = len(N_domains)
     chains_translations = {}
-    chains = sorted("_".join(segments.keys()).split("_"))
+    chains = sorted("_".join(N_domains.keys()).split("_"))
     chains = list(filter(lambda x: x != "chain", chains))
     mask_prior = {}
     for n_chain in chains:
