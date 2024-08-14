@@ -74,7 +74,7 @@ def compute_KL_prior_latent(latent_mean, latent_std, epsilon_loss):
                                            - latent_std ** 2, dim=1))
 
 
-def compute_KL_prior_mask(mask_parameters, mask_prior, variable, epsilon_kl):
+def compute_KL_prior_mask(segments_means, segments_std, mask_prior, variable, epsilon_kl):
     """
     Compute the Dkl loss between the prior and the approximated posterior distribution
     :param mask_parameters: dictionnary, containing the tensor of mask parameters
@@ -82,9 +82,9 @@ def compute_KL_prior_mask(mask_parameters, mask_prior, variable, epsilon_kl):
     :return: torch.float32,  Dkl loss
     """
     assert variable in ["means", "stds", "proportions"]
-    return torch.sum(-1/2 + torch.log(mask_prior[variable]["std"]/mask_parameters[variable]["std"] + eval(epsilon_kl)) \
-    + (1/2)*(mask_parameters[variable]["std"]**2 +
-    (mask_prior[variable]["mean"] - mask_parameters[variable]["mean"])**2)/mask_prior[variable]["std"]**2)
+    return torch.sum(-1/2 + torch.log(mask_prior[variable]["std"]/segments_std + eval(epsilon_kl)) \
+    + (1/2)*(segments_std**2 +
+    (mask_prior[variable]["mean"] - segments_means)**2)/mask_prior[variable]["std"]**2)
 
 
 
@@ -122,7 +122,7 @@ def compute_clashing_distances(new_structures, device):
 
 
 def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, vae, loss_weights,
-                 experiment_settings, tracking_dict, predicted_structures = None, true_structure=None, device=None):
+                 experiment_settings, tracking_dict, segments, predicted_structures = None, true_structure=None, device=None):
     """
     Compute the entire loss
     :param predicted_images: torch.tensor(batch_size, N_pix), predicted images
@@ -140,33 +140,50 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
     #rmsd = compute_rmsd(predicted_images, images)
     rmsd = calc_cor_loss(predicted_images, images, mask_image)
     KL_prior_latent = compute_KL_prior_latent(latent_mean, latent_std, experiment_settings["epsilon_kl"])
-    KL_prior_mask_means = compute_KL_prior_mask(
-        vae.mask_parameters, experiment_settings["mask_prior"],
-        "means", epsilon_kl=experiment_settings["epsilon_kl"])
-
     continuity_loss = compute_continuity_loss(predicted_structures, true_structure, device)
     clashing_loss = compute_clashing_distances(predicted_structures, device)
-    KL_prior_mask_stds = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
-                                               "stds", epsilon_kl=experiment_settings["epsilon_kl"])
-    KL_prior_mask_proportions = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
-                                               "proportions", epsilon_kl=experiment_settings["epsilon_kl"])
+
+
+    all_Kl_prior_segments_means = 0 
+    all_Kl_prior_segments_stds = 0
+    all_Kl_prior_segments_proportions = 0
+    chains = sorted("_".join(segments.keys()).split("_"))
+    chains = list(filter(lambda x: x != "chain", chains))
+    for n_chain in chains: 
+        KL_segments_means = compute_KL_prior_mask(
+        vae.dict_segments_means_means[f"chain_{n_chain}"], vae.dict_segments_means_stds[f"chain_{n_chain}"], experiment_settings["mask_prior"][f"chain_{n_chain}"],
+        "means", epsilon_kl=experiment_settings["epsilon_kl"])
+        all_Kl_prior_segments_means += KL_segments_means
+
+
+        KL_segments_std = compute_KL_prior_mask(
+        vae.dict_segments_stds_means[f"chain_{n_chain}"], vae.dict_segments_stds_stds[f"chain_{n_chain}"], experiment_settings["mask_prior"][f"chain_{n_chain}"],
+        "stds", epsilon_kl=experiment_settings["epsilon_kl"])
+        all_Kl_prior_segments_stds += KL_segments_std
+
+        KL_segments_proportions = compute_KL_prior_mask(
+        vae.dict_segments_proportions_means[f"chain_{n_chain}"], vae.dict_segments_proportions_stds[f"chain_{n_chain}"], experiment_settings["mask_prior"][f"chain_{n_chain}"],
+        "proportions", epsilon_kl=experiment_settings["epsilon_kl"])
+        all_Kl_prior_segments_proportions += KL_segments_proportions
+
+
     l2_pen = compute_l2_pen(vae)
 
 
 
     tracking_dict["rmsd"].append(rmsd.detach().cpu().numpy())
     tracking_dict["kl_prior_latent"].append(KL_prior_latent.detach().cpu().numpy())
-    tracking_dict["kl_prior_mask_mean"].append(KL_prior_mask_means.detach().cpu().numpy())
-    tracking_dict["kl_prior_mask_std"].append(KL_prior_mask_stds.detach().cpu().numpy())
-    tracking_dict["kl_prior_mask_proportions"].append(KL_prior_mask_proportions.detach().cpu().numpy())
+    tracking_dict["kl_prior_mask_mean"].append(all_Kl_prior_segments_means.detach().cpu().numpy())
+    tracking_dict["kl_prior_mask_std"].append(all_Kl_prior_segments_stds.detach().cpu().numpy())
+    tracking_dict["kl_prior_mask_proportions"].append(all_Kl_prior_segments_proportions.detach().cpu().numpy())
     tracking_dict["l2_pen"].append(l2_pen.detach().cpu().numpy())
     tracking_dict["continuity_loss"].append(continuity_loss.detach().cpu().numpy())
     tracking_dict["clashing_loss"].append(clashing_loss.detach().cpu().numpy())
 
     loss = rmsd + loss_weights["KL_prior_latent"]*KL_prior_latent \
-           + loss_weights["KL_prior_mask_mean"]*KL_prior_mask_means \
-           + loss_weights["KL_prior_mask_std"] * KL_prior_mask_stds \
-           + loss_weights["KL_prior_mask_proportions"] * KL_prior_mask_proportions \
+           + loss_weights["KL_prior_mask_mean"]*all_Kl_prior_segments_means \
+           + loss_weights["KL_prior_mask_std"] * all_Kl_prior_segments_stds \
+           + loss_weights["KL_prior_mask_proportions"] * all_Kl_prior_segments_proportions \
            + loss_weights["l2_pen"] * l2_pen + loss_weights["clashing_loss"]*clashing_loss\
            + loss_weights["continuity_loss"]*continuity_loss
 
