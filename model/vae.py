@@ -23,8 +23,8 @@ class VAE(torch.nn.Module):
 
         self.dict_segments_means_means = torch.nn.ParameterDict({})
         self.dict_segments_means_stds = torch.nn.ParameterDict({})
-        self.dict_segments_std_means = torch.nn.ParameterDict({})
-        self.dict_segments_std_stds = torch.nn.ParameterDict({})
+        self.dict_segments_stds_means = torch.nn.ParameterDict({})
+        self.dict_segments_stds_stds = torch.nn.ParameterDict({})
         self.dict_segments_proportions_means = torch.nn.ParameterDict({})
         self.dict_segments_proportions_stds = torch.nn.ParameterDict({})
         self.residues = []
