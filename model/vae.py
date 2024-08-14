@@ -84,8 +84,8 @@ class VAE(torch.nn.Module):
             segments_proportions_means = self.dict_segments_proportions_means[f"chain_{n_chain}"]
             segments_proportions_stds = self.dict_segments_proportions_stds[f"chain_{n_chain}"]
 
-            segments_mean_means = self.dict_segments_means_means[f"chain_{n_chain}"]
-            segments_mean_stds = self.dict_segments_means_stds[f"chain_{n_chain}"]
+            segments_means_means = self.dict_segments_means_means[f"chain_{n_chain}"]
+            segments_means_stds = self.dict_segments_means_stds[f"chain_{n_chain}"]
 
             segments_stds_means = self.dict_segments_stds_means[f"chain_{n_chain}"]
             segments_stds_stds = self.dict_segments_stds_stds[f"chain_{n_chain}"]
