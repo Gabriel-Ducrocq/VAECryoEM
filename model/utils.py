@@ -180,7 +180,7 @@ def parse_yaml(path):
     #            torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None]) 
 
     amplitudes = torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None]
-    gmm_repr = Gaussian(torch.tensor(base_structure.coord, dtype=torch.float32, device=device), 
+    gmm_repr = Gaussian(chain_atom_positions, 
                 torch.ones((base_structure.coord.shape[0], 1), dtype=torch.float32, device=device)*image_settings["sigma_gmm"], 
                 amplitudes)
 
@@ -475,7 +475,7 @@ def rotate_residues_einops(atom_positions, quaternions, segments, device):
     :return: dictionnary of tensor (N_batch, N_residues_in_chain, 3, 3) rotation matrix for each residue in the chain
     """
     chain_atom_positions = {}
-    chains = sorted("_".join(atom_positions.keys()).split("_"))
+    chains = sorted("_".join(segments.keys()).split("_"))
     chains = list(filter(lambda x: x != "chain", chains))
     for n_chains in chains:
         N_residues = segments[f"chain_{n_chains}"].shape[1]

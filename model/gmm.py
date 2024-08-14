@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Gaussian:
-    mus: Union[torch.Tensor, np.ndarray]
+    mus: Union[torch.Tensor, np.ndarray, dict]
     sigmas: Union[torch.Tensor, np.ndarray]
     amplitudes: Union[torch.Tensor, np.ndarray]
 
