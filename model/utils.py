@@ -142,7 +142,7 @@ def parse_yaml(path):
     apix_downsize = Npix * apix /Npix_downsize
     image_translator = SpatialGridTranslate(D=Npix_downsize, device=device)
 
-    
+
     filter_aa = True
     grid = EMAN2Grid(Npix_downsize, apix_downsize, device=device)
     base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"], filter_aa)
@@ -160,7 +160,7 @@ def parse_yaml(path):
     if experiment_settings["resume_training"]["model"] == "None":
         vae = VAE(encoder, decoder, device,  N_chains=N_chains ,N_domains = experiment_settings["N_domains"], N_residues= N_residues,
                   tau_mask=experiment_settings["tau_mask"], mask_start_values=experiment_settings["mask_start"],
-                  latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"], N_images = N_images, amortized=amortized, chain_ids=chain_id)
+                  latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"], N_images = N_images, amortized=amortized, chain_ids=chain_ids)
         vae.to(device)
     else:
         vae = torch.load(experiment_settings["resume_training"]["model"])
