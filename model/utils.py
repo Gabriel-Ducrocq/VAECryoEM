@@ -142,6 +142,10 @@ def parse_yaml(path):
     apix_downsize = Npix * apix /Npix_downsize
     image_translator = SpatialGridTranslate(D=Npix_downsize, device=device)
 
+    
+    filter_aa = True
+    grid = EMAN2Grid(Npix_downsize, apix_downsize, device=device)
+    base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"], filter_aa)
     N_chains, chain_atom_positions, N_residues, chain_ids = compute_chain_coord(base_structure, device)
     total_N_domains = sum(experiment_settings["N_domains"].values())
 
@@ -163,9 +167,6 @@ def parse_yaml(path):
         vae.to(device)
 
 
-    filter_aa = True
-    grid = EMAN2Grid(Npix_downsize, apix_downsize, device=device)
-    base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"], filter_aa)
     #centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"], filter_aa)
     ##############                  I AM NOT CENTERING THE DATA ANYMORE !!!!!!!!!!! ############
     #center_of_mass = compute_center_of_mass(centering_structure)
