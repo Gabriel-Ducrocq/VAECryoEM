@@ -27,7 +27,7 @@ class VAE(torch.nn.Module):
         self.dict_segments_stds_stds = torch.nn.ParameterDict({})
         self.dict_segments_proportions_means = torch.nn.ParameterDict({})
         self.dict_segments_proportions_stds = torch.nn.ParameterDict({})
-        self.residues = []
+        self.residues = {}
 
         for n_chain in self.chain_ids:
             assert mask_start_values["type"] == "uniform", "Currently, only uniform initialization of the segmentation available."
