@@ -90,14 +90,14 @@ class VAE(torch.nn.Module):
             segments_stds_means = self.dict_segments_stds_means[f"chain_{n_chain}"]
             segments_stds_stds = self.dict_segments_stds_stds[f"chain_{n_chain}"]
 
-            cluster_proportions = torch.randn((N_batch, self.N_domains),
+            cluster_proportions = torch.randn((N_batch, self.N_domains[f"chain_{n_chain}"]),
                                               device=self.device) * segments_proportions_stds + segments_proportions_means
 
-            cluster_means = torch.randn((N_batch, self.N_domains), device=self.device) * segments_means_stds + segments_means_means
+            cluster_means = torch.randn((N_batch, self.N_domains[f"chain_{n_chain}"]), device=self.device) * segments_means_stds + segments_means_means
 
-            cluster_std = self.elu(torch.randn((N_batch, self.N_domains), device=self.device)*segments_stds_stds + segments_stds_means) + 1
+            cluster_std = self.elu(torch.randn((N_batch, self.N_domains[f"chain_{n_chain}"]), device=self.device)*segments_stds_stds + segments_stds_means) + 1
             proportions = torch.softmax(cluster_proportions, dim=-1)
-            log_num = -0.5*(self.residues[None, :, :] - cluster_means[:, None, :])**2/cluster_std[:, None, :]**2 + \
+            log_num = -0.5*(self.residues[f"chain_{n_chain}"][None, :, :] - cluster_means[:, None, :])**2/cluster_std[:, None, :]**2 + \
                   torch.log(proportions[:, None, :])
 
             segmentation = torch.softmax(log_num / self.tau_mask, dim=-1)
