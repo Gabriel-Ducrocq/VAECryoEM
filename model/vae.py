@@ -104,7 +104,7 @@ class VAE(torch.nn.Module):
             chain_segments[f"chain_{n_chain}"] = segmentation
 
 
-        return mask
+        return chain_segments
 
     def sample_latent(self, images, indexes=None):
         """
