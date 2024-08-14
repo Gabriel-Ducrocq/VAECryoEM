@@ -185,8 +185,8 @@ def parse_yaml(path):
                 amplitudes)
 
     if experiment_settings["mask_prior"]["type"] == "uniform":
-        experiment_settings["mask_prior"] = compute_mask_prior(experiment_settings["N_residues"],
-                                                               experiment_settings["N_domains"], device)
+        experiment_settings["mask_prior"] = compute_mask_prior(N_residues,
+                                                               N_domains, device)
     else:
         for mask_prior_key in experiment_settings["mask_prior"].keys():
             experiment_settings["mask_prior"][mask_prior_key]["mean"] = torch.tensor(experiment_settings["mask_prior"][mask_prior_key]["mean"],
