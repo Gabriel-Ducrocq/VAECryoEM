@@ -153,7 +153,7 @@ def parse_yaml(path):
                   experiment_settings["latent_dimension"] * 2,
                   experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
                   latent_type="continuous")
-    decoder = MLP(experiment_settings["latent_dimension"],  total_N_domains**6,
+    decoder = MLP(experiment_settings["latent_dimension"],  total_N_domains*6,
                   experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
 
 
