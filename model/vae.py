@@ -54,7 +54,7 @@ class VAE(torch.nn.Module):
                 data=torch.tensor(np.ones(N_domains[f"chain_{n_chain}"]) * 0, dtype=torch.float32, device=device)[None, :],
                 requires_grad=True)
 
-            self.mask_proportions_stds = torch.nn.Parameter(
+            self.segments_proportions_stds = torch.nn.Parameter(
                 data=torch.tensor(np.ones(N_domains[f"chain_{n_chain}"]), dtype=torch.float32, device=device)[None, :],
                 requires_grad=True)
 
