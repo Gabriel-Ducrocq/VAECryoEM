@@ -196,7 +196,7 @@ if __name__ == '__main__':
         z = np.load(args.z)
         
     generate_structures = args.generate_structures
-    analyze(path, model_path, structures_path, z, dimensions=dimensions, generate_structures=generate_structures)
+    analyze(path, model_path, structures_path, z, dimensions=dimensions, generate_structures=generate_structures, thinning=thinning)
 
 
 
