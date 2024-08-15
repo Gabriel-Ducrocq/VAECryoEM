@@ -157,7 +157,9 @@ for i in tqdm(range(N_struct)):
 	amplitudes = torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None]
 	posed_backbones = rotate_structure(backbone_torch, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
 	batch_images = project(posed_backbones, torch.ones((backbone_torch.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
-	batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
+	################################################ I DISABLED THE CTF CORRUPTION
+	#batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
+	batch_ctf_corrupted_images = batch_images
 	batch_poses_translation = - poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure]
 	batch_translated_images = image_translator.transform(batch_ctf_corrupted_images, batch_poses_translation[:, None, :])
 	all_images.append(batch_translated_images.detach().cpu())
@@ -181,8 +183,8 @@ noise_var = mean_variance/image_settings["SNR"]
 print("Mean variance accross images", mean_variance)
 print("Adding Gaussian noise with variance", noise_var)
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
-
-all_images += torch.randn((N_images, Npix, Npix))*torch.sqrt(noise_var)
+################################### I DISABLED 
+#all_images += torch.randn((N_images, Npix, Npix))*torch.sqrt(noise_var)
 print("Saving images in MRC format")
 print(size_prot)
 if len(size_prot) > 1:
