@@ -188,6 +188,7 @@ if __name__ == '__main__':
     parser_arg.add_argument('--generate_structures', action=argparse.BooleanOptionalAction)
     args = parser_arg.parse_args()
     structures_path = args.structures_path
+    thinning = args.thinning
     model_path = args.model
     path = args.experiment_yaml
     dimensions = args.dimensions
