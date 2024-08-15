@@ -91,7 +91,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
     :param yaml_setting_path: str, path the yaml containing all the details of the experiment
     :return:
     """
-    _, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, base_structure, lp_mask2d, mask_images  = utils.parse_yaml(yaml_setting_path)
+    _, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, base_structure, lp_mask2d, mask_images, amortized  = utils.parse_yaml(yaml_setting_path)
     vae = torch.load(model_path)
     vae.eval()
     all_latent_variables = []
@@ -108,7 +108,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
 
             start_net = time()
             batch_images = batch_images.flatten(start_dim=-2)
-            latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images)
+            latent_variables, latent_mean, latent_std = vae.sample_latent(batch_images, indexes)
             all_latent_variables.append(latent_variables)
             if batch_num == 781:
                 all_latent_variables = torch.concat(all_latent_variables, dim=0).detach().cpu().numpy()
