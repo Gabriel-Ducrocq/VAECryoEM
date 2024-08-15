@@ -169,6 +169,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
 
                 for i, pred_struct in enumerate(predicted_structures):
                     print("Saving structure", batch_num*batch_size + i)
+                    print(all_latent_variables.shape)
                     base_structure.coord = pred_struct.detach().cpu().numpy()
                     base_structure.to_pdb(os.path.join(structures_path, f"structure_z_{batch_num*batch_size + i}.pdb"))
 
