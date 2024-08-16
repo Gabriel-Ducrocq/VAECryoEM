@@ -134,13 +134,7 @@ def parse_yaml(path):
 
     print("DEVICE:", device)
     particles_path = experiment_settings["particles_path"]
-    print(experiment_settings["amortized"])
-    print(experiment_settings["amortized"].dtype)
-    assert experiment_settings["amortized"] == "True" or experiment_settings["amortized"] == "False", "Amortization must be set to True or False."
-    if experiment_settings["amortized"] =="True":
-        amortized = True
-    else:
-        amortized = False
+    amortized = experiment_settings["amortized"]
 
     N_images = experiment_settings["N_images"]
     apix = image_settings["apix"]
