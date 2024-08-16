@@ -105,7 +105,7 @@ class VAE(torch.nn.Module):
                 torch.tensor(N_batch, latent_dim) latent std
 
         """
-        if self.amortized:
+        if not self.amortized:
             assert indexes, "If using a non-amortized version of the code, the indexes of the images must be provided"
             latent_variables = torch.randn_like(self.latent_variables_mean, dtype=torch.float32, device=self.device)*self.latent_variables_std[indexes, :] + self.latent_variables_mean[indexes, :]
             return latent_variables, self.latent_variables_mean[indexes, :], self.latent_variables_std[indexes, :] 
