@@ -137,7 +137,7 @@ def parse_yaml(path):
     assert experiment_settings["amortized"] == "True" or experiment_settings["amortized"] == "False", "Amortization must be set to True or False."
     if experiment_settings["amortized"] =="True":
         amortized = True
-    else experiment_settings["amortized"] == "False":
+    else:
         amortized = False
 
     N_images = experiment_settings["N_images"]
