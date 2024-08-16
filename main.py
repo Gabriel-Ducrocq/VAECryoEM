@@ -138,8 +138,9 @@ def train(yaml_setting_path, debug_mode):
             #print("Proj time", end_proj- start_proj)
             #start_ctf = time()
 
-
-            batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
+            ######################### !!!!!!!!!!!!!!!!!!!!!!!!!!! I CANCEL THE CTF CORRECTION !!!!!!!!!!!!!!!!!!!!!!!! ################################
+            #batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
+            batch_predicted_images = predicted_images
             #batch_predicted_images = renderer.apply_ctf(pred_images_ifft, ctf, indexes)
             print("\n\n")
 
