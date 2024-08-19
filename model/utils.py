@@ -337,7 +337,7 @@ def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, op
     for l in range(experiment_settings["N_domains"]):
         wandb.log({f"segments/mask_{l}": np.sum(hard_mask[0] == l)})
 
-    torch.save(vae, experiment_settings["folder_path"] + "models/full_model" + str(epoch))
+    torch.save(vae, experiment_settings["folder_path"] + "models_clashing/full_model" + str(epoch))
 
 def get_atom_positions(residue, name):
     x = residue["CA"].get_coord()
