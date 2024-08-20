@@ -32,7 +32,7 @@ class VAE(torch.nn.Module):
             segments_means = torch.nn.Parameter(data=torch.tensor(np.array([bound_0/2 + i*bound_0 for i in range(N_domains[f"chain_{n_chain}"])]), dtype=torch.float32, device=device)[None, :],
                                                       requires_grad=True)
 
-            segments_std = torch.nn.Parameter(data= torch.tensor(np.ones(N_domains[f"chain_{n_chain}"])*bound_0, dtype=torch.float32, device=device)[None,:],
+            segments_stds = torch.nn.Parameter(data= torch.tensor(np.ones(N_domains[f"chain_{n_chain}"])*bound_0, dtype=torch.float32, device=device)[None,:],
                                                     requires_grad=True)
 
 
