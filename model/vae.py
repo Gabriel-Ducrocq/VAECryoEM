@@ -103,7 +103,6 @@ class VAE(torch.nn.Module):
             segmentation = torch.softmax(log_num / self.tau_mask, dim=-1)
             chain_segments[f"chain_{n_chain}"] = segmentation
 
-
         return chain_segments
 
     def sample_latent(self, images, indexes=None):

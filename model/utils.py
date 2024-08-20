@@ -465,17 +465,48 @@ def compute_rotations_per_residue_einops(quaternions, mask, device):
     return overall_rotation_matrices
 
 
+#def rotate_residues_einops(atom_positions, quaternions, segments, device):
+#    """
+#    Computes the rotation matrix corresponding to each domain for each residue, where the angle of rotation has been
+#    weighted by the mask value of the corresponding domain.
+#    :param positions: dictionnary of atom positions per chain torch.tensor(N_residues_chains, 3)
+#    :param quaternions: dictionnary of torch tensor (N_batch, N_segments_in_chain, 4) of non normalized quaternions defining rotations
+#    :param segments: dictionnary of torch tensor (N_batch, N_residues_in_chain, N_domains)
+#    :return: dictionnary of tensor (N_batch, N_residues_in_chain, 3, 3) rotation matrix for each residue in the chain
+#    """
+#    chain_atom_positions = {}
+#    chains = sorted("_".join(segments.keys()).split("_"))
+#    chains = list(filter(lambda x: x != "chain", chains))
+#    for n_chains in chains:
+#        N_residues = segments[f"chain_{n_chains}"].shape[1]
+#        batch_size = quaternions[f"chain_{n_chains}"].shape[0]
+#        N_domains = segments[f"chain_{n_chains}"].shape[-1]
+#        # NOTE: no need to normalize the quaternions, quaternion_to_axis does it already.
+#        rotation_per_domains_axis_angle = quaternion_to_axis_angle(quaternions[f"chain_{n_chains}"])
+#        #The below tensor is [N_batch, N_residues, N_domains, 3]
+#        segments_rotation_per_domains_axis_angle = segments[f"chain_{n_chains}"][:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
+#        segments_rotation_per_domains_quaternions = axis_angle_to_quaternion(segments_rotation_per_domains_axis_angle)
+#        print(segments_rotation_per_domains_quaternions[:, :, 0, :].shape)
+#        new_atom_positions = quaternion_apply(segments_rotation_per_domains_quaternions[:, :, 0, :], atom_positions[f"chain_{n_chains}"])
+#        for dom in range(1, N_domains):
+#            new_atom_positions = quaternion_apply(segments_rotation_per_domains_quaternions[:, :, dom, :], new_atom_positions)
+
+#        chain_atom_positions[f"chain_{n_chains}"] = new_atom_positions
+
+#    return chain_atom_positions
+
+
 def rotate_residues_einops(atom_positions, quaternions, segments, device):
     """
     Computes the rotation matrix corresponding to each domain for each residue, where the angle of rotation has been
     weighted by the mask value of the corresponding domain.
     :param positions: dictionnary of atom positions per chain torch.tensor(N_residues_chains, 3)
-    :param quaternions: dictionnary of torch tensor (N_batch, N_segments_in_chain, 4) of non normalized quaternions defining rotations
-    :param segments: dictionnary of torch tensor (N_batch, N_residues_in_chain, N_domains)
-    :return: dictionnary of tensor (N_batch, N_residues_in_chain, 3, 3) rotation matrix for each residue in the chain
+    :param quaternions: tensor (N_batch, N_domains, 4) of non normalized quaternions defining rotations
+    :param mask: tensor (N_batch, N_residues, N_domains)
+    :return: tensor (N_batch, N_residues, 3, 3) rotation matrix for each residue
     """
     chain_atom_positions = {}
-    chains = sorted("_".join(segments.keys()).split("_"))
+    chains = sorted("_".join(atom_positions.keys()).split("_"))
     chains = list(filter(lambda x: x != "chain", chains))
     for n_chains in chains:
         N_residues = segments[f"chain_{n_chains}"].shape[1]
@@ -497,13 +528,31 @@ def rotate_residues_einops(atom_positions, quaternions, segments, device):
 
 
 
-def compute_translations_per_residue(translation_vectors, segments):
-    """
+#def compute_translations_per_residue(translation_vectors, segments):
+#    """
     Computes one translation vector per residue based on the mask
     :param translation_vectors: dictionnary of torch.tensor (Batch_size, N_segments_in_chain, 3) translations for each domain
     :param segments: dictionnary of torch.tensor(N_batch, N_residues_in_chain, N_segments_in_chain) weights of the segmentation for each segments
     :return: dictionnary of translation per residue torch.tensor(batch_size, N_residues_in_segments, 3)
+#    """
+#    N_chains = len(segments)
+#    chains_translations = {}
+#    chains = sorted("_".join(segments.keys()).split("_"))
+#    chains = list(filter(lambda x: x != "chain", chains))
+#    for n_chain in chains:
+#        translation_per_residue = torch.einsum("bij, bjk -> bik", segments[f"chain_{n_chain}"], translation_vectors[f"chain_{n_chain}"])
+#        chains_translations[f"chain_{n_chain}"] = translation_per_residue
+#
+#    return chains_translations
+
+def compute_translations_per_residue(translation_vectors, segments):
     """
+    Computes one translation vector per residue based on the mask
+    :param translation_vectors: dictionnary of torch.tensor (Batch_size, N_domains_chain, 3) translations for each domain
+    :param segments: translation_vectors: dictionnary of torch.tensor(N_batch, N_residues_chains, N_domains_chains) weights of the attention segments
+    :return: translation_vectors: dictionnary of translation per residue per chain torch.tensor(batch_size, N_residues_chains, 3)
+    """
+    #### How is it possible to compute this product given the two tensor size
     N_chains = len(segments)
     chains_translations = {}
     chains = sorted("_".join(segments.keys()).split("_"))
@@ -515,15 +564,43 @@ def compute_translations_per_residue(translation_vectors, segments):
     return chains_translations
 
 
+#def deform_structure_bis(atom_positions, translation_per_residue, quaternions, segments, device):
+#    """
+#    Note that the reference frame absolutely needs to be the SAME for all the residues (placed in the same spot),
+#     otherwise the rotation will NOT be approximately rigid !!!
+#    :param positions: torch.tensor(N_residues, 3)
+#    :param translation_vectors: dictionnary of translations vectors per segments:
+#            tensor (Batch_size, N_residues_in_segments, 3)
+#    :param quaternions: dictionnary of torch tensor (N_batch, N_segments_in_chain, 3, 3) of quaternions per segment in chain.
+#    :return: dictionnary torch tensor (Batch_size, N_residues_in_chain, 3) corresponding to the new positions, 
+#    """
+#    ## We displace the structure, using an interleave because there are 3 consecutive atoms belonging to one
+#    ## residue.
+#    ##We compute the rotated residues, where this axis of rotation is at the origin.
+#    transformed_atom_positions = rotate_residues_einops(atom_positions, quaternions, segments, device)
+#    new_atom_positions = []
+#    N_chains = len(segments)
+#    chains_translations = {}
+#    chains = sorted("_".join(segments.keys()).split("_"))
+#    chains = list(filter(lambda x: x != "chain", chains))
+#    for n_chain in chains:
+#        chain_new_atom_positions = transformed_atom_positions[f"chain_{n_chain}"]  + translation_per_residue[f"chain_{n_chain}"]
+#        new_atom_positions.append(chain_new_atom_positions) 
+#
+#    new_atom_positions = torch.concatenate(new_atom_positions, dim=1)
+#    return new_atom_positions
+
+
+
 def deform_structure_bis(atom_positions, translation_per_residue, quaternions, segments, device):
     """
     Note that the reference frame absolutely needs to be the SAME for all the residues (placed in the same spot),
      otherwise the rotation will NOT be approximately rigid !!!
-    :param positions: torch.tensor(N_residues, 3)
-    :param translation_vectors: dictionnary of translations vectors per segments:
-            tensor (Batch_size, N_residues_in_segments, 3)
-    :param quaternions: dictionnary of torch tensor (N_batch, N_segments_in_chain, 3, 3) of quaternions per segment in chain.
-    :return: dictionnary torch tensor (Batch_size, N_residues_in_chain, 3) corresponding to the new positions, 
+    :param positions: dictionnary of positions of atom for each chain: torch.tensor(N_residues_chain, 3)
+    :param translation_vectors: dictionnary of translations vectors per chain: tensor (Batch_size, N_residues_chains, 3)
+    :param rotations_per_residue: dictionnary of rotation matrices per domain for each chain: tensor (N_batch, N_domains_chains, 3, 3)
+    :return: tensor (Batch_size, 3*N_residues, 3) corresponding to translated structure, tensor (3*N_residues, 3)
+            of translation vectors
     """
     ## We displace the structure, using an interleave because there are 3 consecutive atoms belonging to one
     ## residue.
@@ -540,6 +617,7 @@ def deform_structure_bis(atom_positions, translation_per_residue, quaternions, s
 
     new_atom_positions = torch.concatenate(new_atom_positions, dim=1)
     return new_atom_positions
+
 
 
 
