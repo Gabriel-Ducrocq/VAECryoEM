@@ -180,11 +180,11 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
     tracking_dict["continuity_loss"].append(continuity_loss.detach().cpu().numpy())
     tracking_dict["clashing_loss"].append(clashing_loss.detach().cpu().numpy())
 
-    loss = rmsd + loss_weights["KL_prior_latent"]*KL_prior_latent \
-           + loss_weights["KL_prior_mask_mean"]*all_Kl_prior_segments_means \
-           + loss_weights["KL_prior_mask_std"] * all_Kl_prior_segments_stds \
-           + loss_weights["KL_prior_mask_proportions"] * all_Kl_prior_segments_proportions \
-           + loss_weights["l2_pen"] * l2_pen + loss_weights["clashing_loss"]*clashing_loss\
-           + loss_weights["continuity_loss"]*continuity_loss
+    loss = rmsd #+ loss_weights["KL_prior_latent"]*KL_prior_latent \
+           #+ loss_weights["KL_prior_mask_mean"]*all_Kl_prior_segments_means \
+           #+ loss_weights["KL_prior_mask_std"] * all_Kl_prior_segments_stds \
+           #+ loss_weights["KL_prior_mask_proportions"] * all_Kl_prior_segments_proportions \
+           #+ loss_weights["l2_pen"] * l2_pen + loss_weights["clashing_loss"]*clashing_loss\
+           #+ loss_weights["continuity_loss"]*continuity_loss
 
     return loss
