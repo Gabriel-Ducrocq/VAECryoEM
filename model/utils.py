@@ -530,10 +530,10 @@ def rotate_residues_einops(atom_positions, quaternions, segments, device):
 
 #def compute_translations_per_residue(translation_vectors, segments):
 #    """
-    Computes one translation vector per residue based on the mask
-    :param translation_vectors: dictionnary of torch.tensor (Batch_size, N_segments_in_chain, 3) translations for each domain
-    :param segments: dictionnary of torch.tensor(N_batch, N_residues_in_chain, N_segments_in_chain) weights of the segmentation for each segments
-    :return: dictionnary of translation per residue torch.tensor(batch_size, N_residues_in_segments, 3)
+#    Computes one translation vector per residue based on the mask
+#    :param translation_vectors: dictionnary of torch.tensor (Batch_size, N_segments_in_chain, 3) translations for each domain
+#    :param segments: dictionnary of torch.tensor(N_batch, N_residues_in_chain, N_segments_in_chain) weights of the segmentation for each segments
+#    :return: dictionnary of translation per residue torch.tensor(batch_size, N_residues_in_segments, 3)
 #    """
 #    N_chains = len(segments)
 #    chains_translations = {}
