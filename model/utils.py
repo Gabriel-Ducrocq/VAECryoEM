@@ -320,7 +320,7 @@ def compute_mask_prior(N_residues, N_domains, device):
 
     return mask_prior
 
-def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, optimizer):
+def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, optimizer, pred_im, true_im):
     """
     Monitors the training process through wandb and saving masks and models
     :param mask:
@@ -337,7 +337,19 @@ def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, op
     for l in range(experiment_settings["N_domains"]):
         wandb.log({f"segments/mask_{l}": np.sum(hard_mask[0] == l)})
 
-    torch.save(vae, experiment_settings["folder_path"] + "models_clashing/full_model" + str(epoch))
+
+    pred_im = pred_im[0].detach().cpu().numpy()[:, :, None]
+    true_im = true_im[0].detach().cpu().numpy()[:, :, None]
+    print("PRED IM", pred_im.shape)
+    predicted_image_wandb = wandb.Image(pred_im,
+                                         caption="Predicted images")
+    true_image_wandb = wandb.Image(true_im,
+                                         caption="True images")
+    wandb.log({"Images/true_image": true_image_wandb})
+    wandb.log({"Images/predicted_image": predicted_image_wandb})
+    torch.save(vae, experiment_settings["folder_path"] + "models/full_model" + str(epoch))
+
+
 
 def get_atom_positions(residue, name):
     x = residue["CA"].get_coord()
