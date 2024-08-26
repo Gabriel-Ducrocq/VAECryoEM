@@ -61,7 +61,7 @@ def train(yaml_setting_path, debug_mode):
             flattened_batch_images = batch_images.flatten(start_dim=-2)
             batch_translated_images = image_translator.transform(batch_images, batch_poses_translation[:, None, :])
             lp_batch_translated_images = low_pass_images(batch_translated_images, lp_mask2d)
-            if not amortized:
+            if amortized:
                 latent_variables, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
             else:
                 latent_variables, latent_mean, latent_std = vae.sample_latent(None, indexes)
