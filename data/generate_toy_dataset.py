@@ -142,7 +142,8 @@ for i in tqdm(range(N_struct)):
 		faulty_indexes.append(i)
 
 	center_vector = np.mean(base_structure.coord, axis=0)
-	backbone = base_structure.coord - center_vector
+	base_structure.coord = base_structure.coord - center_vector
+	#backbone = base_structure.coord - center_vector
 	#Saving the generated structure.
 	base_structure.coord[(base_structure.chain_id==chain_id) & (base_structure.res_id >= residue_start) & (base_structure.res_id <=residue_end)] = np.einsum("n m, l m -> l n", conformation_matrix_np[i],
 																		base_structure.coord[(base_structure.chain_id==chain_id) & (base_structure.res_id >= residue_start) & (base_structure.res_id <=residue_end)])
@@ -151,15 +152,15 @@ for i in tqdm(range(N_struct)):
 	#utils.rotate_domain_pdb_structure(struct_centered, residue_start, residue_end, conformation_matrix_np[i])
 	#utils.save_structure(struct_centered, f"{folder_experiment}ground_truth/structures/structure_{i+1}.pdb")
 
-	backbone_torch = torch.tensor(backbone, dtype=torch.float32, device=device)
+	#backbone_torch = torch.tensor(backbone, dtype=torch.float32, device=device)
+	backbone_torch = torch.tensor(base_structure.coord, dtype=torch.float32, device=device)
 	backbone_torch = torch.concatenate([backbone_torch[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
 	# Duplicating the deformed backbone and projecting it.
 	amplitudes = torch.tensor(base_structure.num_electron, dtype=torch.float32, device=device)[:, None]
 	posed_backbones = rotate_structure(backbone_torch, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
 	batch_images = project(posed_backbones, torch.ones((backbone_torch.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
-	################################################ I DISABLED THE CTF CORRUPTION
-	#batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
-	batch_ctf_corrupted_images = batch_images
+	batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
+	#batch_ctf_corrupted_images = batch_images
 	batch_poses_translation = - poses_translation[i*N_pose_per_structure:(i+1)*N_pose_per_structure]
 	batch_translated_images = image_translator.transform(batch_ctf_corrupted_images, batch_poses_translation[:, None, :])
 	all_images.append(batch_translated_images.detach().cpu())
@@ -183,8 +184,7 @@ noise_var = mean_variance/image_settings["SNR"]
 print("Mean variance accross images", mean_variance)
 print("Adding Gaussian noise with variance", noise_var)
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
-################################### I DISABLED 
-#all_images += torch.randn((N_images, Npix, Npix))*torch.sqrt(noise_var)
+all_images += torch.randn((N_images, Npix, Npix))*torch.sqrt(noise_var)
 print("Saving images in MRC format")
 print(size_prot)
 if len(size_prot) > 1:
