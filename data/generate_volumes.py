@@ -27,7 +27,7 @@ apix = args.apix
 folder_volumes = args.folder_volumes
 folder_structures = args.folder_structures
 batch_size = args.batch_size
-centering_structure = args.centering_structure
+#centering_structure = args.centering_structure
 Npix = args.Npix
 
 
