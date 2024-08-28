@@ -207,6 +207,7 @@ if __name__ == '__main__':
     structures_path = args.structures_path
     thinning = args.thinning
     model_path = args.model
+    num_points = args.num_points
     path = args.experiment_yaml
     dimensions = args.dimensions
     z = None
@@ -214,7 +215,7 @@ if __name__ == '__main__':
         z = np.load(args.z)
         
     generate_structures = args.generate_structures
-    analyze(path, model_path, structures_path, z, dimensions=dimensions, generate_structures=generate_structures, thinning=thinning)
+    analyze(path, model_path, structures_path, z, dimensions=dimensions, generate_structures=generate_structures, thinning=thinning, numpoints=num_points)
 
 
 
