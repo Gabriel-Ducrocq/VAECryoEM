@@ -165,7 +165,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
                                                                    rotation_per_residue)
 
                 for i, pred_struct in enumerate(predicted_structures):
-                    print("Saving structure", i+1, "from pc", dim)
+                    print("Saving structure", i+1, "from pc", 0)
                     base_structure.coord = pred_struct.detach().cpu().numpy()
                     base_structure.to_pdb(os.path.join(structures_path, f"pc0/structure_z_{i}.pdb"))
 
