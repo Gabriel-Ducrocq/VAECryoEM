@@ -85,7 +85,7 @@ filter_aa = True
 
 
 
-def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimensions=[0, 1, 2], numpoints=10):
+def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimensions=[0, 1, 2], numpoints=10, generate_structures=False):
     """
     train a VAE network
     :param yaml_setting_path: str, path the yaml containing all the details of the experiment
@@ -123,43 +123,65 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
     else:
         all_latent_variables = z
 
-    all_trajectories, all_trajectories_pca, z_pca, pca = compute_traversals(all_latent_variables[::thinning], dimensions=dimensions, numpoints=numpoints)
-    sns.set_style("white")
-    if all_latent_variables.shape[1] > 1:
-        for dim in dimensions[:-1]:
-            os.makedirs(os.path.join(structures_path, f"pc{dim}/"), exist_ok=True)
-            sns.kdeplot(x=z_pca[:, dim], y=z_pca[:, dim+1], fill=True, clip= (-5, 5))
-            print("TRJACTORIES", all_trajectories_pca[dim][:,:])
-            plt.scatter(x=all_trajectories_pca[dim][:, dim], y=all_trajectories_pca[dim][:, dim+1], c="red")
-            plt.title("PCA of the latent space")
-            plt.xlabel(f"PC {dim+1}, variance {pca.explained_variance_ratio_[dim]} ")
-            plt.ylabel(f"PC {dim+2}, variance variance {pca.explained_variance_ratio_[dim+1]}")
-            plt.savefig(os.path.join(structures_path, f"pc{dim}/pca.png"))
-            plt.close()
-            z_dim = torch.tensor(all_trajectories[dim], dtype=torch.float32, device=device)
-            segments = vae.sample_mask(batch_images.shape[0])
+    if not generate_structures:
+        sns.set_style("white")
+        if all_latent_variables.shape[1] > 1:
+            all_trajectories, all_trajectories_pca, z_pca, pca = compute_traversals(all_latent_variables[::thinning], dimensions=dimensions, numpoints=numpoints)
+            for dim in dimensions[:-1]:
+                os.makedirs(os.path.join(structures_path, f"pc{dim}/"), exist_ok=True)
+                sns.kdeplot(x=z_pca[:, dim], y=z_pca[:, dim+1], fill=True, clip= (-5, 5))
+                print("TRJACTORIES", all_trajectories_pca[dim][:,:])
+                plt.scatter(x=all_trajectories_pca[dim][:, dim], y=all_trajectories_pca[dim][:, dim+1], c="red")
+                plt.title("PCA of the latent space")
+                plt.xlabel(f"PC {dim+1}, variance {pca.explained_variance_ratio_[dim]} ")
+                plt.ylabel(f"PC {dim+2}, variance variance {pca.explained_variance_ratio_[dim+1]}")
+                plt.savefig(os.path.join(structures_path, f"pc{dim}/pca.png"))
+                plt.close()
+                z_dim = torch.tensor(all_trajectories[dim], dtype=torch.float32, device=device)
+                segments = vae.sample_mask(batch_images.shape[0])
+                quaternions_per_domain, translations_per_domain = vae.decode(z_dim)
+                translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, segments)
+                predicted_structures = utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, segments, device)
+
+                for i, pred_struct in enumerate(predicted_structures):
+                    print("Saving structure", i+1, "from pc", dim)
+                    base_structure.coord = pred_struct.detach().cpu().numpy()
+                    base_structure.to_pdb(os.path.join(structures_path, f"pc{dim}/structure_z_{i}.pdb"))
+
+        else:
+            os.makedirs(os.path.join(structures_path, f"pc0/"), exist_ok=True)
+            all_trajectories = graph_traversal(all_latent_variables, 0, numpoints=numpoints)
+            z_dim = torch.tensor(all_trajectories, dtype=torch.float32, device=device)
+            segments = vae.sample_mask(z_dim.shape[0])
             quaternions_per_domain, translations_per_domain = vae.decode(z_dim)
             translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, segments)
-            pred_struct = utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, segments, device)
+            predicted_structures = utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, segments, device)
 
             for i, pred_struct in enumerate(predicted_structures):
-                print("Saving structure", i+1, "from pc", dim)
+                print("Saving structure", i+1, "from pc", 0)
                 base_structure.coord = pred_struct.detach().cpu().numpy()
-                base_structure.to_pdb(os.path.join(structures_path, f"pc{dim}/structure_z_{i}.pdb"))
+                base_structure.to_pdb(os.path.join(structures_path, f"pc0/structure_z_{i}.pdb"))
+
 
     else:
-        os.makedirs(os.path.join(structures_path, f"pc0/"), exist_ok=True)
-        all_trajectories = graph_traversal(all_latent_variables, 0, numpoints=numpoints)
-        z_dim = torch.tensor(all_trajectories, dtype=torch.float32, device=device)
-        segments = vae.sample_mask(z_dim.shape[0])
-        quaternions_per_domain, translations_per_domain = vae.decode(z_dim)
-        translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, segments)
-        pred_struct = utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, segments, device)
+        print(all_latent_variables)
+        all_latent_variables= torch.tensor(all_latent_variables[::thinning], dtype=torch.float32, device=device)
+        latent_variables_loader = iter(DataLoader(all_latent_variables, shuffle=False, batch_size=batch_size))
+        for batch_num, z in enumerate(latent_variables_loader):  
+            print("Batch number:", batch_num)
+            print("dimensions", dimensions)
+            start = time()
+                segments = vae.sample_mask(batch_images.shape[0])
+                quaternions_per_domain, translations_per_domain = vae.decode(z)
+                translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, segments)
+                predicted_structures = utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, segments, device)
 
-        for i, pred_struct in enumerate(pred_struct):
-            print("Saving structure", i+1, "from pc", 0)
-            base_structure.coord = pred_struct.detach().cpu().numpy()
-            base_structure.to_pdb(os.path.join(structures_path, f"pc0/structure_z_{i}.pdb"))
+            for i, pred_struct in enumerate(predicted_structures):
+                print("Saving structure", batch_num*batch_size + i)
+                print(all_latent_variables.shape)
+                base_structure.coord = pred_struct.detach().cpu().numpy()
+                base_structure.to_pdb(os.path.join(structures_path, f"structure_z_{batch_num*batch_size + i}.pdb"))
+
 
 
 
@@ -172,13 +194,14 @@ if __name__ == '__main__':
     parser_arg.add_argument("--thinning", type=int, required=False)
     parser_arg.add_argument("--num_points", type=int, required=False)
     parser_arg.add_argument('--dimensions','--list', nargs='+', type=int, help='<Required> PC dimensions along which we compute the trajectories. If not set, use pc 1, 2, 3', required=False)
+    parser_arg.add_argument('--generate_structures', action=argparse.BooleanOptionalAction)
     args = parser_arg.parse_args()
     structures_path = args.structures_path
     model_path = args.model
     path = args.experiment_yaml
     dimensions = args.dimensions
     z = args.z
-    analyze(path, model_path, structures_path, z, dimensions=dimensions)
+    analyze(path, model_path, structures_path, z, dimensions=dimensions, generate_structures=generate_structures)
 
 
 
