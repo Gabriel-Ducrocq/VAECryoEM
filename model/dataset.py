@@ -8,8 +8,24 @@ import torchvision.transforms.functional as tvf
 from pytorch3d.transforms import euler_angles_to_matrix
 
 
+
+class Mask(torch.nn.Module):
+
+    def __init__(self, im_size, rad):
+        super(Mask, self).__init__()
+
+        mask = torch.lt(torch.linspace(-1, 1, im_size)[None]**2 + torch.linspace(-1, 1, im_size)[:, None]**2, rad**2)
+        # float for pl ddp broadcast compatible
+        self.register_buffer('mask', mask.float())
+        self.num_masked = torch.sum(mask).item()
+
+    def forward(self, x):
+        return x * self.mask
+
+
+
 class ImageDataSet(Dataset):
-    def __init__(self, apix, side_shape, particles_df, particles_path, down_side_shape=None, down_method="interp", invert_data=True):
+    def __init__(self, apix, side_shape, particles_df, particles_path, down_side_shape=None, down_method="interp", invert_data=True, rad_mask=None):
         """
         #Create a dataset of images and poses
         #:param apix: float, size of a pixel in Å.
@@ -24,6 +40,10 @@ class ImageDataSet(Dataset):
         self.apix = apix
         self.particles_path = particles_path
         self.particles_df = particles_df
+        self.mask = None
+        if rad_mask is not None:
+            self.mask = Mask(side_shape, rad_mask)
+
         print(particles_df.columns)
         #Reading the euler angles and turning them into rotation matrices. 
         euler_angles_degrees = particles_df[["rlnAngleRot", "rlnAngleTilt", "rlnAnglePsi"]].values
@@ -95,6 +115,8 @@ class ImageDataSet(Dataset):
                     raise NotImplementedError            
 
             proj = proj[0]
+            if self.cfg.mask_rad is not None:
+                proj = self.mask(proj)
 
         except Exception as e:
             print(f"WARNING: Particle image {img_name} invalid! Setting to zeros.")
