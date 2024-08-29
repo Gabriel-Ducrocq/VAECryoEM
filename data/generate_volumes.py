@@ -22,25 +22,27 @@ parser_arg.add_argument('--Npix', type=float, required=True)
 parser_arg.add_argument('--folder_volumes', type=str, required=True)
 parser_arg.add_argument('--folder_structures', type=str, required=True)
 parser_arg.add_argument('--batch_size', type=str, required=True)
+parser_arg.add_argument('--base_structure', type=str, required=True)
 args = parser_arg.parse_args()
 apix = args.apix
 folder_volumes = args.folder_volumes
 folder_structures = args.folder_structures
 batch_size = args.batch_size
-#centering_structure = args.centering_structure
+base_structure = args.base_structure
 Npix = args.Npix
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 grid = EMAN2Grid(Npix, apix, device=device)
 
+base_structure = polymer.Polymer.from_pdb(base_structure)
 indexes = [path.split("_")[-1].split(".")[0] for path in os.listdir(folder_structures) if ".pdb" in path]
 paths = [folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path]
 sorted_paths = list(zip(*sorted(zip(indexes, paths))))[-1]
 print("Structures list", sorted_paths)
 sorted_paths = sorted_paths[::10]
 structures_poly = [Polymer.from_pdb(path) for path in sorted_paths]
-structures = [Gaussian(torch.tensor(poly.coord), torch.tensor([[2]*poly.coord.shape[0]]), poly.num_electron)
+structures = [Gaussian(torch.tensor(poly.coord), torch.tensor([[2]*poly.coord.shape[0]]), base_structure.num_electron)
                 for poly in structures_poly]
 
 print("min coord, max_coord", torch.min(grid.line_coords), torch.max(grid.line_coords))
