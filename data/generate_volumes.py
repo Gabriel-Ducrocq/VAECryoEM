@@ -31,8 +31,8 @@ batch_size = args.batch_size
 Npix = args.Npix
 
 
-grid = EMAN2Grid(Npix, apix)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+grid = EMAN2Grid(Npix, apix, device=device)
 
 print("Structures list", os.listdir(folder_structures))
 path_structures = tqdm([folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path][::10])
@@ -44,7 +44,7 @@ print("min coord, max_coord", torch.min(grid.line_coords), torch.max(grid.line_c
 N = len(structures)
 for i in tqdm(range(0,N)):
     batch_struct = structures[i]
-    batch_volumes = structure_to_volume(torch.tensor(batch_struct.mus)[None, :, :], torch.tensor(batch_struct.sigmas), torch.tensor(batch_struct.amplitudes)[:, None], grid, device)
+    batch_volumes = structure_to_volume(torch.tensor(batch_struct.mus).to(device)[None, :, :], torch.tensor(batch_struct.sigmas).to(device), torch.tensor(batch_struct.amplitudes).to(device)[:, None], grid, device)
 
     #mrc.write(f"{folder_volumes}volume_{indexes[i]}.mrc", np.transpose(batch_volumes[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=1.0, is_vol=True)
     print(batch_volumes.shape)
