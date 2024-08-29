@@ -115,7 +115,7 @@ class ImageDataSet(Dataset):
                     raise NotImplementedError            
 
             proj = proj[0]
-            if self.cfg.mask_rad is not None:
+            if self.mask is not None:
                 proj = self.mask(proj)
 
         except Exception as e:
