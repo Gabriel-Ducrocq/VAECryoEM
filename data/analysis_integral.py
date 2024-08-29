@@ -156,7 +156,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
         translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, segments)
         pred_struct = utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, segments, device)
 
-        for i, pred_struct in enumerate(predicted_structures):
+        for i, pred_struct in enumerate(pred_struct):
             print("Saving structure", i+1, "from pc", 0)
             base_structure.coord = pred_struct.detach().cpu().numpy()
             base_structure.to_pdb(os.path.join(structures_path, f"pc0/structure_z_{i}.pdb"))
