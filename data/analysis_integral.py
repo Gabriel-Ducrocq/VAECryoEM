@@ -125,8 +125,8 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
 
     all_trajectories, all_trajectories_pca, z_pca, pca = compute_traversals(all_latent_variables[::thinning], dimensions=dimensions, numpoints=numpoints)
     sns.set_style("white")
-    for dim in dimensions[:-1]:
-        if all_latent_variables.shape[1] > 1:
+    if all_latent_variables.shape[1] > 1:
+        for dim in dimensions[:-1]:
             os.makedirs(os.path.join(structures_path, f"pc{dim}/"), exist_ok=True)
             sns.kdeplot(x=z_pca[:, dim], y=z_pca[:, dim+1], fill=True, clip= (-5, 5))
             print("TRJACTORIES", all_trajectories_pca[dim][:,:])
@@ -147,21 +147,21 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
                 base_structure.coord = pred_struct.detach().cpu().numpy()
                 base_structure.to_pdb(os.path.join(structures_path, f"pc{dim}/structure_z_{i}.pdb"))
 
-        else:
-            os.makedirs(os.path.join(structures_path, f"pc0/"), exist_ok=True)
-            all_trajectories = graph_traversal(all_latent_variables, 0, numpoints=numpoints)
-            z_dim = torch.tensor(all_trajectories, dtype=torch.float32, device=device)
-            mask = vae.sample_mask(z_dim.shape[0])
-            quaternions_per_domain, translations_per_domain = vae.decode(z_dim)
-            rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
-            translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
-            predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
-                                                               rotation_per_residue)
+    else:
+        os.makedirs(os.path.join(structures_path, f"pc0/"), exist_ok=True)
+        all_trajectories = graph_traversal(all_latent_variables, 0, numpoints=numpoints)
+        z_dim = torch.tensor(all_trajectories, dtype=torch.float32, device=device)
+        mask = vae.sample_mask(z_dim.shape[0])
+        quaternions_per_domain, translations_per_domain = vae.decode(z_dim)
+        rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
+        translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
+        predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
+                                                           rotation_per_residue)
 
-            for i, pred_struct in enumerate(predicted_structures):
-                print("Saving structure", i+1, "from pc", 0)
-                base_structure.coord = pred_struct.detach().cpu().numpy()
-                base_structure.to_pdb(os.path.join(structures_path, f"pc0/structure_z_{i}.pdb"))
+        for i, pred_struct in enumerate(predicted_structures):
+            print("Saving structure", i+1, "from pc", 0)
+            base_structure.coord = pred_struct.detach().cpu().numpy()
+            base_structure.to_pdb(os.path.join(structures_path, f"pc0/structure_z_{i}.pdb"))
 
 
 
