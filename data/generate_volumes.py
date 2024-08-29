@@ -35,7 +35,7 @@ Npix = args.Npix
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 grid = EMAN2Grid(Npix, apix, device=device)
 
-base_structure = polymer.Polymer.from_pdb(base_structure)
+base_structure = Polymer.from_pdb(base_structure)
 indexes = [path.split("_")[-1].split(".")[0] for path in os.listdir(folder_structures) if ".pdb" in path]
 paths = [folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path]
 sorted_paths = list(zip(*sorted(zip(indexes, paths))))[-1]
