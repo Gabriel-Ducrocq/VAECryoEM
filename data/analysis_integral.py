@@ -151,7 +151,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
         os.makedirs(os.path.join(structures_path, f"pc0/"), exist_ok=True)
         all_trajectories = graph_traversal(all_latent_variables, 0, numpoints=numpoints)
         z_dim = torch.tensor(all_trajectories, dtype=torch.float32, device=device)
-        mask = vae.sample_mask(z_dim.shape[0])
+        segments = vae.sample_mask(z_dim.shape[0])
         quaternions_per_domain, translations_per_domain = vae.decode(z_dim)
         translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, segments)
         pred_struct = utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, segments, device)
