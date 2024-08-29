@@ -139,8 +139,8 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             z_dim = torch.tensor(all_trajectories[dim], dtype=torch.float32, device=device)
             segments = vae.sample_mask(batch_images.shape[0])
             quaternions_per_domain, translations_per_domain = vae.decode(z_dim)
-            translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, segments)
-            pred_struct = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, segments, device)
+            translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, segments)
+            pred_struct = utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, segments, device)
 
             for i, pred_struct in enumerate(predicted_structures):
                 print("Saving structure", i+1, "from pc", dim)
@@ -153,8 +153,8 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
         z_dim = torch.tensor(all_trajectories, dtype=torch.float32, device=device)
         mask = vae.sample_mask(z_dim.shape[0])
         quaternions_per_domain, translations_per_domain = vae.decode(z_dim)
-        translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, segments)
-        pred_struct = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, segments, device)
+        translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, segments)
+        pred_struct = utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, segments, device)
 
         for i, pred_struct in enumerate(predicted_structures):
             print("Saving structure", i+1, "from pc", 0)
