@@ -200,6 +200,7 @@ if __name__ == '__main__':
     model_path = args.model
     path = args.experiment_yaml
     dimensions = args.dimensions
+    generate_structures = args.generate_structures
     z = args.z
     analyze(path, model_path, structures_path, z, dimensions=dimensions, generate_structures=generate_structures)
 
