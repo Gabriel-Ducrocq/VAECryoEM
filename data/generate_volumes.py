@@ -35,7 +35,7 @@ grid = EMAN2Grid(Npix, apix)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 print("Structures list", os.listdir(folder_structures))
-path_structures = tqdm([folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path][::100])
+path_structures = tqdm([folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path][::10])
 structures_poly = [Polymer.from_pdb(path) for path in path_structures]
 structures = [Gaussian(torch.tensor(poly.coord), torch.tensor([[2]*poly.coord.shape[0]]), poly.num_electron)
                 for poly in structures_poly]
