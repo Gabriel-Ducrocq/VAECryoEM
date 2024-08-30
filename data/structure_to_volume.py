@@ -7,6 +7,7 @@ import yaml
 import torch
 import utils
 import mrcfile
+from cryodrgn import mrc
 import argparse
 import numpy as np
 import renderer
@@ -55,7 +56,8 @@ def structure_to_volume(image_yaml, structure_path, output_path):
     #end = time.time()
     #print(f"Time to generate a volume on {Npix_downsize} a side again3:", end-start)
     #print("Volume shape", volume.shape)
-    mrc.MRCFile.write(output_path, np.transpose(volume[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=apix_downsize, is_vol=True)
+    #mrc.MRCFile.write(output_path, np.transpose(volume[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=apix_downsize, is_vol=True)
+    mrc.write(output_path, np.transpose(volume[0].detach().cpu().numpy(), axes=(2, 1, 0)), Apix=apix_downsize, is_vol=True)
 
 
 if __name__ == '__main__':
