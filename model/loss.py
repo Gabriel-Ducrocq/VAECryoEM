@@ -137,8 +137,13 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
     """
 
     ## !!!!!!!!! REPLACING THE RMSD WITH A CORRELATION COMPUTATION BE CAREFUL !!!!!!!!!!!!!!
-    #rmsd = compute_rmsd(predicted_images, images)
-    rmsd = calc_cor_loss(predicted_images, images, mask_image)
+    loss_type = experiment_settings.get("loss_type")
+    if loss_type == "msd":
+        rmsd = compute_rmsd(predicted_images, images)
+    else:
+        rmsd = calc_cor_loss(predicted_images, images, mask_image)
+
+        
     KL_prior_latent = compute_KL_prior_latent(latent_mean, latent_std, experiment_settings["epsilon_kl"])
     KL_prior_mask_means = compute_KL_prior_mask(
         vae.mask_parameters, experiment_settings["mask_prior"],
