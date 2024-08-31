@@ -173,12 +173,16 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             print(all_latent_variables)
             all_latent_variables= torch.tensor(all_latent_variables[::thinning], dtype=torch.float32, device=device)
             latent_variables_loader = iter(DataLoader(all_latent_variables, shuffle=False, batch_size=batch_size))
+            all_axis_angle = []
+            all_translations = []
             for batch_num, z in enumerate(latent_variables_loader):  
                 print("Batch number:", batch_num)
                 print("dimensions", dimensions)
                 start = time()
                 mask = vae.sample_mask(z.shape[0])
                 quaternions_per_domain, translations_per_domain = vae.decode(z)
+                all_axis_angle.append(quaternion_to_axis_angle(quaternions_per_domain))
+                all_translations.append(translation_per_residue)
                 rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
                 translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
                 predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
@@ -191,6 +195,10 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
                     base_structure.to_pdb(os.path.join(structures_path, f"structure_z_{batch_num*batch_size + i}.pdb"))
 
 
+            all_axis_angle = torch.concatenate(all_axis_angle, dim=0).detach().cpu().numpy()
+            all_translations = torch.concatenate(all_translations, dim=0).detach().cpu().numpy()
+            np.save(os.path.join(structures_path, f"all_axis_angle_predicted.npy"), all_axis_angle)
+            np.save(os.path.join(structures_path, f"all_translations_predicted.npy"), all_translations)
 
 
 if __name__ == '__main__':
