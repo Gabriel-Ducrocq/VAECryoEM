@@ -182,7 +182,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
                 mask = vae.sample_mask(z.shape[0])
                 quaternions_per_domain, translations_per_domain = vae.decode(z)
                 all_axis_angle.append(quaternion_to_axis_angle(quaternions_per_domain))
-                all_translations.append(translation_per_residue)
+                all_translations.append(translations_per_domain)
                 rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
                 translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
                 predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
