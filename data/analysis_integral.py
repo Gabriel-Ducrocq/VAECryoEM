@@ -182,6 +182,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
                 mask = vae.sample_mask(z.shape[0])
                 quaternions_per_domain, translations_per_domain = vae.decode(z)
                 all_axis_angle.append(quaternion_to_axis_angle(quaternions_per_domain))
+                print("Translations per domain:", translations_per_domain)
                 all_translations.append(translations_per_domain)
                 rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
                 translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
