@@ -87,6 +87,8 @@ rotation_angle = np.zeros((N_struct, 1))
 rotation_angle[:int(N_struct/2), :] = np.random.normal(size=(int(N_struct/2), 1))*0.2 +np.pi/3
 rotation_angle[int(N_struct/2):, :] = np.random.normal(size=(int(N_struct/2), 1))*0.2 +2*np.pi/3
 
+rotation_angle[:, :] = np.linspace(0, 2*np.pi, N_struct)[:, None]
+
 axis_angle = torch.tensor(rotation_angle*rotation_axis, dtype=torch.float32, device=device)
 conformation_matrix_torch = axis_angle_to_matrix(axis_angle)
 conformation_matrix_np = conformation_matrix_torch.detach().cpu().numpy()
