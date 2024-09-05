@@ -19,6 +19,7 @@ from Bio import BiopythonWarning
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--apix', type=float, required=True)
 parser_arg.add_argument('--Npix', type=float, required=True)
+parser_arg.add_argument('--thinning', type=int, required=True)
 parser_arg.add_argument('--folder_volumes', type=str, required=True)
 parser_arg.add_argument('--folder_structures', type=str, required=True)
 parser_arg.add_argument('--batch_size', type=str, required=True)
@@ -32,6 +33,7 @@ batch_size = args.batch_size
 base_structure = args.base_structure
 center = args.center
 Npix = args.Npix
+thinning = args.thinning
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -42,7 +44,7 @@ indexes = [path.split("_")[-1].split(".")[0] for path in os.listdir(folder_struc
 paths = [folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path]
 sorted_paths = list(zip(*sorted(zip(indexes, paths))))[-1]
 print("Structures list", sorted_paths)
-sorted_paths = sorted_paths[::10]
+sorted_paths = sorted_paths[::thinning]
 print("Reading pdbs")
 structures_poly = [Polymer.from_pdb(path) for path in sorted_paths]
 if not center:
