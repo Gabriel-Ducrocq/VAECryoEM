@@ -43,11 +43,14 @@ paths = [folder_structures + path for path in os.listdir(folder_structures) if "
 sorted_paths = list(zip(*sorted(zip(indexes, paths))))[-1]
 print("Structures list", sorted_paths)
 sorted_paths = sorted_paths[::10]
+print("Reading pdbs")
 structures_poly = [Polymer.from_pdb(path) for path in sorted_paths]
 if not center:
+    print("No centering")
     structures = [Gaussian(torch.tensor(poly.coord), torch.tensor([[2]*poly.coord.shape[0]]), base_structure.num_electron)
                     for poly in structures_poly]
 else:
+    print("Centering")
     center_vector = np.mean(base_structure.coord, axis=0)[None, :]
     structures = [Gaussian(torch.tensor(poly.coord - center_vector), torch.tensor([[2]*poly.coord.shape[0]]), base_structure.num_electron)
                     for poly in structures_poly]
