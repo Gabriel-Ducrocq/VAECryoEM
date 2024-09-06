@@ -130,6 +130,7 @@ class VAE(torch.nn.Module):
             transformations_per_domain = torch.reshape(transformations, (N_batch, self.N_domains, 6))
             r6_per_domain = transformations_per_domain[:, :, 3:]
             translations_per_domain = transformations_per_domain[:, :, :3]
+            return r6_per_domain, translations_per_domain
         else:
             latent_variables = torch.tensor([latent_variable for latent_variable in range(self.latent_dim)],
                                            dtype=torch.float32, device=self.device)[:, None]
