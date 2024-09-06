@@ -73,8 +73,8 @@ def graph_traversal(z_pca, dim, numpoints=10):
     print(z_pca.shape)
     print("dim", dim)
     z_pca_dim = z_pca[:, int(dim)]
-    start = np.percentile(z_pca_dim, 5)
-    stop = np.percentile(z_pca_dim, 95)
+    start = np.percentile(z_pca_dim, 1)
+    stop = np.percentile(z_pca_dim, 99)
     traj_pca = np.zeros((numpoints, z_pca.shape[1]))
     traj_pca[:, dim] = np.linspace(start, stop, numpoints)
     return traj_pca
