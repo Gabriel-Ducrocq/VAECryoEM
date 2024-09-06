@@ -7,8 +7,8 @@ parser_arg.add_argument('--folder1', type=str, required=True)
 parser_arg.add_argument('--folder2', type=str, required=True)
 parser_arg.add_argument('--output', type=str, required=True)
 parser_arg.add_argument('--Apix', type=str, required=True)
-parser_arg.add_argument('--thinning1', type=str, required=True)
-parser_arg.add_argument('--thinning2', type=str, required=True)
+parser_arg.add_argument('--thinning1', type=int, required=True)
+parser_arg.add_argument('--thinning2', type=int, required=True)
 
 args = parser_arg.parse_args()
 folder_1 = args.folder1
