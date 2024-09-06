@@ -7,12 +7,16 @@ parser_arg.add_argument('--folder1', type=str, required=True)
 parser_arg.add_argument('--folder2', type=str, required=True)
 parser_arg.add_argument('--output', type=str, required=True)
 parser_arg.add_argument('--Apix', type=str, required=True)
+parser_arg.add_argument('--thinning1', type=str, required=True)
+parser_arg.add_argument('--thinning2', type=str, required=True)
 
 args = parser_arg.parse_args()
 folder_1 = args.folder1
 folder_2 = args.folder2
 output = args.output
 Apix = args.Apix
+thinning1 = args.thinning1
+thinning2 = args.thinning2
 
 #volumes1 = [folder_1 + "volume_6zp5.mrc", folder_1 + "volume_6zp7.mrc"]
 volumes1 = [folder_1 + path for path in os.listdir(folder_1) if ".mrc" in path]
@@ -23,8 +27,8 @@ indexes2 = [int(name.split("_")[-1].split(".")[0]) for name in volumes2]
 #print(f"Example indexes: indexes1 {indexes1[0]}, indexes2 {indexes2[0]}")
 print(f"Example indexes: indexes2 {indexes2[0]}")
 
-sorted1 = sorted(zip(indexes1, volumes1))
-sorted2 = sorted(zip(indexes2, volumes2))
+sorted1 = sorted(zip(indexes1, volumes1))[::thinning1]
+sorted2 = sorted(zip(indexes2, volumes2))[::thinning2]
 
 #print(sorted(indexes1))
 print("\n\n\n\n")
