@@ -21,7 +21,7 @@ from dataset import ImageDataSet
 from gmm import Gaussian, EMAN2Grid
 from Bio.PDB.PDBParser import PDBParser
 from biotite.structure.io.pdb import PDBFile
-from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix, axis_angle_to_quaternion, quaternion_apply
+from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix, axis_angle_to_quaternion, quaternion_apply, rotation_6d_to_matrix, matrix_to_axis_angle
 from pytorch3d.transforms import Transform3d
 
 
@@ -466,7 +466,7 @@ def rotate_residues_einops(atom_positions, quaternions, mask, device):
     batch_size = quaternions.shape[0]
     N_domains = mask.shape[-1]
     # NOTE: no need to normalize the quaternions, quaternion_to_axis does it already.
-    rotation_per_domains_axis_angle = quaternion_to_axis_angle(quaternions)
+    rotation_per_domains_axis_angle = matrix_to_axis_angle(rotation_6d_to_matrix(quaternions))
     #The below tensor is [N_batch, N_residues, N_domains, 3]
     mask_rotation_per_domains_axis_angle = mask[:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
     mask_rotation_per_domains_quaternions = axis_angle_to_quaternion(mask_rotation_per_domains_axis_angle)

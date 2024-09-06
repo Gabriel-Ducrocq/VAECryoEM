@@ -128,8 +128,7 @@ class VAE(torch.nn.Module):
         if self.latent_type == "continuous":
             transformations = self.decoder(latent_variables)
             transformations_per_domain = torch.reshape(transformations, (N_batch, self.N_domains, 6))
-            ones = torch.ones(size=(N_batch, self.N_domains, 1), device=self.device)
-            quaternions_per_domain = torch.concat([ones, transformations_per_domain[:, :, 3:]], dim=-1)
+            r6_per_domain = transformations_per_domain[:, :, 3:]
             translations_per_domain = transformations_per_domain[:, :, :3]
         else:
             latent_variables = torch.tensor([latent_variable for latent_variable in range(self.latent_dim)],
