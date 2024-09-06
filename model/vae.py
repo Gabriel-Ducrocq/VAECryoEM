@@ -127,7 +127,7 @@ class VAE(torch.nn.Module):
         N_batch = latent_variables.shape[0]
         if self.latent_type == "continuous":
             transformations = self.decoder(latent_variables)
-            transformations_per_domain = torch.reshape(transformations, (N_batch, self.N_domains, 6))
+            transformations_per_domain = torch.reshape(transformations, (N_batch, self.N_domains, 9))
             r6_per_domain = transformations_per_domain[:, :, 3:]
             translations_per_domain = transformations_per_domain[:, :, :3]
             return r6_per_domain, translations_per_domain
