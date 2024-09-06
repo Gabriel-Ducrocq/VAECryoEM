@@ -41,6 +41,8 @@ grid = EMAN2Grid(Npix, apix, device=device)
 filter_aa = True
 base_structure = Polymer.from_pdb(base_structure, filter_aa)
 indexes = [path.split("_")[-1].split(".")[0] for path in os.listdir(folder_structures) if ".pdb" in path]
+print("Indexes", indexes)
+print("Number indexes", len(indexes))
 paths = [folder_structures + path for path in os.listdir(folder_structures) if ".pdb" in path]
 sorted_paths = list(zip(*sorted(zip(indexes, paths))))[-1]
 print("Structures list", sorted_paths)
