@@ -35,7 +35,7 @@ N_volumes_1 = len(sorted1)
 N_volumes_2 = len(sorted2)
 assert N_volumes_1 == N_volumes_2, "The number of volumes must be the same"
 
-for i in tqdm(range(0, N_volumes)):
+for i in tqdm(range(0, N_volumes_1)):
 	#os.system(f"pdb_selatom -CA,C,N {sorted1[i][1]} > backbone1.pdb")
 	#os.system(f"pdb_selatom -CA,C,N {sorted2[i][1]} > backbone2.pdb")
 	#os.system(f"pdb2mrc.py {backbone1} volume1 --apix={Apix}")
