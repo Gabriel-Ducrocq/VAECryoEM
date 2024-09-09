@@ -24,7 +24,7 @@ from gmm import Gaussian, EMAN2Grid
 from sklearn.decomposition import PCA
 from torch.utils.data import DataLoader
 from scipy.spatial.distance import cdist
-from pytorch3d.transforms import quaternion_to_axis_angle, quaternion_to_matrix
+from pytorch3d.transforms import quaternion_to_axis_angle, quaternion_to_matrix, rotation_6d_to_matrix, matrix_to_axis_angle
 
 class ResSelect(bpdb.Select):
     def accept_residue(self, res):
@@ -181,15 +181,16 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
                 start = time()
                 mask = vae.sample_mask(z.shape[0])
                 quaternions_per_domain, translations_per_domain = vae.decode(z)
-                all_axis_angle.append(quaternion_to_axis_angle(quaternions_per_domain))
+                all_axis_angle.append(matrix_to_axis_angle(rotation_6d_to_matrix(quaternions_per_domain)))
                 print("Translations per domain:", translations_per_domain)
                 all_translations.append(translations_per_domain)
-                rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
-                translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
-                np.save(os.path.join(structures_path, f"rotation_per_residue.npy"), rotation_per_residue.detach().cpu().numpy())
-                np.save(os.path.join(structures_path, f"translation_per_residue.npy"), translation_per_residue.detach().cpu().numpy())
-                predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
-                                                                   rotation_per_residue)
+                #rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
+                #translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
+                #np.save(os.path.join(structures_path, f"rotation_per_residue.npy"), rotation_per_residue.detach().cpu().numpy())
+                #np.save(os.path.join(structures_path, f"translation_per_residue.npy"), translation_per_residue.detach().cpu().numpy())
+                #predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
+                #                                                   rotation_per_residue)
+                predicted_structures = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, mask, device)
 
                 for i, pred_struct in enumerate(predicted_structures):
                     print("Saving structure", batch_num*batch_size + i)
