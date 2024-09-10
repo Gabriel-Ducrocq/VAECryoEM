@@ -148,7 +148,7 @@ def parse_yaml(path):
                       experiment_settings["latent_dimension"] * 2,
                       experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
                       latent_type="continuous")
-        decoder = MLP(experiment_settings["latent_dimension"], experiment_settings["N_domains"]*9,
+        decoder = MLP(experiment_settings["latent_dimension"], experiment_settings["N_domains"]*6,
                       experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
     else:
         encoder = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
@@ -347,7 +347,7 @@ def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, op
                                          caption="True images")
     wandb.log({"Images/true_image": true_image_wandb})
     wandb.log({"Images/predicted_image": predicted_image_wandb})
-    torch.save(vae, experiment_settings["folder_path"] + "models/full_model" + str(epoch))
+    torch.save(vae, experiment_settings["folder_path"] + "models_lr_0_000003/full_model" + str(epoch))
 
 
 
