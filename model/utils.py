@@ -148,7 +148,7 @@ def parse_yaml(path):
                       experiment_settings["latent_dimension"] * 2,
                       experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
                       latent_type="continuous")
-        decoder = MLP(experiment_settings["latent_dimension"], experiment_settings["N_domains"]*6,
+        decoder = MLP(experiment_settings["latent_dimension"], experiment_settings["N_domains"]*9,
                       experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
     else:
         encoder = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
