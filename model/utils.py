@@ -574,7 +574,7 @@ def init_train_network(vae, image_translator, ctf, grid, gmm_repr, optimizer, da
             all_losses.append(loss.detach().cpu().numpy())
 
 
-    wandb.log({f"init_task/mse": np.mean(all_losses)})
+        wandb.log({f"init_task/mse": np.mean(all_losses)})
 
 
 
