@@ -20,9 +20,10 @@ import torch.nn.functional as F
 from dataset import ImageDataSet
 from gmm import Gaussian, EMAN2Grid
 from Bio.PDB.PDBParser import PDBParser
+from torch.utils.data import DataLoader
 from biotite.structure.io.pdb import PDBFile
-from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix, axis_angle_to_quaternion, quaternion_apply, rotation_6d_to_matrix, matrix_to_axis_angle
 from pytorch3d.transforms import Transform3d
+from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix, axis_angle_to_quaternion, quaternion_apply, rotation_6d_to_matrix, matrix_to_axis_angle
 
 
 def primal_to_fourier2d(images):
