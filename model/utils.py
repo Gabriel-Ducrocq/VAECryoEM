@@ -532,7 +532,7 @@ def deform_structure(atom_positions, translation_per_residue, rotations_per_resi
     return new_atom_positions
 
 
-def loss_init_train(predicted_r6_rotation_per_domain, predicted_translation_per_domain):
+def loss_init_train(predicted_r6_rotation_per_domain, predicted_translation_per_domain, device):
     """
     Loss to set the init translation to 0 and the init rotation to identity
     :param predicted_r6_rotation_per_domain: torch.tensor(batch_size, N_domains, 6)
@@ -567,7 +567,7 @@ def init_train_network(vae, image_translator, ctf, grid, gmm_repr, optimizer, da
 
             mask = vae.sample_mask(batch_images.shape[0])
             rotation_r6_per_domain, translations_per_domain = vae.decode(latent_variables)
-            loss = loss_init_train(rotation_r6_per_domain, translations_per_domain)
+            loss = loss_init_train(rotation_r6_per_domain, translations_per_domain, device)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
