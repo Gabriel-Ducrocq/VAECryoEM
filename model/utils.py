@@ -531,4 +531,53 @@ def deform_structure(atom_positions, translation_per_residue, rotations_per_resi
     return new_atom_positions
 
 
+def loss_init_train(predicted_r6_rotation_per_domain, predicted_translation_per_domain):
+    """
+    Loss to set the init translation to 0 and the init rotation to identity
+    :param predicted_r6_rotation_per_domain: torch.tensor(batch_size, N_domains, 6)
+    :param predicted_translation_per_domain: torch.tensor(batch_size, N_domains, 3)
+    """
+    identity_r6 = torch.zeros_like(predicted_r6_rotation_per_domain, device=device, dtype=torch.float32)
+    identity_r6[:, :, 0] = 1
+    identity_r6[:, :, 4] = 1
+    loss_translation = torch.mean(torch.sum((predicted_translation_per_domain - torch.zeros_like(predicted_translation_per_domain, device=device, dtype=torch.float32))**2, dim=-1))
+    loss_rotation = torch.mean(torch.sum((predicted_r6_rotation_per_domain - identity_r6)**2, dim=-1))
+    return loss_rotation + loss_translation
+
+def init_train_network(vae, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, base_structure, lp_mask2d, mask_images, amortized):
+    N_epochs = 3
+    for epoch in range(N_epochs):
+        all_losses = []
+        print("Epoch number init:", epoch)
+        #### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DROP LAST !!!!!! ##################################
+        data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4, drop_last=True)))
+        start_tot = time()
+        for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
+            batch_images = batch_images.to(device)
+            batch_poses = batch_poses.to(device)
+            batch_poses_translation = batch_poses_translation.to(device)
+            indexes = indexes.to(device)
+            flattened_batch_images = batch_images.flatten(start_dim=-2)
+            batch_translated_images = image_translator.transform(batch_images, batch_poses_translation[:, None, :])
+            lp_batch_translated_images = low_pass_images(batch_translated_images, lp_mask2d)
+            if amortized:
+                latent_variables, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
+            else:
+                latent_variables, latent_mean, latent_std = vae.sample_latent(None, indexes)
+
+            mask = vae.sample_mask(batch_images.shape[0])
+            rotation_r6_per_domain, translations_per_domain = vae.decode(latent_variables)
+            loss = loss_init_train(predicted_r6_rotation_per_domain, predicted_translation_per_domain)
+            loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+            all_losses.append(loss.detach().cpu().numpy())
+
+
+    wandb.log({f"init_task/mse": np.mean(all_losses)})
+
+
+
+
+
 
