@@ -567,7 +567,7 @@ def init_train_network(vae, image_translator, ctf, grid, gmm_repr, optimizer, da
 
             mask = vae.sample_mask(batch_images.shape[0])
             rotation_r6_per_domain, translations_per_domain = vae.decode(latent_variables)
-            loss = loss_init_train(rotation_r6_per_domain, predicted_translation_per_domain)
+            loss = loss_init_train(rotation_r6_per_domain, translations_per_domain)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
