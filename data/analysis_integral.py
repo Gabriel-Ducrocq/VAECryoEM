@@ -115,14 +115,19 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
                 np.save(f"{structures_path}z_cryosphere_1.npy", all_latent_variables)
                 all_latent_variables = []
 
+            if batch_num == 880:
+                all_latent_variables = torch.concat(all_latent_variables, dim=0).detach().cpu().numpy()
+                np.save(f"{structures_path}z_cryosphere_2.npy", all_latent_variables)
+                all_latent_variables = []
 
 
         all_latent_variables = torch.concat(all_latent_variables, dim=0).detach().cpu().numpy()
-        np.save(f"{structures_path}z_cryosphere_2.npy", all_latent_variables)
+        np.save(f"{structures_path}z_cryosphere_3.npy", all_latent_variables)
         all_latent_variables = 0
         z1 = np.load(f"{structures_path}z_cryosphere_1.npy", all_latent_variables)
         z2 = np.load(f"{structures_path}z_cryosphere_2.npy", all_latent_variables)
-        all_latent_variables = np.concatenate([z1, z2], axis=0)
+        z3 = np.load(f"{structures_path}z_cryosphere_3.npy", all_latent_variables)
+        all_latent_variables = np.concatenate([z1, z2, z3], axis=0)
     else:
         all_latent_variables = z
 
