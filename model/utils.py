@@ -552,7 +552,6 @@ def init_train_network(vae, image_translator, ctf, grid, gmm_repr, optimizer, da
         print("Epoch number init:", epoch)
         #### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DROP LAST !!!!!! ##################################
         data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4, drop_last=True)))
-        start_tot = time()
         for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
