@@ -186,7 +186,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
                 print("Translations per domain:", translations_per_domain)
                 all_translations.append(translations_per_domain)
                 #rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
-                #translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
+                translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
                 #np.save(os.path.join(structures_path, f"rotation_per_residue.npy"), rotation_per_residue.detach().cpu().numpy())
                 #np.save(os.path.join(structures_path, f"translation_per_residue.npy"), translation_per_residue.detach().cpu().numpy())
                 #predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
