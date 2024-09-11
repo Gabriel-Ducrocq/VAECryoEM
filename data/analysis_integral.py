@@ -191,7 +191,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
                 #np.save(os.path.join(structures_path, f"translation_per_residue.npy"), translation_per_residue.detach().cpu().numpy())
                 #predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
                 #                                                   rotation_per_residue)
-                predicted_structures = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, mask, device)
+                predicted_structures = utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, mask, device)
 
                 for i, pred_struct in enumerate(predicted_structures):
                     print("Saving structure", batch_num*batch_size + i)
