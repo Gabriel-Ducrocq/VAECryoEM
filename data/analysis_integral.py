@@ -161,7 +161,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
                 quaternions_per_domain, translations_per_domain = vae.decode(z_dim)
                 #rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
                 translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
-                predicted_structures = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, mask, device)
+                predicted_structures = utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, mask, device)
                 #predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
                 #                                                   rotation_per_residue)
 
