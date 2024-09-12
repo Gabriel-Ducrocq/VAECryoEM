@@ -133,7 +133,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             for dim in dimensions[:-1]:
                 os.makedirs(os.path.join(structures_path, f"pc{dim}/"), exist_ok=True)
                 sns.kdeplot(x=z_pca[:, dim], y=z_pca[:, dim+1], fill=True, clip= (-5, 5))
-                print("TRJACTORIES", all_trajectories_pca[dim][:,:])
+                print("TRJACTORIES", all_trajectories_pca[dim][:, :])
                 plt.scatter(x=all_trajectories_pca[dim][:, dim], y=all_trajectories_pca[dim][:, dim+1], c="red")
                 plt.title("PCA of the latent space")
                 plt.xlabel(f"PC {dim+1}, variance {pca.explained_variance_ratio_[dim]} ")
