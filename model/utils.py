@@ -552,11 +552,11 @@ def loss_init_train(predicted_r6_rotation_per_domain, predicted_translation_per_
     :param predicted_r6_rotation_per_domain: torch.tensor(batch_size, N_domains, 6)
     :param predicted_translation_per_domain: torch.tensor(batch_size, N_domains, 3)
     """
-    identity_r6 = torch.zeros_like(predicted_r6_rotation_per_domain, device=device, dtype=torch.float32)
-    identity_r6[:, :, 0] = 1
-    identity_r6[:, :, 4] = 1
+    angles = torch.sqrt(torch.sum(predicted_r6_rotation_per_domain**2, dim=-1))
+    identity_r6 = torch.zeros_like(angles, device=device, dtype=torch.float32)
+
     loss_translation = torch.mean(torch.sum((predicted_translation_per_domain - torch.zeros_like(predicted_translation_per_domain, device=device, dtype=torch.float32))**2, dim=-1))
-    loss_rotation = torch.mean(torch.sum((predicted_r6_rotation_per_domain - identity_r6)**2, dim=-1))
+    loss_rotation = torch.mean(torch.sum((angles - identity_r6[:, :])**2, dim=-1))
     return loss_rotation + loss_translation
 
 def init_train_network(vae, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, base_structure, lp_mask2d, mask_images, amortized):
