@@ -131,7 +131,7 @@ class VAE(torch.nn.Module):
             axis_and_angle_per_domain = transformations_per_domain[:, :, 3:]
             axis_per_domain = torch.nn.functional.normalize(axis_and_angle_per_domain[:, :, :-1], dim=-1)
             #I multiply by 2 to get in the range [-pi, pi] and then by 2 again to be sure the boundaries are reachable with good gradients
-            angle_per_domain = 2*torch.atan2(axis_and_angle_per_domain[:, :, -1])*2
+            angle_per_domain = 2*torch.atan2(axis_and_angle_per_domain[:, :, -1], torch.ones_like(axis_and_angle_per_domain[:, :, -1]))*2
             axis_angle_per_domain = angle_per_domain*axis_per_domain
             translations_per_domain = transformations_per_domain[:, :, :3]
 
