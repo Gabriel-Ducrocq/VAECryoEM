@@ -348,20 +348,20 @@ def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, op
                                          caption="True images")
     wandb.log({"Images/true_image": true_image_wandb})
     wandb.log({"Images/predicted_image": predicted_image_wandb})
-    all_norms = torch.cat(tracking_metrics["translation_per_domain"], dim=0)
-    all_angles = torch.cat(tracking_metrics["angle_per_domain"][:, -1], dim=0)
-    all_axis = torch.cat(tracking_metrics["axis_per_domain"][:, -1], dim=0)
+    #all_norms = torch.cat(tracking_metrics["translation_per_domain"], dim=0)
+    #all_angles = torch.cat(tracking_metrics["angle_per_domain"][:, -1], dim=0)
+    #all_axis = torch.cat(tracking_metrics["axis_per_domain"][:, -1], dim=0)
 
-    table_translations = wandb.Table(data=all_norms, columns=["Domain 0", "Domain 1", "Domain 2", "Domain 3"])
-    table_angles = wandb.Table(data=all_angles, columns=["Domain 3"])
-    table_axis = wandb.Table(data=all_axis, columns=["Domain 3"])
-    wandb.log({'distributions/translations': wandb.plot.histogram(table_translations, "translations",
-           title="Norm of translations per domain")})
-    wandb.log({'distributions/angles': wandb.plot.histogram(table_angles, "angles",
-           title="Angles of rotation domain 3")})
+    #table_translations = wandb.Table(data=all_norms, columns=["Domain 0", "Domain 1", "Domain 2", "Domain 3"])
+    #table_angles = wandb.Table(data=all_angles, columns=["Domain 3"])
+    #table_axis = wandb.Table(data=all_axis, columns=["Domain 3"])
+    #wandb.log({'distributions/translations': wandb.plot.histogram(table_translations, "translations",
+    #       title="Norm of translations per domain")})
+    #wandb.log({'distributions/angles': wandb.plot.histogram(table_angles, "angles",
+    #       title="Angles of rotation domain 3")})
 
-    wandb.log({'distributions/axis': wandb.plot.histogram(table_axis, "axis",
-           title="Dot product axis of rotation domain 3")})
+    #wandb.log({'distributions/axis': wandb.plot.histogram(table_axis, "axis",
+    #       title="Dot product axis of rotation domain 3")})
 
     torch.save(vae, experiment_settings["folder_path"] + "models/full_model" + str(epoch))
 
