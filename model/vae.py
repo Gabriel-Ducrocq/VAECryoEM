@@ -127,10 +127,15 @@ class VAE(torch.nn.Module):
         N_batch = latent_variables.shape[0]
         if self.latent_type == "continuous":
             transformations = self.decoder(latent_variables)
-            transformations_per_domain = torch.reshape(transformations, (N_batch, self.N_domains, 9))
-            r6_per_domain = transformations_per_domain[:, :, 3:]
+            transformations_per_domain = torch.reshape(transformations, (N_batch, self.N_domains, 7))
+            axis_and_angle_per_domain = transformations_per_domain[:, :, 3:]
+            axis_per_domain = torch.nn.functional.normalize(axis_and_angle_per_domain[:, :, :-1], dim=-1)
+            #I multiply by 2 to get in the range [-pi, pi] and then by 2 again to be sure the boundaries are reachable with good gradients
+            angle_per_domain = 2*torch.atan2(axis_and_angle_per_domain[:, :, -1])*2
+            axis_angle_per_domain = angle_per_domain*axis_per_domain
             translations_per_domain = transformations_per_domain[:, :, :3]
-            return r6_per_domain, translations_per_domain
+
+            return axis_angle_per_domain translations_per_domain
         else:
             latent_variables = torch.tensor([latent_variable for latent_variable in range(self.latent_dim)],
                                            dtype=torch.float32, device=self.device)[:, None]

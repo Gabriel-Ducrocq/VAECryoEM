@@ -149,7 +149,7 @@ def parse_yaml(path):
                       experiment_settings["latent_dimension"] * 2,
                       experiment_settings["encoder"]["hidden_dimensions"], network_type="encoder", device=device,
                       latent_type="continuous")
-        decoder = MLP(experiment_settings["latent_dimension"], experiment_settings["N_domains"]*9,
+        decoder = MLP(experiment_settings["latent_dimension"], experiment_settings["N_domains"]*7,
                       experiment_settings["decoder"]["hidden_dimensions"], network_type="decoder", device=device)
     else:
         encoder = MLP(image_settings["N_pixels_per_axis"][0] * image_settings["N_pixels_per_axis"][1],
@@ -348,6 +348,21 @@ def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, op
                                          caption="True images")
     wandb.log({"Images/true_image": true_image_wandb})
     wandb.log({"Images/predicted_image": predicted_image_wandb})
+    all_norms = torch.cat(tracking_metrics["translation_per_domain"], dim=0)
+    all_angles = torch.cat(tracking_metrics["angle_per_domain"][:, -1], dim=0)
+    all_axis = torch.cat(tracking_metrics["axis_per_domain"][:, -1], dim=0)
+
+    table_translations = wandb.Table(data=all_norms, columns=["Domain 0", "Domain 1", "Domain 2", "Domain 3"])
+    table_angles = wandb.Table(data=all_angles, columns=["Domain 3"])
+    table_axis = wandb.Table(data=all_axis, columns=["Domain 3"])
+    wandb.log({'distributions/translations': wandb.plot.histogram(table_translations, "translations",
+           title="Norm of translations per domain")})
+    wandb.log({'distributions/angles': wandb.plot.histogram(table_angles, "angles",
+           title="Angles of rotation domain 3")})
+
+    wandb.log({'distributions/axis': wandb.plot.histogram(table_axis, "axis",
+           title="Dot product axis of rotation domain 3")})
+
     torch.save(vae, experiment_settings["folder_path"] + "models/full_model" + str(epoch))
 
 
@@ -453,7 +468,7 @@ def compute_rotations_per_residue_einops(quaternions, mask, device):
     return overall_rotation_matrices
 
 
-def rotate_residues_einops(atom_positions, quaternions, mask, device):
+def rotate_residues_einops(atom_positions, rotation_per_domains_axis_angle, mask, device):
     """
     Computes the rotation matrix corresponding to each domain for each residue, where the angle of rotation has been
     weighted by the mask value of the corresponding domain.
@@ -467,7 +482,6 @@ def rotate_residues_einops(atom_positions, quaternions, mask, device):
     batch_size = quaternions.shape[0]
     N_domains = mask.shape[-1]
     # NOTE: no need to normalize the quaternions, quaternion_to_axis does it already.
-    rotation_per_domains_axis_angle = matrix_to_axis_angle(rotation_6d_to_matrix(quaternions))
     #The below tensor is [N_batch, N_residues, N_domains, 3]
     mask_rotation_per_domains_axis_angle = mask[:, :, :, None] * rotation_per_domains_axis_angle[:, None, :, :]
     mask_rotation_per_domains_quaternions = axis_angle_to_quaternion(mask_rotation_per_domains_axis_angle)

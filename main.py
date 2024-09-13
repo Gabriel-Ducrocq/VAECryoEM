@@ -50,7 +50,7 @@ def train(yaml_setting_path, debug_mode):
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
         tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
-                            "kl_prior_mask_proportions":[], "l2_pen":[], "continuity_loss":[], "clashing_loss":[]}
+                            "kl_prior_mask_proportions":[], "l2_pen":[], "continuity_loss":[], "clashing_loss":[], "axis_per_domain":[], "angle_per_domain":[], "translation_per_domain":[]}
 
         #### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DROP LAST !!!!!! ##################################
         data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4, drop_last=True)))
@@ -77,6 +77,17 @@ def train(yaml_setting_path, debug_mode):
             batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
             loss = compute_loss(batch_predicted_images, lp_batch_translated_images, None, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics, predicted_structures=predicted_structures, true_structure=base_structure, device=device)
+
+            norm_translation_per_domain = torch.sqrt(torch.sum(translations_per_domain**2, dim=-1))
+            angle_per_domain = torch.sqrt(torch.sum(quaternions_per_domain**2, dim=-1, keepdim=True))
+            axis_per_domain = quaternions_per_domain/angle_per_domain
+            angle_per_domain = angle_per_domain % (2*torch.pi)
+            true_axis = torch.zeros(3, device=device, detype=torch.float32)
+            true_axis[1] = 1.0
+            dot_product_per_domain = torch.einsum("bdi, i-> bd", axis_per_domain, true_axis) 
+            tracking_metrics["translation_per_domain"].append(norm_translation_per_domain)
+            tracking_metrics["angle_per_domain"].append(angle_per_domain)
+            tracking_metrics["axis_per_domain"].append(angle_per_domain)
             loss.backward()
             optimizer.step()
             #end_backward = time()
