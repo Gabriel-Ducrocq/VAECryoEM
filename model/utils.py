@@ -479,7 +479,7 @@ def rotate_residues_einops(atom_positions, rotation_per_domains_axis_angle, mask
     """
 
     N_residues = mask.shape[1]
-    batch_size = quaternions.shape[0]
+    batch_size = rotation_per_domains_axis_angle.shape[0]
     N_domains = mask.shape[-1]
     # NOTE: no need to normalize the quaternions, quaternion_to_axis does it already.
     #The below tensor is [N_batch, N_residues, N_domains, 3]
