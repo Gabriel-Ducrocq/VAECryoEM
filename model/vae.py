@@ -135,7 +135,7 @@ class VAE(torch.nn.Module):
             axis_angle_per_domain = angle_per_domain*axis_per_domain
             translations_per_domain = transformations_per_domain[:, :, :3]
 
-            return axis_angle_per_domain translations_per_domain
+            return axis_angle_per_domain, translations_per_domain
         else:
             latent_variables = torch.tensor([latent_variable for latent_variable in range(self.latent_dim)],
                                            dtype=torch.float32, device=self.device)[:, None]
