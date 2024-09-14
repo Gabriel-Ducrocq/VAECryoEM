@@ -136,7 +136,7 @@ if is_homogeneous:
     backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
 
 if not is_homogeneous:
-    n_iter = len(sorted_structures)
+    n_iter = len(sorted_structures)/10
 else:
     assert N_images % N_pose_per_structure == 0, "Number of poses does not divide the number of images"
     n_iter = int(N_images/N_pose_per_structure)
