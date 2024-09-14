@@ -152,17 +152,17 @@ for i in tqdm(range(n_iter)):
         poly = Polymer.from_pdb(sorted_structures[i], filter_aa) 
         backbone = poly.coord - center_vector
         backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
-        backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure*10)], dim=0)
+        backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
         if len(poly) not in size_prot:
             size_prot.append(len(poly))
             faulty_indexes.append(i)
 
     amplitudes = torch.tensor(poly.num_electron, dtype=torch.float32, device=device)[:, None]
-    posed_backbones = rotate_structure(backbone, poses[i*N_pose_per_structure*10:(i+1)*N_pose_per_structure*10])
+    posed_backbones = rotate_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
     batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
-    batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure*10, (i+1)*N_pose_per_structure*10)], device=device))
+    batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
     ###  !!!!!!!!!!!!! We multiply by -1 so that when we correct for the translation in the cryoSPHERE run, we dont get 2x translation but 0 tranlations !
-    batch_poses_translation = - poses_translations[i*N_pose_per_structure*10:(i+1)*N_pose_per_structure*10]
+    batch_poses_translation = - poses_translations[i*N_pose_per_structure:(i+1)*N_pose_per_structure]
     batch_translated_images = image_translator.transform(batch_ctf_corrupted_images, batch_poses_translation[:, None, :])
     #batch_ctf_corrupted_images = batch_images
     #plt.imshow(batch_ctf_corrupted_images[0].detach().numpy())
