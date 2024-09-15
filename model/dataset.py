@@ -89,6 +89,7 @@ class ImageDataSet(Dataset):
             f_sub_data = torch.cat(f_sub_data, dim=0)
             self.f_mu = 0.0  # just follow cryodrgn
             self.f_std = torch.std(f_sub_data).item()
+            print("Estimated std", self.f_std)
         else:
             raise Exception("The normalization factor has been estimated!")
 
