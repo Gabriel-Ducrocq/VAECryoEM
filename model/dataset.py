@@ -82,11 +82,13 @@ class ImageDataSet(Dataset):
         if self.f_mu is None and self.f_std is None:
             f_sub_data = []
             # I have checked that the standard deviation of 10/100/1000 particles is similar
-            indexes_query = [i for i in range(0, len(self), len(self) // 100)]
-            _, _, _, _, fproj = self.__getitem__(indexes_query)
+            for i in range(0, len(self), len(self) // 100):
+                _, _, _, _, fproj = self[i]
+                f_sub_data.append(f_proj)
+
             f_sub_data = torch.cat(f_sub_data, dim=0)
             self.f_mu = 0.0  # just follow cryodrgn
-            self.f_std = torch.std(fproj).item()
+            self.f_std = torch.std(f_sub_data).item()
         else:
             raise Exception("The normalization factor has been estimated!")
 
