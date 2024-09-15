@@ -84,7 +84,7 @@ class ImageDataSet(Dataset):
             # I have checked that the standard deviation of 10/100/1000 particles is similar
             for i in range(0, len(self), len(self) // 100):
                 _, _, _, _, fproj = self[i]
-                f_sub_data.append(f_proj)
+                f_sub_data.append(fproj)
 
             f_sub_data = torch.cat(f_sub_data, dim=0)
             self.f_mu = 0.0  # just follow cryodrgn
