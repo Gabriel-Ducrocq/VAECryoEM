@@ -74,6 +74,21 @@ class ImageDataSet(Dataset):
             self.down_apix = self.side_shape * self.apix /self.down_side_shape
 
         self.invert_data = invert_data
+        self.f_std = None
+        self.f_mu = None
+        self.estimate_normalization()
+
+    def estimate_normalization(self):
+        if self.f_mu is None and self.f_std is None:
+            f_sub_data = []
+            # I have checked that the standard deviation of 10/100/1000 particles is similar
+            indexes_query = [i for i in range(0, len(self), len(self) // 100)]
+            _, _, _, _, fproj = self.__getitem__(indexes_query)
+            f_sub_data = torch.cat(f_sub_data, dim=0)
+            self.f_mu = 0.0  # just follow cryodrgn
+            self.f_std = torch.std(fproj).item()
+        else:
+            raise Exception("The normalization factor has been estimated!")
 
     def standardize(self, images, device="cpu"):
         return (images - self.avg_image.to(device))/self.std_image.to(device)
@@ -118,6 +133,11 @@ class ImageDataSet(Dataset):
             if self.mask is not None:
                 proj = self.mask(proj)
 
+            fproj = primal_to_fourier_2d(proj)
+            if self.f_mu is not None:
+                fproj = (fproj - self.f_mu) / self.f_std
+                proj = fourier_to_primal_2d(fproj).real
+
         except Exception as e:
             print(f"WARNING: Particle image {img_name} invalid! Setting to zeros.")
             print(e)
@@ -127,7 +147,29 @@ class ImageDataSet(Dataset):
         #    print("INVERTING")
         #    proj *= -1
 
-        return idx, proj, self.poses[idx], self.poses_translation[idx]/self.down_apix
+        return idx, proj, self.poses[idx], self.poses_translation[idx]/self.down_apix, fproj
+
+
+
+def primal_to_fourier_2d(images):
+    """
+    Computes the fourier transform of the images.
+    images: torch.tensor(batch_size, N_pix, N_pix)
+    return fourier transform of the images
+    """
+    r = torch.fft.ifftshift(images, dim=(-2, -1))
+    fourier_images = torch.fft.fftshift(torch.fft.fft2(r, dim=(-2, -1), s=(r.shape[-2], r.shape[-1])), dim=(-2, -1))
+    return fourier_images
+
+def fourier_to_primal_2d(fourier_images):
+    """
+    Computes the inverse fourier transform
+    fourier_images: torch.tensor(batch_size, N_pix, N_pix)
+    return fourier transform of the images
+    """
+    f = torch.fft.ifftshift(fourier_images, dim=(-2, -1))
+    r = torch.fft.fftshift(torch.fft.ifft2(f, dim=(-2, -1), s=(f.shape[-2], f.shape[-1])),dim=(-2, -1)).real
+    return r
 
 
 
@@ -191,7 +233,7 @@ class StarfileDataSet(Dataset):
             self.f_mu = 0.0  # just follow cryodrgn
             self.f_std = torch.std(f_sub_data).item()
         else:
-            raise Exception("The normalization factor has been estimated!")
+            raise Exception("The normalization factor has been estimated! Std:", self.f_std)
 
     def __getitem__(self, idx):
         item_row = self.particles_df.iloc[idx]

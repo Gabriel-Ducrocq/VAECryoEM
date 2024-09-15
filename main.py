@@ -53,7 +53,7 @@ def train(yaml_setting_path, debug_mode):
         #### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DROP LAST !!!!!! ##################################
         data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4, drop_last=True)))
         start_tot = time()
-        for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
+        for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation, _) in enumerate(data_loader):
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
             batch_poses_translation = batch_poses_translation.to(device)
@@ -72,7 +72,7 @@ def train(yaml_setting_path, debug_mode):
             predicted_structures = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, mask, device)
             posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
             predicted_images  = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
-            batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
+            batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)/dataset.f_std
             loss = compute_loss(batch_predicted_images, lp_batch_translated_images, None, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics, predicted_structures=predicted_structures, true_structure=base_structure, device=device)
             loss.backward()
