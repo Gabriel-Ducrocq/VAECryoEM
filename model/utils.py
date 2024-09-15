@@ -332,7 +332,8 @@ def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, op
     """
     wandb.log({key: np.mean(val) for key, val in tracking_metrics.items()})
     wandb.log({"epoch": epoch})
-    wandb.log({"lr":optimizer.param_groups[0]['lr']})
+    wandb.log({"lr_segmentation":optimizer.param_groups[0]['lr']})
+    wandb.log({"lr":optimizer.param_groups[1]['lr']})
     hard_mask = np.argmax(mask.detach().cpu().numpy(), axis=-1)
     for l in range(experiment_settings["N_domains"]):
         wandb.log({f"segments/mask_{l}": np.sum(hard_mask[0] == l)})
