@@ -181,7 +181,7 @@ for i in tqdm(range(n_iter)):
     for k, pred_struct in enumerate(backbone):
         print("Saving structure", i*N_pose_per_structure + k)
         poly.coord -= center_vector
-        poly.to_pdb(os.path.join(f"{structures_path}/ground_truth/", f"structure_z_{i*N_pose_per_structure + k}.pdb"))
+        poly.to_pdb(os.path.join(f"{folder_experiment}/ground_truth/", f"structure_z_{i*N_pose_per_structure + k}.pdb"))
 
 
 
