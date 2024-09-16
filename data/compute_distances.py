@@ -53,7 +53,7 @@ def compute_distribution_distances(path, idxA, idxB, predicted=False, chain_id =
         dist = compute_distance(pol, idxA, idxB, chain_id)
         all_distances.append(dist)
         
-    return all_distances
+    return np.array(all_distances)
 
 
 
