@@ -348,7 +348,7 @@ def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, op
                                          caption="True images")
     wandb.log({"Images/true_image": true_image_wandb})
     wandb.log({"Images/predicted_image": predicted_image_wandb})
-    torch.save(vae, experiment_settings["folder_path"] + "models_lr_0_0003/full_model" + str(epoch))
+    torch.save(vae, experiment_settings["folder_path"] + "models_lr_0_0003_20_domains/full_model" + str(epoch))
 
 
 
