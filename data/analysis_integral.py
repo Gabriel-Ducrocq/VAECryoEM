@@ -93,6 +93,11 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
     """
     _, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, base_structure, lp_mask2d, mask_images, amortized  = utils.parse_yaml(yaml_setting_path)
     vae = torch.load(model_path)
+    if amortized:
+        vae.amortized = True
+    else:
+        vae.amortized = False
+        
     vae.eval()
     all_latent_variables = []
     data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=4))
