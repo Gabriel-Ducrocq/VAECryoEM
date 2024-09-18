@@ -178,10 +178,10 @@ for i in tqdm(range(n_iter)):
     #caped = torch.minimum(rel_err, torch.ones_like(rel_err))
     #plt.imshow(caped.detach().numpy())
     #plt.show()
-    for k, pred_struct in enumerate(backbone):
-        print("Saving structure", i*N_pose_per_structure + k)
-        poly.coord -= center_vector
-        poly.to_pdb(os.path.join(f"{folder_experiment}/ground_truth/", f"structure_z_{i*N_pose_per_structure + k}.pdb"))
+    #for k, pred_struct in enumerate(backbone):
+    #    print("Saving structure", i*N_pose_per_structure + k)
+    #    poly.coord -= center_vector
+    #    poly.to_pdb(os.path.join(f"{folder_experiment}/ground_truth/", f"structure_z_{i*N_pose_per_structure + k}.pdb"))
 
 
 
