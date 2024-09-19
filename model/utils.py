@@ -214,7 +214,7 @@ def parse_yaml(path):
 
     particles_star = starfile.read(experiment_settings["star_file"])
     ctf_experiment = CTF.from_starfile(experiment_settings["star_file"], apix = apix_downsize, side_shape=Npix_downsize , device=device)
-    if "particles" in list(particles_star.columns):
+    if type(particles_star) is dict and columns in particles_star:
         dataset = ImageDataSet(apix, Npix, particles_star["particles"], particles_path, down_side_shape=Npix_downsize, rad_mask=experiment_settings.get("input_mask_rad"))
     else:
         dataset = ImageDataSet(apix, Npix, particles_star, particles_path, down_side_shape=Npix_downsize)
