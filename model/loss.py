@@ -124,6 +124,7 @@ def compute_clashing_distances(new_structures, device):
     N_non_zeros = torch.count_nonzero(distances, dim=-1)
     average_clahing = torch.sum(distances, dim=-1)/N_non_zeros
     """
+    N_residues = new_structures.shape[1]
     all_average_clashing = []
     for new_struct in new_structures:
         distances = torch.cdist(new_struct, new_struct)
