@@ -194,7 +194,8 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
     tracking_dict["kl_prior_mask_proportions"].append(KL_prior_mask_proportions.detach().cpu().numpy())
     tracking_dict["l2_pen"].append(l2_pen.detach().cpu().numpy())
     tracking_dict["continuity_loss"].append(continuity_loss.detach().cpu().numpy())
-    tracking_dict["clashing_loss"].append(clashing_loss.detach().cpu().numpy())
+    #tracking_dict["clashing_loss"].append(clashing_loss.detach().cpu().numpy())
+    tracking_dict["clashing_loss"].append(clashing_loss)
 
     loss = rmsd + loss_weights["KL_prior_latent"]*KL_prior_latent \
            + loss_weights["KL_prior_mask_mean"]*KL_prior_mask_means \
