@@ -125,17 +125,20 @@ def compute_clashing_distances(new_structures, device):
     average_clahing = torch.sum(distances, dim=-1)/N_non_zeros
     """
     N_residues = new_structures.shape[1]
+    triu_indices = torch.triu_indices(N_residues, N_residues, offset=2, device=device)
+    zero_tensor = torch.zeros((N_residues, N_residues), device=device)
     all_average_clashing = []
     for k, new_struct in enumerate(new_structures):
         print(k)
         distances = torch.cdist(new_struct, new_struct)
-        triu_indices = torch.triu_indices(N_residues, N_residues, offset=2, device=device)
         distances = distances[triu_indices[0], triu_indices[1]]
         number_clash_per_sample = torch.sum(distances < 4, dim=-1)
-        distances = torch.minimum((distances - 4), torch.zeros_like(distances))**2
+        distances = torch.minimum((distances - 4), zero_tensor)**2
         average_clahing = torch.sum(distances, dim=-1)/number_clash_per_sample
         print(average_clahing.shape)
         all_average_clashing.append(average_clahing)
+        del average_clahing
+        del distances
 
     return torch.mean(all_average_clahing)
 
