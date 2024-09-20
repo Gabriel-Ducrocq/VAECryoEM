@@ -134,6 +134,7 @@ def compute_clashing_distances(new_structures, device):
         number_clash_per_sample = torch.sum(distances < 4, dim=-1)
         distances = torch.minimum((distances - 4), torch.zeros_like(distances))**2
         average_clahing = torch.sum(distances, dim=-1)/number_clash_per_sample
+        print(average_clahing.shape)
         all_average_clashing.append(average_clahing)
 
     return torch.mean(all_average_clahing)
