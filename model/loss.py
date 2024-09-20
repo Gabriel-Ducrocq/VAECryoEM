@@ -141,6 +141,7 @@ def compute_clashing_distances(new_structures, device):
         all_average_clashing.append(average_clahing)
         del average_clahing
         del distances
+        torch.cuda.empty_cache()
 
     return torch.mean(all_average_clahing)
 
