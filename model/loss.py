@@ -126,7 +126,8 @@ def compute_clashing_distances(new_structures, device):
     """
     N_residues = new_structures.shape[1]
     all_average_clashing = []
-    for new_struct in new_structures:
+    for k, new_struct in enumerate(new_structures):
+        print(k)
         distances = torch.cdist(new_struct, new_struct)
         triu_indices = torch.triu_indices(N_residues, N_residues, offset=2, device=device)
         distances = distances[triu_indices[0], triu_indices[1]]
