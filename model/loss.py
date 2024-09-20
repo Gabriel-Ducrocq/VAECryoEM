@@ -110,6 +110,7 @@ def compute_clashing_distances(new_structures, device):
     :return: torch.tensor(1, ) of the averaged clashing distance for distance inferior to 4Å,
     reaverage over the batch dimension
     """
+    """
     N_residues = new_structures.shape[1]
     #distances is torch.tensor(N_batch, N_residues, N_residues)
     distances = torch.cdist(new_structures, new_structures)
@@ -122,8 +123,18 @@ def compute_clashing_distances(new_structures, device):
     distances = torch.minimum(distances - 4, torch.zeros_like(distances[0]))**2
     N_non_zeros = torch.count_nonzero(distances, dim=-1)
     average_clahing = torch.sum(distances, dim=-1)/N_non_zeros
+    """
+    all_average_clashing = []
+    for new_struct in new_structures:
+        distances = torch.cdist(new_struct, new_struct)
+        triu_indices = torch.triu_indices(N_residues, N_residues, offset=2, device=device)
+        distances = distances[triu_indices[0], triu_indices[1]]
+        number_clash_per_sample = torch.sum(distances < 4, dim=-1)
+        distances = torch.minimum((distances - 4), torch.zeros_like(distances))**2
+        average_clahing = torch.sum(distances, dim=-1)/number_clash_per_sample
+        all_average_clashing.append(average_clahing)
 
-    return torch.mean(average_clahing)
+    return torch.mean(all_average_clahing)
 
 
 def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, vae, loss_weights,
