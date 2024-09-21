@@ -9,7 +9,7 @@ from time import time
 from model import renderer
 from model.utils import low_pass_images
 from torch.utils.data import DataLoader
-from model.loss import compute_loss, find_range_cutoff_pairs, remove_duplicate_pairs
+from model.loss import compute_loss, find_range_cutoff_pairs, remove_duplicate_pairs, find_continuous_pairs
 
 
 import matplotlib.pyplot as plt
@@ -46,8 +46,9 @@ def train(yaml_setting_path, debug_mode):
                 "epochs": experiment_settings["N_epochs"],
             })
 
-    clash_pairs = loss.find_range_cutoff_pairs(meta.coord, cfg.loss.clash_min_cutoff)
-    clash_pairs = loss.remove_duplicate_pairs(clash_pairs, connect_pairs)
+    connect_pairs = find_continuous_pairs(meta.chain_id, meta.res_id, meta.atom_name)
+    clash_pairs = find_range_cutoff_pairs(meta.coord, cfg.loss.clash_min_cutoff)
+    clash_pairs = remove_duplicate_pairs(clash_pairs, connect_pairs)
 
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
