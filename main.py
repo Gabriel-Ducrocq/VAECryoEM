@@ -51,8 +51,8 @@ def train(yaml_setting_path, debug_mode):
     clash_pairs = remove_duplicate_pairs(clash_pairs, connect_pairs)
     dists = calc_dist_by_pair_indices(base_structure.coord, connect_pairs)
 
-    clash_pairs = torch.tensor(clash_pairs, device=device, dtype=torch.float32)
-    connect_pairs = torch.tensor(connect_pairs, device=device, dtype=torch.float32)
+    clash_pairs = torch.tensor(clash_pairs, device=device, dtype=torch.long)
+    connect_pairs = torch.tensor(connect_pairs, device=device, dtype=torch.long)
     dists = torch.tensor(dists, device=device, dtype=torch.float32)
 
     N_residues = base_structure.coord.shape[0]
