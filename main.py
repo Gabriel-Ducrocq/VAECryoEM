@@ -49,7 +49,7 @@ def train(yaml_setting_path, debug_mode):
     connect_pairs = find_continuous_pairs(base_structure.chain_id, base_structure.res_id, base_structure.atom_name)
     clash_pairs = find_range_cutoff_pairs(base_structure.coord, 4)
     clash_pairs = remove_duplicate_pairs(clash_pairs, connect_pairs)
-    dists = calc_dist_by_pair_indices(meta.coord, sse_pairs)
+    dists = calc_dist_by_pair_indices(base_structure.coord, connect_pairs)
 
     clash_pairs = torch.tensor(clash_pairs, device=device, dtype=torch.float32)
     connect_pairs = torch.tensor(connect_pairs, device=device, dtype=torch.float32)
