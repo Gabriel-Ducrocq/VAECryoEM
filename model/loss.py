@@ -31,6 +31,12 @@ def calc_pair_dist_loss(pred_struc, pair_index, target_dist, type="vanilla", cha
         return F.mse_loss(pred_dist, target_dist.repeat(bsz, 1))
 
 
+def calc_dist_by_pair_indices(coord_arr, pair_indices):
+    coord_pair_arr = coord_arr[pair_indices]  # num_pair, 2, 3
+    dist = np.linalg.norm(np.diff(coord_pair_arr, axis=1), ord=2, axis=-1)
+    return dist.flatten()
+
+
 
 
 def find_continuous_pairs(chain_id_arr, res_id_arr, atom_name_arr):
@@ -321,7 +327,7 @@ def compute_clashing_distances(new_structures, device):
 
 
 def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, vae, loss_weights,
-                 experiment_settings, tracking_dict, pairs_continuous_loss = None, pairs_clashing_loss = None, predicted_structures = None, true_structure=None, device=None):
+                 experiment_settings, tracking_dict, pairs_continuous_loss = None, pairs_clashing_loss = None, dists_pairs = None, predicted_structures = None, true_structure=None, device=None):
     """
     Compute the entire loss
     :param predicted_images: torch.tensor(batch_size, N_pix), predicted images
@@ -350,8 +356,8 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
         "means", epsilon_kl=experiment_settings["epsilon_kl"])
 
     #continuity_loss = compute_continuity_loss(predicted_structures, true_structure, device)
-    continuity_loss = calc_pair_dist_loss(predicted_structures, pairs_continuous_loss, target_dist, type="vanilla", chain_id=None)
-    if pairs_continuous_loss is None and pairs_clashing_loss is None:
+    continuity_loss = calc_pair_dist_loss(predicted_structures, pairs_continuous_loss, dists, type="vanilla", chain_id=None)
+    if pairs_clashing_loss is None:
         clashing_loss = compute_clashing_distances(predicted_structures, device)
     else:
         clashing_loss =  calc_clash_loss(predicted_structures, pairs_clashing_loss, clash_cutoff=4.0)
