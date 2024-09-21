@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from torch import linalg as LA
 from scipy.spatial import distance
 from model.renderer import primal_to_fourier2d, fourier2d_to_primal 
 
@@ -7,6 +8,30 @@ from model.renderer import primal_to_fourier2d, fourier2d_to_primal
 
 AA_ATOMS = ("CA", )
 NT_ATOMS = ("C1'", )
+
+
+
+def calc_clash_loss(pred_struc, pair_index, clash_cutoff=4.0):
+    pred_dist = pred_struc[:, pair_index]  # bsz, num_pair, 2, 3
+    pred_dist = LA.vector_norm(torch.diff(pred_dist, dim=-2), axis=-1).squeeze(-1)  # bsz, num_pair
+    possible_clash_dist = pred_dist[pred_dist < clash_cutoff]
+    if possible_clash_dist.numel() == 0:
+        avg_loss = torch.tensor(0.0).to(pred_struc)
+    else:
+        possible_clash_loss = (clash_cutoff - possible_clash_dist)**2
+        avg_loss = possible_clash_loss.mean()
+    return avg_loss
+
+
+def calc_pair_dist_loss(pred_struc, pair_index, target_dist, type="vanilla", chain_id=None):
+    bsz = pred_struc.shape[0]
+    pred_dist = pred_struc[:, pair_index]  # bsz, num_pair, 2, 3
+    pred_dist = LA.vector_norm(torch.diff(pred_dist, dim=-2), axis=-1).squeeze(-1)  # bsz, num_pair
+    if type == "vanilla":
+        return F.mse_loss(pred_dist, target_dist.repeat(bsz, 1))
+
+
+
 
 def find_continuous_pairs(chain_id_arr, res_id_arr, atom_name_arr):
     pairs = []
@@ -87,6 +112,7 @@ def find_range_cutoff_pairs(coord_arr, min_cutoff=4., max_cutoff=10.):
     indices_in_pdb = np.nonzero(sel_mask)
     indices_in_pdb = np.column_stack((indices_in_pdb[0], indices_in_pdb[1]))
     return indices_in_pdb
+
 
 def remove_duplicate_pairs(pairs_a, pairs_b, remove_flip=True):
     """Remove pair b from a"""
@@ -283,44 +309,19 @@ def compute_clashing_distances(new_structures, device):
     :return: torch.tensor(1, ) of the averaged clashing distance for distance inferior to 4Å,
     reaverage over the batch dimension
     """
-    """
     N_residues = new_structures.shape[1]
     #distances is torch.tensor(N_batch, N_residues, N_residues)
     distances = torch.cdist(new_structures, new_structures)
     triu_indices = torch.triu_indices(N_residues, N_residues, offset=2, device=device)
-    #distances = distances[:, triu_indices[0], triu_indices[1]]
-    #number_clash_per_sample = torch.sum(distances < 4, dim=-1)
-    #distances = torch.minimum((distances - 4), torch.zeros_like(distances))**2
-    #average_clahing = torch.sum(distances, dim=-1)/number_clash_per_sample
     distances = distances[:, triu_indices[0], triu_indices[1]]
-    distances = torch.minimum(distances - 4, torch.zeros_like(distances[0]))**2
-    N_non_zeros = torch.count_nonzero(distances, dim=-1)
-    average_clahing = torch.sum(distances, dim=-1)/N_non_zeros
-    """
-    N_residues = new_structures.shape[1]
-    triu_indices = torch.triu_indices(N_residues, N_residues, offset=2, device=device)
-    all_average_clashing = []
-    for k, new_struct in enumerate(new_structures):
-        print(k)
-        distances = torch.cdist(new_struct, new_struct)
-        distances = distances[triu_indices[0], triu_indices[1]]
-        number_clash_per_sample = torch.sum(distances < 4, dim=-1)
-        if k == 0:
-            zero_tensor = torch.zeros_like(distances)
-
-        distances = torch.minimum((distances - 4), zero_tensor)**2
-        average_clahing = torch.sum(distances, dim=-1)/number_clash_per_sample
-        print(average_clahing.shape)
-        all_average_clashing.append(average_clahing)
-        del average_clahing
-        del distances
-        torch.cuda.empty_cache()
-
+    number_clash_per_sample = torch.sum(distances < 4, dim=-1)
+    distances = torch.minimum((distances - 4), torch.zeros_like(distances))**2
+    average_clahing = torch.sum(distances, dim=-1)/number_clash_per_sample
     return torch.mean(all_average_clahing)
 
 
 def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, vae, loss_weights,
-                 experiment_settings, tracking_dict, predicted_structures = None, true_structure=None, device=None):
+                 experiment_settings, tracking_dict, pairs_continuous_loss = None, pairs_clashing_loss = None, predicted_structures = None, true_structure=None, device=None):
     """
     Compute the entire loss
     :param predicted_images: torch.tensor(batch_size, N_pix), predicted images
@@ -348,10 +349,13 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
         vae.mask_parameters, experiment_settings["mask_prior"],
         "means", epsilon_kl=experiment_settings["epsilon_kl"])
 
-    continuity_loss = compute_continuity_loss(predicted_structures, true_structure, device)
-    ###               !!!!!!!!!!!!!!!!!!!!!!!!                 TURNING OFF THE CLASHING LOSS                    !!!!!!!!!!!!!!!!!
-    #clashing_loss = compute_clashing_distances(predicted_structures, device)
-    clashing_loss = 0
+    #continuity_loss = compute_continuity_loss(predicted_structures, true_structure, device)
+    continuity_loss = calc_pair_dist_loss(predicted_structures, pairs_continuous_loss, target_dist, type="vanilla", chain_id=None)
+    if pairs_continuous_loss is None and pairs_clashing_loss is None:
+        clashing_loss = compute_clashing_distances(predicted_structures, device)
+    else:
+        clashing_loss =  calc_clash_loss(predicted_structures, pairs_clashing_loss, clash_cutoff=4.0)
+
     KL_prior_mask_stds = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
                                                "stds", epsilon_kl=experiment_settings["epsilon_kl"])
     KL_prior_mask_proportions = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
@@ -367,7 +371,7 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
     tracking_dict["kl_prior_mask_proportions"].append(KL_prior_mask_proportions.detach().cpu().numpy())
     tracking_dict["l2_pen"].append(l2_pen.detach().cpu().numpy())
     tracking_dict["continuity_loss"].append(continuity_loss.detach().cpu().numpy())
-    #tracking_dict["clashing_loss"].append(clashing_loss.detach().cpu().numpy())
+    tracking_dict["clashing_loss"].append(clashing_loss.detach().cpu().numpy())
     tracking_dict["clashing_loss"].append(clashing_loss)
 
     loss = rmsd + loss_weights["KL_prior_latent"]*KL_prior_latent \
@@ -376,6 +380,6 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
            + loss_weights["KL_prior_mask_proportions"] * KL_prior_mask_proportions \
            + loss_weights["l2_pen"] * l2_pen \
            + loss_weights["continuity_loss"]*continuity_loss #\
-           #+ loss_weights["clashing_loss"]*clashing_loss
+           + loss_weights["clashing_loss"]*clashing_loss
 
     return loss

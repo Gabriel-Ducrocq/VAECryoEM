@@ -50,6 +50,11 @@ def train(yaml_setting_path, debug_mode):
     clash_pairs = find_range_cutoff_pairs(meta.coord, cfg.loss.clash_min_cutoff)
     clash_pairs = remove_duplicate_pairs(clash_pairs, connect_pairs)
 
+    clash_pairs = torch.tensor(clash_pairs, device=device, dtype=torch.float32)
+    connect_pairs = torch.tensor(connect_pairs, device=device, dtype=torch.float32)
+
+    N_residues = base_structure.coord.shape[0]
+
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
         tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
@@ -78,8 +83,13 @@ def train(yaml_setting_path, debug_mode):
             posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
             predicted_images  = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)/dataset.f_std
-            loss = compute_loss(batch_predicted_images, lp_batch_translated_images, None, latent_mean, latent_std, vae,
+            if N_residues < 7000:
+                loss = compute_loss(batch_predicted_images, lp_batch_translated_images, None, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics, predicted_structures=predicted_structures, true_structure=base_structure, device=device)
+            else:
+                loss = compute_loss(batch_predicted_images, lp_batch_translated_images, None, latent_mean, latent_std, vae,
+                                experiment_settings["loss_weights"], experiment_settings, tracking_metrics,  pairs_continuous_loss=connect_pairs, pairs_clashing_loss = clash_pairs, predicted_structures=predicted_structures, true_structure=base_structure, device=device)
+                
             loss.backward()
             optimizer.step()
             #end_backward = time()
