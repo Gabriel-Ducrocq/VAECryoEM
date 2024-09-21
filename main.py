@@ -87,7 +87,7 @@ def train(yaml_setting_path, debug_mode):
             batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)/dataset.f_std
             if N_residues < 7000:
                 loss = compute_loss(batch_predicted_images, lp_batch_translated_images, None, latent_mean, latent_std, vae,
-                                experiment_settings["loss_weights"], experiment_settings, tracking_metrics, predicted_structures=predicted_structures, true_structure=base_structure, device=device)
+                                experiment_settings["loss_weights"], experiment_settings, tracking_metrics, pairs_continuous_loss=connect_pairs, pairs_clashing_loss = None, dists_pairs = dists, predicted_structures=predicted_structures, true_structure=base_structure, device=device)
             else:
                 loss = compute_loss(batch_predicted_images, lp_batch_translated_images, None, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics,  pairs_continuous_loss=connect_pairs, pairs_clashing_loss = clash_pairs, dists_pairs = dists, predicted_structures=predicted_structures, true_structure=base_structure, device=device)
