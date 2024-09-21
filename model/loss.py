@@ -356,7 +356,7 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
         "means", epsilon_kl=experiment_settings["epsilon_kl"])
 
     #continuity_loss = compute_continuity_loss(predicted_structures, true_structure, device)
-    continuity_loss = calc_pair_dist_loss(predicted_structures, pairs_continuous_loss, dists, type="vanilla", chain_id=None)
+    continuity_loss = calc_pair_dist_loss(predicted_structures, pairs_continuous_loss, dists_pairs, type="vanilla", chain_id=None)
     if pairs_clashing_loss is None:
         clashing_loss = compute_clashing_distances(predicted_structures, device)
     else:
