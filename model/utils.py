@@ -18,11 +18,33 @@ from tqdm import tqdm
 from polymer import Polymer
 import torch.nn.functional as F
 from dataset import ImageDataSet
+from scipy.spatial import distance
 from gmm import Gaussian, EMAN2Grid
 from Bio.PDB.PDBParser import PDBParser
 from biotite.structure.io.pdb import PDBFile
-from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix, axis_angle_to_quaternion, quaternion_apply
 from pytorch3d.transforms import Transform3d
+from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix, axis_angle_to_quaternion, quaternion_apply
+
+
+
+def find_range_cutoff_pairs(coord_arr, min_cutoff=4., max_cutoff=10.):
+    dist_map = distance.cdist(coord_arr, coord_arr, metric='euclidean')
+    sel_mask = (dist_map <= max_cutoff) & (dist_map >= min_cutoff)
+    indices_in_pdb = np.nonzero(sel_mask)
+    indices_in_pdb = np.column_stack((indices_in_pdb[0], indices_in_pdb[1]))
+    return indices_in_pdb
+
+def remove_duplicate_pairs(pairs_a, pairs_b, remove_flip=True):
+    """Remove pair b from a"""
+    s = max(pairs_a.max(), pairs_b.max()) + 1
+    # trick for fast comparison
+    mask = np.zeros((s, s), dtype=bool)
+
+    np.put(mask, np.ravel_multi_index(pairs_a.T, mask.shape), True)
+    np.put(mask, np.ravel_multi_index(pairs_b.T, mask.shape), False)
+    if remove_flip:
+        np.put(mask, np.ravel_multi_index(np.flip(pairs_b, 1).T, mask.shape), False)
+    return np.column_stack(np.nonzero(mask))
 
 
 def primal_to_fourier2d(images):

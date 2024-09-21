@@ -4,6 +4,178 @@ from model.renderer import primal_to_fourier2d, fourier2d_to_primal
 
 
 
+AA_ATOMS = ("CA", )
+NT_ATOMS = ("C1'", )
+
+def find_continuous_pairs(chain_id_arr, res_id_arr, atom_name_arr):
+    pairs = []
+
+    # res_id in different chains are duplicated, so loop on chains
+    u_chain_id = np.unique(chain_id_arr)
+
+    #For each chain
+    for c_id in u_chain_id:
+        #Identify which residue belong to that chain
+        tmp_mask = chain_id_arr == c_id
+        tmp_indices_in_pdb = np.nonzero(tmp_mask)[0]
+
+        #Get these residues and their indexes
+        tmp_res_id_arr = res_id_arr[tmp_mask]
+        tmp_atom_name_arr = atom_name_arr[tmp_mask]
+
+        # check is aa or nt
+        tmp_atom_name_set = set(tmp_atom_name_arr)
+
+        if len(tmp_atom_name_set.intersection(AA_ATOMS)) > len(tmp_atom_name_set.intersection(NT_ATOMS)):
+            in_res_atom_names = AA_ATOMS
+        elif len(tmp_atom_name_set.intersection(AA_ATOMS)) < len(tmp_atom_name_set.intersection(NT_ATOMS)):
+            in_res_atom_names = NT_ATOMS
+        else:
+            raise NotImplemented("Cannot determine chain is amino acid or nucleotide.")
+
+        # find pairs
+        if len(in_res_atom_names) == 1:
+            #Get the unique residue indices as well as their indexes array of that chain
+            u_res_id, indices_in_chain = np.unique(tmp_res_id_arr, return_index=True)
+            if len(u_res_id) != np.sum(tmp_mask):
+                raise ValueError(f"Found duplicate residue id in single chain {c_id}.")
+
+            #Pair each residue with the following one and stack their indices column wise
+            indices_in_chain_pair = np.column_stack((indices_in_chain[:-1], indices_in_chain[1:]))
+
+            # must be adjacent on residue id
+            valid_mask = np.abs(np.diff(u_res_id[indices_in_chain_pair], axis=1)) == 1
+
+            #Keep only the pairs that have actually subsequent indices in the chain.
+            indices_in_chain_pair = indices_in_chain_pair[valid_mask.flatten()]
+
+            #Get their inndexes in the entire PDB, not only within the chain
+            indices_in_pdb_pair = tmp_indices_in_pdb[indices_in_chain_pair]
+        elif len(in_res_atom_names) > 1:
+
+            def _cmp(a, b):
+                # res_id compare
+                if a[0] != b[0]:
+                    return a[0] - b[0]
+                else:
+                    # atom_name in the same order of AA_ATOMS or NT_ATOMS
+                    return in_res_atom_names.index(a[1]) - in_res_atom_names.index(b[1])
+
+            cache = list(zip(tmp_res_id_arr, tmp_atom_name_arr, tmp_indices_in_pdb))
+            sorted_cache = list(sorted(cache, key=cmp_to_key(_cmp)))
+
+            sorted_indices_in_pdb = [item[2] for item in sorted_cache]
+            sorted_res_id = [item[0] for item in sorted_cache]
+
+            indices_in_pdb_pair = np.column_stack((sorted_indices_in_pdb[:-1], sorted_indices_in_pdb[1:]))
+
+            valid_mask = np.abs(np.diff(np.column_stack((sorted_res_id[:-1], sorted_res_id[1:])), axis=1)) <= 1
+
+            indices_in_pdb_pair = indices_in_pdb_pair[valid_mask.flatten()]
+        else:
+            raise NotImplemented("No enough atoms to construct continuous pairs.")
+
+        pairs.append(indices_in_pdb_pair)
+
+    pairs = np.vstack(pairs)
+    return pairs
+
+def find_range_cutoff_pairs(coord_arr, min_cutoff=4., max_cutoff=10.):
+    dist_map = distance.cdist(coord_arr, coord_arr, metric='euclidean')
+    sel_mask = (dist_map <= max_cutoff) & (dist_map >= min_cutoff)
+    indices_in_pdb = np.nonzero(sel_mask)
+    indices_in_pdb = np.column_stack((indices_in_pdb[0], indices_in_pdb[1]))
+    return indices_in_pdb
+
+def remove_duplicate_pairs(pairs_a, pairs_b, remove_flip=True):
+    """Remove pair b from a"""
+    s = max(pairs_a.max(), pairs_b.max()) + 1
+    # trick for fast comparison
+    mask = np.zeros((s, s), dtype=bool)
+
+    #np.ravel_multi_index gets the index of the elements in non linear shape as if the array was linear
+    #so ravel_multi_index(pairs_a.T, mask.shape) get the indexes of the elements in the pair as if mask was linear
+    #So the next line sets all the values of the mask array where the indexes are in pairs_a to True
+    np.put(mask, np.ravel_multi_index(pairs_a.T, mask.shape), True)
+    #This line set all the values of the mask array where the indexes are in pairs_b to False. This step is needed so that pairs in a that are also
+    #in b are set to False
+    np.put(mask, np.ravel_multi_index(pairs_b.T, mask.shape), False)
+    if remove_flip:
+        #This line does the same thing except we first flip the coordinates in pairs_b, so we get both (x, y) and (y, x) to False
+        np.put(mask, np.ravel_multi_index(np.flip(pairs_b, 1).T, mask.shape), False)
+
+    #Finally, we return the non False elements, e.g the pairs in a that are not in b.
+    return np.column_stack(np.nonzero(mask))
+
+
+def find_continuous_pairs(chain_id_arr, res_id_arr, atom_name_arr):
+    pairs = []
+
+    # res_id in different chains are duplicated, so loop on chains
+    u_chain_id = np.unique(chain_id_arr)
+
+    for c_id in u_chain_id:
+        tmp_mask = chain_id_arr == c_id
+        tmp_indices_in_pdb = np.nonzero(tmp_mask)[0]
+
+        tmp_res_id_arr = res_id_arr[tmp_mask]
+        tmp_atom_name_arr = atom_name_arr[tmp_mask]
+
+        # check is aa or nt
+        tmp_atom_name_set = set(tmp_atom_name_arr)
+
+        if len(tmp_atom_name_set.intersection(AA_ATOMS)) > len(tmp_atom_name_set.intersection(NT_ATOMS)):
+            in_res_atom_names = AA_ATOMS
+        elif len(tmp_atom_name_set.intersection(AA_ATOMS)) < len(tmp_atom_name_set.intersection(NT_ATOMS)):
+            in_res_atom_names = NT_ATOMS
+        else:
+            raise NotImplemented("Cannot determine chain is amino acid or nucleotide.")
+
+        # find pairs
+        if len(in_res_atom_names) == 1:
+            u_res_id, indices_in_chain = np.unique(tmp_res_id_arr, return_index=True)
+            if len(u_res_id) != np.sum(tmp_mask):
+                raise ValueError(f"Found duplicate residue id in single chain {c_id}.")
+
+            indices_in_chain_pair = np.column_stack((indices_in_chain[:-1], indices_in_chain[1:]))
+
+            # must be adjacent on residue id
+            valid_mask = np.abs(np.diff(u_res_id[indices_in_chain_pair], axis=1)) == 1
+
+            indices_in_chain_pair = indices_in_chain_pair[valid_mask.flatten()]
+
+            indices_in_pdb_pair = tmp_indices_in_pdb[indices_in_chain_pair]
+        elif len(in_res_atom_names) > 1:
+
+            def _cmp(a, b):
+                # res_id compare
+                if a[0] != b[0]:
+                    return a[0] - b[0]
+                else:
+                    # atom_name in the same order of AA_ATOMS or NT_ATOMS
+                    return in_res_atom_names.index(a[1]) - in_res_atom_names.index(b[1])
+
+            cache = list(zip(tmp_res_id_arr, tmp_atom_name_arr, tmp_indices_in_pdb))
+            sorted_cache = list(sorted(cache, key=cmp_to_key(_cmp)))
+
+            sorted_indices_in_pdb = [item[2] for item in sorted_cache]
+            sorted_res_id = [item[0] for item in sorted_cache]
+
+            indices_in_pdb_pair = np.column_stack((sorted_indices_in_pdb[:-1], sorted_indices_in_pdb[1:]))
+
+            valid_mask = np.abs(np.diff(np.column_stack((sorted_res_id[:-1], sorted_res_id[1:])), axis=1)) <= 1
+
+            indices_in_pdb_pair = indices_in_pdb_pair[valid_mask.flatten()]
+        else:
+            raise NotImplemented("No enough atoms to construct continuous pairs.")
+
+        pairs.append(indices_in_pdb_pair)
+
+    pairs = np.vstack(pairs)
+    return pairs
+
+
+
 def calc_cor_loss(pred_images, gt_images, mask=None):
     """
     Compute the cross-correlation for each pair (predicted_image, true) image in a batch. And average them

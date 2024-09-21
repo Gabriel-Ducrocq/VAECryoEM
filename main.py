@@ -1,15 +1,16 @@
 import torch
 import wandb
+import einops
 import argparse
 import model.utils
 import numpy as np
 from tqdm import tqdm
 from time import time
 from model import renderer
-from model.loss import compute_loss
 from model.utils import low_pass_images
 from torch.utils.data import DataLoader
-import einops
+from model.loss import compute_loss, find_range_cutoff_pairs, remove_duplicate_pairs
+
 
 import matplotlib.pyplot as plt
 
@@ -44,6 +45,9 @@ def train(yaml_setting_path, debug_mode):
                 "dataset": experiment_settings["star_file"],
                 "epochs": experiment_settings["N_epochs"],
             })
+
+    clash_pairs = loss.find_range_cutoff_pairs(meta.coord, cfg.loss.clash_min_cutoff)
+    clash_pairs = loss.remove_duplicate_pairs(clash_pairs, connect_pairs)
 
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
