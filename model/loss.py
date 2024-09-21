@@ -379,7 +379,7 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
            + loss_weights["KL_prior_mask_std"] * KL_prior_mask_stds \
            + loss_weights["KL_prior_mask_proportions"] * KL_prior_mask_proportions \
            + loss_weights["l2_pen"] * l2_pen \
-           + loss_weights["continuity_loss"]*continuity_loss #\
+           + loss_weights["continuity_loss"]*continuity_loss \
            + loss_weights["clashing_loss"]*clashing_loss
 
     return loss
