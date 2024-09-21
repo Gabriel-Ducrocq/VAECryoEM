@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 from torch import linalg as LA
+import torch.nn.functional as F
 from scipy.spatial import distance
 from model.renderer import primal_to_fourier2d, fourier2d_to_primal 
 
