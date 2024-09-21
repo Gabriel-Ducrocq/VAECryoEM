@@ -46,8 +46,8 @@ def train(yaml_setting_path, debug_mode):
                 "epochs": experiment_settings["N_epochs"],
             })
 
-    connect_pairs = find_continuous_pairs(meta.chain_id, meta.res_id, meta.atom_name)
-    clash_pairs = find_range_cutoff_pairs(meta.coord, cfg.loss.clash_min_cutoff)
+    connect_pairs = find_continuous_pairs(base_structure.chain_id, base_structure.res_id, base_structure.atom_name)
+    clash_pairs = find_range_cutoff_pairs(base_structure.coord, 4)
     clash_pairs = remove_duplicate_pairs(clash_pairs, connect_pairs)
 
     clash_pairs = torch.tensor(clash_pairs, device=device, dtype=torch.float32)
@@ -89,7 +89,7 @@ def train(yaml_setting_path, debug_mode):
             else:
                 loss = compute_loss(batch_predicted_images, lp_batch_translated_images, None, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics,  pairs_continuous_loss=connect_pairs, pairs_clashing_loss = clash_pairs, predicted_structures=predicted_structures, true_structure=base_structure, device=device)
-                
+
             loss.backward()
             optimizer.step()
             #end_backward = time()
