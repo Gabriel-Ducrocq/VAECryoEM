@@ -143,7 +143,7 @@ class ImageDataSet(Dataset):
 
         except Exception as e:
             mrc_idx, img_name = particles["rlnImageName"].split("@")
-            print(self.particles_path)
+            print(os.path.join(self.particles_path, img_name))
             print(f"WARNING: Particle image {img_name} invalid! Setting to zeros.")
             print(e)
             proj = torch.zeros(self.down_side_shape, self.down_side_shape)
