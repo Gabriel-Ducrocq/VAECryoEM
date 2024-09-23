@@ -219,6 +219,7 @@ class StarfileDataSet(Dataset):
             self.down_apix = self.side_shape * self.apix / cfg.down_side_shape
 
         if cfg.mask_rad is not None:
+            print("DOWN SIDE SHAPE:", self.down_side_shape)
             self.mask = Mask(self.down_side_shape, cfg.mask_rad)
 
         self.f_mu = None
