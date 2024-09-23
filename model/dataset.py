@@ -107,46 +107,46 @@ class ImageDataSet(Dataset):
         # NOTA BENE: the convention for the rotation matrix is left multiplication of the coordinates of the atoms of the protein !!
         """
         particles = self.particles_df.iloc[idx]
-        try:
-            mrc_idx, img_name = particles["rlnImageName"].split("@")
-            mrc_idx = int(mrc_idx) - 1
-            mrc_path = os.path.join(self.particles_path, img_name)
-            with mrcfile.mmap(mrc_path, mode="r", permissive=True) as mrc:
-                if mrc.data.ndim > 2:
-                    proj = torch.from_numpy(np.array(mrc.data[mrc_idx])).float() #* self.cfg.scale_images
-                else:
-                    # the mrcs file can contain only one particle
-                    proj = torch.from_numpy(np.array(mrc.data)).float() #* self.cfg.scale_images
-
-            # get (1, side_shape, side_shape) proj
-            if len(proj.shape) == 2:
-                proj = proj[None, :, :]  # add a dummy channel (for consistency w/ img fmt)
+        #try:
+        mrc_idx, img_name = particles["rlnImageName"].split("@")
+        mrc_idx = int(mrc_idx) - 1
+        mrc_path = os.path.join(self.particles_path, img_name)
+        with mrcfile.mmap(mrc_path, mode="r", permissive=True) as mrc:
+            if mrc.data.ndim > 2:
+                proj = torch.from_numpy(np.array(mrc.data[mrc_idx])).float() #* self.cfg.scale_images
             else:
-                assert len(proj.shape) == 3 and proj.shape[0] == 1  # some starfile already have a dummy channel
+                # the mrcs file can contain only one particle
+                proj = torch.from_numpy(np.array(mrc.data)).float() #* self.cfg.scale_images
 
-            if self.down_side_shape != self.side_shape:
-                if self.down_method == "interp":
-                    proj = tvf.resize(proj, [self.down_side_shape, ] * 2, antialias=True)
-                #elif self.down_method == "fft":
-                #    proj = downsample_2d(proj[0, :, :], self.down_side_shape)[None, :, :]
-                else:
-                    raise NotImplementedError            
+        # get (1, side_shape, side_shape) proj
+        if len(proj.shape) == 2:
+            proj = proj[None, :, :]  # add a dummy channel (for consistency w/ img fmt)
+        else:
+            assert len(proj.shape) == 3 and proj.shape[0] == 1  # some starfile already have a dummy channel
 
-            proj = proj[0]
-            if self.mask is not None:
-                proj = self.mask(proj)
+        if self.down_side_shape != self.side_shape:
+            if self.down_method == "interp":
+                proj = tvf.resize(proj, [self.down_side_shape, ] * 2, antialias=True)
+            #elif self.down_method == "fft":
+            #    proj = downsample_2d(proj[0, :, :], self.down_side_shape)[None, :, :]
+            else:
+                raise NotImplementedError            
 
-            fproj = primal_to_fourier_2d(proj)
-            if self.f_mu is not None:
-                fproj = (fproj - self.f_mu) / self.f_std
-                proj = fourier_to_primal_2d(fproj).real
+        proj = proj[0]
+        if self.mask is not None:
+            proj = self.mask(proj)
 
-        except Exception as e:
-            mrc_idx, img_name = particles["rlnImageName"].split("@")
-            print(os.path.join(self.particles_path, img_name))
-            print(f"WARNING: Particle image {img_name} invalid! Setting to zeros.")
-            print(e)
-            proj = torch.zeros(self.down_side_shape, self.down_side_shape)
+        fproj = primal_to_fourier_2d(proj)
+        if self.f_mu is not None:
+            fproj = (fproj - self.f_mu) / self.f_std
+            proj = fourier_to_primal_2d(fproj).real
+
+        #except Exception as e:
+        #    mrc_idx, img_name = particles["rlnImageName"].split("@")
+        #    print(os.path.join(self.particles_path, img_name))
+         #   print(f"WARNING: Particle image {img_name} invalid! Setting to zeros.")
+         #   print(e)
+         #   proj = torch.zeros(self.down_side_shape, self.down_side_shape)
 
         #if self.invert_data:
         #    print("INVERTING")
