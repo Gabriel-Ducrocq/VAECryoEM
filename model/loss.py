@@ -324,7 +324,7 @@ def compute_clashing_distances(new_structures, device):
     number_clash_per_sample = torch.sum(distances < 4, dim=-1)
     distances = torch.minimum((distances - 4), torch.zeros_like(distances))**2
     average_clahing = torch.sum(distances, dim=-1)/number_clash_per_sample
-    return torch.mean(all_average_clahing)
+    return torch.mean(average_clahing)
 
 
 def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, vae, loss_weights,
