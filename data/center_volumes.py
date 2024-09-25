@@ -56,7 +56,7 @@ def center_origin(mrc_file_path, mrc_file_centered):
             print("The voxel sizes or shapes differ across the three axes in the three-dimensional data.")
             new_origin = (- m.data.shape[2] // 2 * m.voxel_size.x, - m.data.shape[1] // 2 * m.voxel_size.y,
                           - m.data.shape[0] // 2 * m.voxel_size.z)
-        save_mrc(m.data.copy(), mrc_file_centered + _get_file_name(mrc_file_path) + "_centered.mrc",
+        save_mrc(m.data.copy(), mrc_file_centered + "centered_" +  _get_file_name(mrc_file_path) + ".mrc",
                  m.voxel_size, new_origin)
         print(f"Result centered MRC saved to {_get_file_name(mrc_file_path)}_centered.mrc.")
 
