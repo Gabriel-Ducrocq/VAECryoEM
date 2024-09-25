@@ -2,6 +2,7 @@ import os
 import mrcfile
 import argparse
 import numpy as np
+from tqdm import tqdm
 import os.path as osp
 
 
@@ -73,7 +74,7 @@ centered_volumes_path= args.centered_volumes_path
 
 all_volumes = [volumes_path + f for f in os.listdir(volumes_path) if "mrc" in f]
 
-for i, vol_path in enumerate(all_volumes):
+for i, vol_path in tqdm(enumerate(all_volumes)):
     print(len(all_volumes))
     center_origin(vol_path, centered_volumes_path)
 
