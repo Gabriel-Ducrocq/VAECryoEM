@@ -7,8 +7,8 @@ import os.path as osp
 
 def save_mrc(vol,
              path,
-             voxel_size: Union[int, float, Tuple, np.recarray] = None,
-             origin: Union[int, float, Tuple, np.recarray] = None):
+             voxel_size = None,
+             origin = None):
     """
     Save volumetric data to mrc file, set voxel_size, origin.
     See Also: https://mrcfile.readthedocs.io/en/stable/source/mrcfile.html#mrcfile.mrcobject.MrcObject.voxel_size
