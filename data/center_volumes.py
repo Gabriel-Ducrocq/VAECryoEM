@@ -50,7 +50,7 @@ args = parser_arg.parse_args()
 volumes_path = args.volumes_path
 centered_volumes_path= args.centered_volumes_path
 
-all_volumes = [f for f in os.listdir(volumes_path) if "mrc" in f]
+all_volumes = [volumes_path + f for f in os.listdir(volumes_path) if "mrc" in f]
 
 for i, vol_path in enumerate(all_volumes):
     center_origin(vol_path, centered_volumes_path)
