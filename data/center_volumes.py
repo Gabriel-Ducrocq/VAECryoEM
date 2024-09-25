@@ -1,3 +1,4 @@
+import os
 import mrcfile
 import argparse
 import numpy as np
