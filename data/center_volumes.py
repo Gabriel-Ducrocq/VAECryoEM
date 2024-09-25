@@ -28,7 +28,6 @@ def center_origin(mrc_file_path, mrc_file_centered):
     reference_structure_path (str): The path to the input PDB file.
     consensus_map_path (str): The path to the input MRC file.
     """
-    filename
     with mrcfile.open(mrc_file_path) as m:
         if m.voxel_size.x == m.voxel_size.y == m.voxel_size.z and np.all(np.asarray(m.data.shape) == m.data.shape[0]):
             new_origin = (- m.data.shape[0] // 2 * m.voxel_size.x, ) * 3
