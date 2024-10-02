@@ -45,6 +45,27 @@ def train(yaml_setting_path, debug_mode):
                 "epochs": experiment_settings["N_epochs"],
             })
 
+    data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4, drop_last=True)))
+    for epoch in range(5):
+        batch_images = batch_images.to(device)
+        batch_poses = batch_poses.to(device)
+        batch_poses_translation = batch_poses_translation.to(device)
+        indexes = indexes.to(device)
+        flattened_batch_images = batch_images.flatten(start_dim=-2)
+        ###### !!!!!!!!!!!!!!!!!!!!          BE CAREFUL FOR NOW I AM ONLY PREDICTING ROTATIONS POSE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ######################
+        batch_translated_images = image_translator.transform(batch_images, batch_poses_translation[:, None, :])
+        lp_batch_translated_images = low_pass_images(batch_translated_images, lp_mask2d)
+        latent_variables, predicted_rotation_pose, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
+        target = torch.zeros_like(predicted_rotation_pose, dtype=torch.float32, device=device)
+        target[:, 0] = 1
+        target[:, 3] = 1
+        loss = torch.mean(torch.sum((predicted_rotation_pose - target)**2, dim=-1))
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+        wandb.log({"warm_up_loss": loss})
+
+
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
         tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
@@ -69,13 +90,13 @@ def train(yaml_setting_path, debug_mode):
             lp_batch_translated_images = low_pass_images(batch_translated_images, lp_mask2d)
             latent_variables, predicted_rotation_pose, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
             predicted_rotation_matrix_pose = rotation_6d_to_matrix(predicted_rotation_pose)
-            mask = vae.sample_mask(batch_images.shape[0])
-            if epoch < 30:
-                latent_variables = torch.randn_like(latent_variables, device=device, dtype=torch.float32)
+            #mask = vae.sample_mask(batch_images.shape[0])
+            #if epoch < 30:
+            #    latent_variables = torch.randn_like(latent_variables, device=device, dtype=torch.float32)
 
-            quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
-            translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
-            predicted_structures = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, mask, device)
+            #quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
+            #translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
+            #predicted_structures = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, mask, device)
 
             posed_predicted_structures = renderer.rotate_structure(predicted_structures, predicted_rotation_matrix_pose)
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
@@ -91,8 +112,8 @@ def train(yaml_setting_path, debug_mode):
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
-            end_batch = time()
-            print("time batch", end_batch - start_batch)
+            #end_batch = time()
+            #print("time batch", end_batch - start_batch)
 
 
         end_tot = time()
