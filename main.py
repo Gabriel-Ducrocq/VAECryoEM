@@ -74,76 +74,23 @@ def train(yaml_setting_path, debug_mode):
                 latent_variables = torch.randn_like(latent_variables, device=device, dtype=torch.float32)
 
             quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
-            #start_old = time()
-            #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
-            #end_old = time()
-            #start_new = time()
-            #rotation_per_residue = model.utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
-            #rotation_per_residue = model.utils.compute_rotations_per_residue(quaternions_per_domain, mask, device)
-            #end_new = time()
-            #print("Old and New", end_old - start_old, end_new - start_new)
-            #print("\n\n\n")
-            #print("ARE THE TWO ROT EQUAL", torch.allclose(rotation_per_residue,rotation_per_residue_einops))
-            #print("\n\n\n")
             translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
-            #end_net = time()
-            #print("Net time:", end_net - start_net)
-            #start_deforming = time()
-            #predicted_structures = model.utils.deform_structure(gmm_repr.mus, translation_per_residue,
-            #                                                   rotation_per_residue)
-
             predicted_structures = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, mask, device)
 
             posed_predicted_structures = renderer.rotate_structure(predicted_structures, predicted_rotation_matrix_pose)
-            #end_deforming = time()
-            #print("Deforming time", end_deforming - start_deforming)
-            #start_proj = time()
-            start = time()
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
-            end = time()
             print("Time to projection:", end-start)
-            #proj_base = renderer.project(gmm_repr.mus[None, :, :], gmm_repr.sigmas, gmm_repr.amplitudes, grid)
-            #plt.imshow(proj_base[0].detach().cpu())
-            #plt.savefig("true_image.png")
-            #end_proj = time()
-            #print("Proj time", end_proj- start_proj)
-            #start_ctf = time()
             batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
-            #batch_predicted_images = predicted_images
-            #end_ctf = time()
-            #print("CTF time", end_ctf - start_ctf)
-            #start_trans = time()
-            #end_trans = time()
-            #print("Tran time", end_trans- start_trans)
-            #start_flatten = time()
-            #batch_predicted_images = torch.flatten(batch_predicted_images, start_dim=-2, end_dim=-1)
-            #end_flatten = time()
-            #print("FLATTEN time", end_flatten - start_flatten)
-            #batch_predicted_images = dataset.standardize(batch_predicted_images, device=device)
-
 
             if not experiment_settings["clashing_loss"]:
                 deformed_structures = None
-
-            #print("True images mean", torch.mean(batch_images), "True images std", torch.std(batch_images))
-            #print("Pred images mean", torch.mean(batch_predicted_images), "Pred images std", torch.std(batch_predicted_images))
-            #start_loss = time()
-            #mask_images
             loss = compute_loss(batch_predicted_images, lp_batch_translated_images, predicted_rotation_matrix_pose, batch_poses, None, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics, device=device)
                                 #predicted_structures=deformed_structures)
 
-            #end_loss = time()
-            #print("Loss time", end_loss - start_loss)
-            #print("Epoch:",  epoch, "Batch number:", batch_num, "Loss:", loss, "device:", device)
-            #start_gradient = time()
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
-            #end_gradient = time()
-            #print("Gradient time", end_gradient - start_gradient)
-            #end = time()
-            #print("Iteration duration:", end-start)
             end_batch = time()
             print("time batch", end_batch - start_batch)
 
