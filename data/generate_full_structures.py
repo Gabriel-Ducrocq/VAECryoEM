@@ -88,10 +88,10 @@ filter_aa = True
 
 def deform_entire_structure(positions, rotation_matrix_per_residue, translation_per_residue, expansion_mask):
     rotation_matrix_per_atom = rotation_matrix_per_residue[:, expansion_mask, :, :]
-    print(rotation_matrix_per_atom.shape)
-    print(positions.shape)
     rotated_atoms = torch.einsum("baij, aj -> bai", rotation_matrix_per_atom, positions)
-    translated_atoms = positions + translation_per_residue[:, expansion_mask, :]
+    print(translation_per_residue.shape)
+    print(rotated_atoms.shape)
+    translated_atoms = rotated_atoms + translation_per_residue[:, expansion_mask, :]
     return translated_atoms
 
 
