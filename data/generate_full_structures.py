@@ -88,8 +88,6 @@ filter_aa = True
 
 def deform_entire_structure(positions, rotation_matrix_per_residue, translation_per_residue, expansion_mask):
     rotation_matrix_per_atom = rotation_matrix_per_residue[:, expansion_mask, :, :]
-    print(rotation_matrix_per_residue.shape)
-    print(positions.shape)
     rotated_atoms = torch.einsum(rotation_matrix_per_atom, positions, "baij, aj -> bai")
     translated_atoms = positions + translation_per_residue[:, expansion_mask, :]
     return translated_atoms
@@ -174,7 +172,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
         rotation_matrix_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
         translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
 
-        predicted_structures = deform_entire_structure(base_coordinates, rotation_matrix_per_residue, translation_per_residue, expansion_mask)
+        predicted_structures = deform_entire_structure(base_coordinates[0], rotation_matrix_per_residue, translation_per_residue, expansion_mask)
 
         for i, pred_struct in enumerate(predicted_structures):
             print("Saving structure", batch_num*batch_size + i)
