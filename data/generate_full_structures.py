@@ -91,6 +91,7 @@ def deform_entire_structure(positions, rotation_matrix_per_residue, translation_
     rotated_atoms = torch.einsum("baij, aj -> bai", rotation_matrix_per_atom, positions)
     print(translation_per_residue.shape)
     print(rotated_atoms.shape)
+    print(translation_per_residue.shape)
     translated_atoms = rotated_atoms + translation_per_residue[:, expansion_mask, :]
     return translated_atoms
 
