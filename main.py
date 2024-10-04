@@ -46,24 +46,28 @@ def train(yaml_setting_path, debug_mode):
             })
 
     data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4, drop_last=True)))
+    all_losses = []
     for epoch in range(5):
-        batch_images = batch_images.to(device)
-        batch_poses = batch_poses.to(device)
-        batch_poses_translation = batch_poses_translation.to(device)
-        indexes = indexes.to(device)
-        flattened_batch_images = batch_images.flatten(start_dim=-2)
-        ###### !!!!!!!!!!!!!!!!!!!!          BE CAREFUL FOR NOW I AM ONLY PREDICTING ROTATIONS POSE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ######################
-        batch_translated_images = image_translator.transform(batch_images, batch_poses_translation[:, None, :])
-        lp_batch_translated_images = low_pass_images(batch_translated_images, lp_mask2d)
-        latent_variables, predicted_rotation_pose, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
-        target = torch.zeros_like(predicted_rotation_pose, dtype=torch.float32, device=device)
-        target[:, 0] = 1
-        target[:, 3] = 1
-        loss = torch.mean(torch.sum((predicted_rotation_pose - target)**2, dim=-1))
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-        wandb.log({"warm_up_loss": loss})
+        for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
+            batch_images = batch_images.to(device)
+            batch_poses = batch_poses.to(device)
+            batch_poses_translation = batch_poses_translation.to(device)
+            indexes = indexes.to(device)
+            flattened_batch_images = batch_images.flatten(start_dim=-2)
+            ###### !!!!!!!!!!!!!!!!!!!!          BE CAREFUL FOR NOW I AM ONLY PREDICTING ROTATIONS POSE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ######################
+            batch_translated_images = image_translator.transform(batch_images, batch_poses_translation[:, None, :])
+            lp_batch_translated_images = low_pass_images(batch_translated_images, lp_mask2d)
+            latent_variables, predicted_rotation_pose, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
+            target = torch.zeros_like(predicted_rotation_pose, dtype=torch.float32, device=device)
+            target[:, 0] = 1
+            target[:, 3] = 1
+            loss = torch.mean(torch.sum((predicted_rotation_pose - target)**2, dim=-1))
+            loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+            all_losses.append(loss.detach().cpu().numpy())
+
+        wandb.log({"warm_up_loss": np.mean(all_losses)})
 
 
     for epoch in range(N_epochs):
