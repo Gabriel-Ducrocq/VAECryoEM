@@ -80,7 +80,7 @@ def train(yaml_setting_path, debug_mode):
         start_tot = time()
         for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
             start_batch = time()
-            #start = time()
+            start = time()
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
             batch_poses_translation = batch_poses_translation.to(device)
@@ -104,7 +104,6 @@ def train(yaml_setting_path, debug_mode):
             predicted_structures = gmm_repr.mus[None, :, :].repeat(batch_size, 1, 1)
             posed_predicted_structures = renderer.rotate_structure(predicted_structures, predicted_rotation_matrix_pose)
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
-            print("Time to projection:", end-start)
             batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
 
             if not experiment_settings["clashing_loss"]:
