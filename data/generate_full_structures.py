@@ -178,6 +178,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
         translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
 
         print("ALL NUMBER OF ATOMS LENGTH", len(all_number_of_atoms))
+        print("BASE STRUCTURE NUMBER OF RESIDUES", base_structure.coord.shape)
         predicted_structures = deform_entire_structure(base_coordinates[0], rotation_matrix_per_residue, translation_per_residue, expansion_mask)
 
         for i, pred_struct in enumerate(predicted_structures):
