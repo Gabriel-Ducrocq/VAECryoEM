@@ -94,7 +94,7 @@ def train(yaml_setting_path, debug_mode):
             lp_batch_translated_images = low_pass_images(batch_translated_images, lp_mask2d)
             latent_variables, predicted_rotation_pose, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
             predicted_rotation_matrix_pose = rotation_6d_to_matrix(predicted_rotation_pose)
-            #mask = vae.sample_mask(batch_images.shape[0])
+            mask = vae.sample_mask(batch_images.shape[0])
             #if epoch < 30:
             #    latent_variables = torch.randn_like(latent_variables, device=device, dtype=torch.float32)
 
