@@ -46,8 +46,8 @@ def train(yaml_setting_path, debug_mode):
             })
 
     data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4, drop_last=True)))
-    all_losses = []
     for epoch in range(5):
+        all_losses = []
         for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
@@ -101,7 +101,7 @@ def train(yaml_setting_path, debug_mode):
             #quaternions_per_domain, translations_per_domain = vae.decode(latent_variables)
             #translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
             #predicted_structures = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, mask, device)
-
+            predicted_structures = gmm_repr.mus[None, :, :].repeat(batch_size, 1, 1)
             posed_predicted_structures = renderer.rotate_structure(predicted_structures, predicted_rotation_matrix_pose)
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             print("Time to projection:", end-start)
