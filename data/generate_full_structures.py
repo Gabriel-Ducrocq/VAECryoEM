@@ -181,7 +181,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             print(all_latent_variables.shape)
             atom_arr_stack.coord = pred_struct[None, :, :].detach().cpu().numpy()
             file = PDBFile()
-            file.set_structure(atom_arr_stack.coord)
+            file.set_structure(atom_arr_stack)
             file.write(os.path.join(structures_path, f"structure_z_{batch_num*batch_size + i}.pdb"))
 
 
