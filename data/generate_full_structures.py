@@ -124,6 +124,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             n_atoms = chain[:, chain.res_id == res_id].shape[1]
             all_number_of_atoms.append(n_atoms)
 
+    print("ALL NUMBER OF ATOMS LENGTH", len(all_number_of_atoms))
     expansion_mask = [i for i, n_atoms in enumerate(all_number_of_atoms) for _ in range(n_atoms)]
     vae.eval()
     all_latent_variables = []
