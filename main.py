@@ -49,6 +49,7 @@ def train(yaml_setting_path, debug_mode):
     for epoch in range(5):
         all_losses = []
         for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
+            print("epoch:", epoch)
             batch_images = batch_images.to(device)
             batch_poses = batch_poses.to(device)
             batch_poses_translation = batch_poses_translation.to(device)
