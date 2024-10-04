@@ -118,7 +118,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
     all_number_of_atoms = []
     f = PDBFile.read(experiment_settings["base_structure_path"])
     atom_arr_stack = f.get_structure()
-    atom_arr_stack = atom_arr_stack[struc.filter_amino_acids(atom_arr_stack)]
+    atom_arr_stack = atom_arr_stack[:, struc.filter_amino_acids(atom_arr_stack)]
     base_coordinates = torch.tensor(atom_arr_stack.coord, dtype=torch.float32, device=device)
     for chain_id in np.unique(atom_arr_stack.chain_id):
         chain = atom_arr_stack[:, atom_arr_stack.chain_id == chain_id]
