@@ -55,7 +55,6 @@ def train(yaml_setting_path, debug_mode):
             batch_poses_translation = batch_poses_translation.to(device)
             indexes = indexes.to(device)
             flattened_batch_images = batch_images.flatten(start_dim=-2)
-            ###### !!!!!!!!!!!!!!!!!!!!          BE CAREFUL FOR NOW I AM ONLY PREDICTING ROTATIONS POSE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ######################
             batch_translated_images = image_translator.transform(batch_images, batch_poses_translation[:, None, :])
             lp_batch_translated_images = low_pass_images(batch_translated_images, lp_mask2d)
             latent_variables, predicted_rotation_pose, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
@@ -107,8 +106,6 @@ def train(yaml_setting_path, debug_mode):
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)
 
-            if not experiment_settings["clashing_loss"]:
-                deformed_structures = None
             loss = compute_loss(batch_predicted_images, lp_batch_translated_images, predicted_rotation_matrix_pose, batch_poses, None, latent_mean, latent_std, vae,
                                 experiment_settings["loss_weights"], experiment_settings, tracking_metrics, device=device)
                                 #predicted_structures=deformed_structures)
