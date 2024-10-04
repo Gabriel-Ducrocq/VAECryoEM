@@ -45,8 +45,8 @@ def train(yaml_setting_path, debug_mode):
                 "epochs": experiment_settings["N_epochs"],
             })
 
-    data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4, drop_last=True)))
     for epoch in range(5):
+        data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4, drop_last=True)))
         all_losses = []
         for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
             print("epoch:", epoch)
