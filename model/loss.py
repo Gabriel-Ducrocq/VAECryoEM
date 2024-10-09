@@ -154,6 +154,7 @@ def compute_loss(predicted_images, images, predicted_rotation_matrix_pose, batch
     dot_prods = torch.sum(viewpoint_predicted*viewpoint_true, dim=-1)
     angles = torch.acos(dot_prods)*180/torch.pi
     angles = torch.mean(angles).detach().cpu().numpy()
+    print("Angles:", angles)
 
     predicted_rotation_error = torch.mean(torch.sum((predicted_rotation_matrix_pose - batch_poses)**2, dim=(-2, -1)))
     tracking_dict["viewpoint_angle_diff_degrees"].append(angles)
