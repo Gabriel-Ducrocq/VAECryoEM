@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from Bio import BiopythonWarning
 from gmm import Gaussian, EMAN2Grid
 from convert_to_star import create_star_file
-from pytorch3d.transforms import axis_angle_to_matrix
+from pytorch3d.transforms import axis_angle_to_matrix, quaternion_to_matrix
 from renderer import project, rotate_structure, apply_ctf
 
 parser_arg = argparse.ArgumentParser()
@@ -99,7 +99,10 @@ if not pose_rotation:
     axis_angle = normalized_axis*angle_rotation
     poses = axis_angle_to_matrix(axis_angle)
 else:
-    poses = torch.load(pose_rotation)
+    poses = np.load(pose_rotation)
+    poses = torch.tensor(poses, dtype=torch.float32)
+    poses = quaternion_to_matrix(poses)
+
 
 if not poses_translation:
     ################################# TRANSLATIONS ARE SET TO ZERO !!!!!! #############################
