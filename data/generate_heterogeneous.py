@@ -100,7 +100,7 @@ if not pose_rotation:
     poses = axis_angle_to_matrix(axis_angle)
 else:
     poses = np.load(pose_rotation)
-    poses = torch.tensor(poses, dtype=torch.float32)
+    poses = torch.tensor(poses, dtype=torch.float32, device=device)
     poses = quaternion_to_matrix(poses)
 
 
