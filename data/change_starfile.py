@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser_arg.add_argument('--new_image_path', type=str, required=True)
     parser_arg.add_argument('--new_starfile_path', type=str, required=True)
     args = parser_arg.parse_args()
-    starfile = args.stafile
+    starfile = args.starfile
     new_image_path = args.new_image_path
     new_starfile_path = args.new_starfile_path
     change_starfile(starfile_path, new_image_path, new_starfile_path)
