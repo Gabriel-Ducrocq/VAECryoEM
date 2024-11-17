@@ -7,7 +7,7 @@ def change_mrcs_path(x, new_path):
 
 def change_starfile(starfile_path, new_image_path, new_starfile_path):
 	df = starfile.read(starfile_path)
-	df["particles"]["rlnImageName"] = df["particles"]["rlnImageName"].apply(lambda x: starfile_path(x, new_image_path))
+	df["particles"]["rlnImageName"] = df["particles"]["rlnImageName"].apply(lambda x: change_mrcs_path(x, new_image_path))
 	starfile.save(new_starfile_path, df)
 
 
