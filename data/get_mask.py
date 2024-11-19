@@ -31,7 +31,7 @@ from pytorch3d.transforms import quaternion_to_axis_angle, quaternion_to_matrix
 
 
 
-
+cols = ["red", "blue", "orange", "green", "pink", "yellow", "black"]*10
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--model_path', type=str, required=True)
 args = parser_arg.parse_args()
@@ -46,7 +46,7 @@ for l in range(vae.N_domains):
 
 
 ll = np.cumsum(all_segments)
-for i, ell in enumerate(ll):
-    print(f"color #1:{ell}-{ll[i+1]} {cols[i]}")  
+for i in range(len(ll)-1):
+    print(f"color #1:{ll[i]}-{ll[i+1]} {cols[i]}")  
 
 
