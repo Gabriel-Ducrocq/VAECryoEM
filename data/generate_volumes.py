@@ -64,7 +64,7 @@ print("min coord, max_coord", torch.min(grid.line_coords), torch.max(grid.line_c
 N = len(structures)
 for i in tqdm(range(0,N)):
     batch_struct = structures[i]
-    print(batch_struct.shape)
+    print(batch_struct.mus.shape)
     print(batch_struct.sigmas.shape)
     print(batch_struct.amplitudes.shape)
     batch_volumes = structure_to_volume(torch.tensor(batch_struct.mus).to(device)[None, :, :], torch.tensor(batch_struct.sigmas).to(device), torch.tensor(batch_struct.amplitudes).to(device)[:, None], grid, device)
