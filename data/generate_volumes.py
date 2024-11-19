@@ -51,12 +51,12 @@ print("Reading pdbs")
 structures_poly = [Polymer.from_pdb(path) for path in sorted_paths]
 if not center:
     print("No centering")
-    structures = [Gaussian(torch.tensor(poly.coord), torch.tensor([[2]*poly.coord.shape[0]]), base_structure.num_electron)
+    structures = [Gaussian(torch.tensor(poly.coord), torch.tensor([[2]*poly.coord.shape[0]]), poly.num_electron)
                     for poly in structures_poly]
 else:
     print("Centering")
     center_vector = np.mean(base_structure.coord, axis=0)[None, :]
-    structures = [Gaussian(torch.tensor(poly.coord - center_vector), torch.tensor([[2]*poly.coord.shape[0]]), base_structure.num_electron)
+    structures = [Gaussian(torch.tensor(poly.coord - center_vector), torch.tensor([[2]*poly.coord.shape[0]]), poly.num_electron)
                     for poly in structures_poly]
 
 
