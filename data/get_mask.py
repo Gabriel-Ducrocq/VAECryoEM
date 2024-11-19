@@ -45,7 +45,9 @@ for l in range(vae.N_domains):
 	all_segments.append(np.sum(hard_segments[0] == l))
 
 
-ll = np.cumsum(all_segments)
+A= np.cumsum(all_segments)
+ll= np.zeros(vae.N_domains)
+ll[1:] = A
 list_coloring = []
 for i in range(len(ll)-1):
     print(f"color #1:{ll[i]}-{ll[i+1]} {cols[i]}")  
