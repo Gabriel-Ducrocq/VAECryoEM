@@ -42,11 +42,10 @@ segments = vae.sample_mask(1)
 hard_segments = np.argmax(segments.detach().cpu().numpy(), axis=-1)
 all_segments = []
 for l in range(vae.N_domains):
-	print(np.sum(hard_segments[0] == l))
 	all_segments.append(np.sum(hard_segments[0] == l))
 
 
-ll = np.cumsum(l)
+ll = np.cumsum(all_segments)
 for i, ell in enumerate(ll):
     print(f"color #1:{ell}-{ll[i+1]} {cols[i]}")  
 
