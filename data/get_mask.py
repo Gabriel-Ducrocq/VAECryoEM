@@ -40,5 +40,13 @@ vae = torch.load(model_path, map_location='cpu')
 vae.device="cpu"
 segments = vae.sample_mask(1)
 hard_segments = np.argmax(segments.detach().cpu().numpy(), axis=-1)
-print(hard_segments)
+all_segments = []
+for l in range(vae.N_domains):
+    all_segments.append(np.sum(hard_mask[0] == l))
+
+
+ll = np.cumsum(l)
+for i, ell in enumerate(ll):
+    print(f"color #1:{ell}-{ll[i+1]} {cols[i]}")  
+
 
