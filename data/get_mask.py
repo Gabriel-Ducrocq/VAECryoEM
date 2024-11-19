@@ -42,6 +42,7 @@ segments = vae.sample_mask(1)
 hard_segments = np.argmax(segments.detach().cpu().numpy(), axis=-1)
 all_segments = []
 for l in range(vae.N_domains):
+	print(hard_segments.shape)
     all_segments.append(np.sum(hard_segments[0] == l))
 
 
