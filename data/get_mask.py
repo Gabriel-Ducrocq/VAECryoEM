@@ -35,7 +35,7 @@ from pytorch3d.transforms import quaternion_to_axis_angle, quaternion_to_matrix
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--model_path', type=str, required=True)
 args = parser_arg.parse_args()
-module_path = args.model_path
+model_path = args.model_path
 vae = torch.load(model_path)
 segments = vae.sample_mask(1)
 hard_segments = np.argmax(segments.detach().cpu().numpy(), axis=-1)
