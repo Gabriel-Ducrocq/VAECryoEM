@@ -39,8 +39,13 @@ def compute_distribution_distances(path, idxA, idxB, predicted=False, chain_id =
     res_ids = [i for i in range(1, 504)]
     for i in tqdm(range(start, end)):
         if not predicted:
-            path_struct = path + "test_"+str(i)+ ".pdb"
-            pol = Polymer.from_pdb(path_struct)
+            try:
+                path_struct = path + "test_"+str(i)+ ".pdb"
+                pol = Polymer.from_pdb(path_struct)
+            except:
+                path_struct = path + "short_"+str(i)+ ".pdb"
+                pol = Polymer.from_pdb(path_struct)
+                
             print(pol.coord.shape)
             pol.chain_id[:503] = "A"
             pol.chain_id[503:] = "B"
