@@ -43,7 +43,7 @@ def compute_distribution_distances(path, idxA, idxB, predicted=False, chain_id =
                 path_struct = path + "test_"+str(i)+ ".pdb"
                 pol = Polymer.from_pdb(path_struct)
             except:
-                path_struct = path + "short_"+str(i)+ ".pdb"
+                path_struct = path + "short_"+str(i+1)+ ".pdb"
                 pol = Polymer.from_pdb(path_struct)
 
             print(pol.coord.shape)
@@ -56,7 +56,7 @@ def compute_distribution_distances(path, idxA, idxB, predicted=False, chain_id =
                 path_struct = path + "structure_z_"+str(i)+ ".pdb"
                 pol = Polymer.from_pdb(path_struct)
             except:
-                path_struct = path + "short_"+str(i)+ ".pdb"
+                path_struct = path + "short_"+str(i+1)+ ".pdb"
                 pol = Polymer.from_pdb(path_struct)
             
         dist = compute_distance(pol, idxA, idxB, chain_id)
