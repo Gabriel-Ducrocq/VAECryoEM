@@ -15,8 +15,10 @@ from polymer import Polymer
 
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--path', type=str, required=True)
+parser_arg.add_argument('--chain_information', action=argparse.BooleanOptionalAction)
 args = parser_arg.parse_args()
 path = args.path
+chain_information = args.chain_information
 
 
 def compute_distance(polymer, idxA, idxB, chain_id):
@@ -27,7 +29,15 @@ def compute_distance(polymer, idxA, idxB, chain_id):
     center_b = np.mean(domainB, axis=0)
     return np.sqrt(np.sum((center_a - center_b)**2))
 
-def compute_distribution_distances(path, idxA, idxB, predicted=False, chain_id = ["A", "B"]):
+def compute_distance_no_chain(polymer, idxA, idxB):
+    """Compute the distances between two domains when there is no chain information"""
+    domainA = polymer.coord[np.isin(polymer.res_id, idxA)]
+    domainB = polymer.coord[np.isin(polymer.res_id, idxB)]
+    center_a = np.mean(domainA, axis=0)
+    center_b = np.mean(domainB, axis=0)
+    return np.sqrt(np.sum((center_a - center_b)**2))
+
+def compute_distribution_distances(path, idxA, idxB, predicted=False, chain_id = ["A", "B"], chain_information):
     """ Computes the distances for all the structures present in the folder path """
     all_distances = []
     start = 1
@@ -59,12 +69,17 @@ def compute_distribution_distances(path, idxA, idxB, predicted=False, chain_id =
                 path_struct = path + "short_"+str(i+1)+ ".pdb"
                 pol = Polymer.from_pdb(path_struct)
             
-        dist = compute_distance(pol, idxA, idxB, chain_id)
+        if chain_information:
+            dist = compute_distance(pol, idxA, idxB, chain_id)
+        else:
+            dist = compute_distance_no_chain(pol, idxA, idxB)
+
+        print(dist)
         all_distances.append(dist)
         
     return np.array(all_distances)
 
 
 
-distances = compute_distribution_distances(path, [i for i in range(321, 504)], [i for i in range(321, 504)], predicted=True)
+distances = compute_distribution_distances(path, [i for i in range(321, 503)], [i for i in range(321, 503)], predicted=True, chain_information=chain_information)
 np.save(f"{path}/all_predicted_distances.npy", distances)
