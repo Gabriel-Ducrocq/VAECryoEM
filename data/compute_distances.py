@@ -45,15 +45,19 @@ def compute_distribution_distances(path, idxA, idxB, predicted=False, chain_id =
             except:
                 path_struct = path + "short_"+str(i)+ ".pdb"
                 pol = Polymer.from_pdb(path_struct)
-                
+
             print(pol.coord.shape)
             pol.chain_id[:503] = "A"
             pol.chain_id[503:] = "B"
             pol.res_id[pol.chain_id == "A"] = res_ids
             pol.res_id[pol.chain_id == "B"] = res_ids
         else:
-            path_struct = path + "structure_z_"+str(i)+ ".pdb"
-            pol = Polymer.from_pdb(path_struct)
+            try:
+                path_struct = path + "structure_z_"+str(i)+ ".pdb"
+                pol = Polymer.from_pdb(path_struct)
+            except:
+                path_struct = path + "short_"+str(i)+ ".pdb"
+                pol = Polymer.from_pdb(path_struct)
             
         dist = compute_distance(pol, idxA, idxB, chain_id)
         all_distances.append(dist)
