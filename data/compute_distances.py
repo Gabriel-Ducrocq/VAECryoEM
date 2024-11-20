@@ -37,7 +37,7 @@ def compute_distance_no_chain(polymer, idxA, idxB):
     center_b = np.mean(domainB, axis=0)
     return np.sqrt(np.sum((center_a - center_b)**2))
 
-def compute_distribution_distances(path, idxA, idxB, predicted=False, chain_id = ["A", "B"], chain_information):
+def compute_distribution_distances(path, idxA, idxB, predicted=False, chain_id = ["A", "B"], chain_information=True):
     """ Computes the distances for all the structures present in the folder path """
     all_distances = []
     start = 1
