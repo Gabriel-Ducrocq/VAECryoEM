@@ -192,7 +192,9 @@ def apply_ctf(images, ctf, indexes):
 
     ##### !!!!!!!!!!!!!!!! I AM MULTIPLYING BY -1 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     fourier_images = primal_to_fourier2d(images)
-    fourier_images *= -ctf.compute_ctf(indexes)
+    #### I DEACTIVATE THE CTFFFFFFF !!!!!! ##########
+    #fourier_images *= -ctf.compute_ctf(indexes)
+    fourier_images *= -1
     ctf_corrupted = fourier2d_to_primal(fourier_images)
     return ctf_corrupted
 
