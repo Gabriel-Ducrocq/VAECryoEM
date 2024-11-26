@@ -53,11 +53,11 @@ def compute_traversals(z, dimensions = [0, 1, 2], numpoints=10):
     for dim in dimensions:
             traj_pca = graph_traversal(z_pca, dim, numpoints)
             ztraj_pca = pca.inverse_transform(traj_pca)
-            nearest_points, _ = get_nearest_point(z, ztraj_pca)
+            nearest_points, indices_points = get_nearest_point(z, ztraj_pca)
             all_trajectories.append(nearest_points)
             all_trajectories_pca.append(traj_pca)
         
-    return all_trajectories, all_trajectories_pca, z_pca, pca
+    return all_trajectories, all_trajectories_pca, z_pca, pca, indices_points
 
 
 
@@ -133,7 +133,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
 
     if not generate_structures:
         if all_latent_variables.shape[-1] > 1:
-            all_trajectories, all_trajectories_pca, z_pca, pca = compute_traversals(all_latent_variables[::thinning], dimensions=dimensions, numpoints=numpoints)
+            all_trajectories, all_trajectories_pca, z_pca, pca, indices_z = compute_traversals(all_latent_variables[::thinning], dimensions=dimensions, numpoints=numpoints)
             sns.set_style("white")
             for dim in dimensions[:-1]:
                 os.makedirs(os.path.join(structures_path, f"pc{dim}/"), exist_ok=True)
@@ -145,6 +145,8 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
                 plt.ylabel(f"PC {dim+2}, variance variance {pca.explained_variance_ratio_[dim+1]}")
                 plt.savefig(os.path.join(structures_path, f"pc{dim}/pca.png"))
                 plt.close()
+                np.save(os.path.join(structures_path, f"pc{dim}/z_pc{dim}.npy"), all_trajectories)
+                np.save(os.path.join(structures_path, f"pc{dim}/z_indices_pc{dim}.npy"), indices_z)
                 z_dim = torch.tensor(all_trajectories[dim], dtype=torch.float32, device=device)
                 mask = vae.sample_mask(z_dim.shape[0])
                 quaternions_per_domain, translations_per_domain = vae.decode(z_dim)
