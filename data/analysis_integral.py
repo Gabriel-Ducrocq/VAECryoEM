@@ -223,7 +223,6 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             indexes = indexes.to(device)
             batch_images = batch_images.flatten(start_dim=-2)
             latent_variables, z, latent_std = vae.sample_latent(batch_images, indexes)
-            all_latent_variables.append(latent_variables)
             mask = vae.sample_mask(z.shape[0])
             quaternions_per_domain, translations_per_domain = vae.decode(z)
             rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
