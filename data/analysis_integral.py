@@ -85,7 +85,7 @@ filter_aa = True
 
 
 
-def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimensions=[0, 1, 2], numpoints=10, generate_structures=False):
+def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimensions=[0, 1, 2], numpoints=10, generate_structures=False, generate_images=False):
     """
     train a VAE network
     :param yaml_setting_path: str, path the yaml containing all the details of the experiment
@@ -131,7 +131,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
     else:
         all_latent_variables = z
 
-    if not generate_structures:
+    if not generate_structures and not generate_images:
         if all_latent_variables.shape[-1] > 1:
             all_trajectories, all_trajectories_pca, z_pca, pca, indices_z = compute_traversals(all_latent_variables[::thinning], dimensions=dimensions, numpoints=numpoints)
             sns.set_style("white")
@@ -176,39 +176,69 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
                     base_structure.coord = pred_struct.detach().cpu().numpy()
                     base_structure.to_pdb(os.path.join(structures_path, f"pc0/structure_z_{i}.pdb"))
 
+    elif generate_structures and not generate_images:
+        print(all_latent_variables)
+        all_latent_variables= torch.tensor(all_latent_variables[::thinning], dtype=torch.float32, device=device)
+        latent_variables_loader = iter(DataLoader(all_latent_variables, shuffle=False, batch_size=batch_size))
+        all_axis_angle = []
+        all_translations = []
+        for batch_num, z in enumerate(latent_variables_loader):  
+            print("Batch number:", batch_num)
+            print("dimensions", dimensions)
+            start = time()
+            mask = vae.sample_mask(z.shape[0])
+            quaternions_per_domain, translations_per_domain = vae.decode(z)
+            all_axis_angle.append(quaternion_to_axis_angle(quaternions_per_domain))
+            print("Translations per domain:", translations_per_domain)
+            all_translations.append(translations_per_domain)
+            rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
+            translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
+            np.save(os.path.join(structures_path, f"rotation_per_residue.npy"), rotation_per_residue.detach().cpu().numpy())
+            np.save(os.path.join(structures_path, f"translation_per_residue.npy"), translation_per_residue.detach().cpu().numpy())
+            predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
+                                                               rotation_per_residue)
+
+            for i, pred_struct in enumerate(predicted_structures):
+                print("Saving structure", batch_num*batch_size + i)
+                print(all_latent_variables.shape)
+                base_structure.coord = pred_struct.detach().cpu().numpy()
+                base_structure.to_pdb(os.path.join(structures_path, f"structure_z_{batch_num*batch_size + i}.pdb"))
+
+
+        all_axis_angle = torch.concatenate(all_axis_angle, dim=0).detach().cpu().numpy()
+        all_translations = torch.concatenate(all_translations, dim=0).detach().cpu().numpy()
+        np.save(os.path.join(structures_path, f"all_axis_angle_predicted.npy"), all_axis_angle)
+        np.save(os.path.join(structures_path, f"all_translations_predicted.npy"), all_translations)
+
     else:
-            print(all_latent_variables)
-            all_latent_variables= torch.tensor(all_latent_variables[::thinning], dtype=torch.float32, device=device)
-            latent_variables_loader = iter(DataLoader(all_latent_variables, shuffle=False, batch_size=batch_size))
-            all_axis_angle = []
-            all_translations = []
-            for batch_num, z in enumerate(latent_variables_loader):  
-                print("Batch number:", batch_num)
-                print("dimensions", dimensions)
-                start = time()
-                mask = vae.sample_mask(z.shape[0])
-                quaternions_per_domain, translations_per_domain = vae.decode(z)
-                all_axis_angle.append(quaternion_to_axis_angle(quaternions_per_domain))
-                print("Translations per domain:", translations_per_domain)
-                all_translations.append(translations_per_domain)
-                rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
-                translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
-                np.save(os.path.join(structures_path, f"rotation_per_residue.npy"), rotation_per_residue.detach().cpu().numpy())
-                np.save(os.path.join(structures_path, f"translation_per_residue.npy"), translation_per_residue.detach().cpu().numpy())
-                predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue,
-                                                                   rotation_per_residue)
-
-                for i, pred_struct in enumerate(predicted_structures):
-                    print("Saving structure", batch_num*batch_size + i)
-                    print(all_latent_variables.shape)
-                    base_structure.coord = pred_struct.detach().cpu().numpy()
-                    base_structure.to_pdb(os.path.join(structures_path, f"structure_z_{batch_num*batch_size + i}.pdb"))
+        all_images = []
+        data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=4)))
+        for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation, _) in enumerate(data_loader):
+            print("Batch number:", batch_num)
+            print("dimensions", dimensions)
+            start = time()
+            batch_images = batch_images.to(device)
+            batch_poses = batch_poses.to(device)
+            batch_poses_translation = batch_poses_translation.to(device)
+            indexes = indexes.to(device)
+            batch_images = batch_images.flatten(start_dim=-2)
+            latent_variables, z, latent_std = vae.sample_latent(batch_images, indexes)
+            all_latent_variables.append(latent_variables)
+            mask = vae.sample_mask(z.shape[0])
+            quaternions_per_domain, translations_per_domain = vae.decode(z)
+            rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
+            translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
+            predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue, rotation_per_residue)
+            posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
+            predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
+            all_images.append(predicted_images.detach().cpu().numpy())
 
 
-            all_axis_angle = torch.concatenate(all_axis_angle, dim=0).detach().cpu().numpy()
-            all_translations = torch.concatenate(all_translations, dim=0).detach().cpu().numpy()
-            np.save(os.path.join(structures_path, f"all_axis_angle_predicted.npy"), all_axis_angle)
-            np.save(os.path.join(structures_path, f"all_translations_predicted.npy"), all_translations)
+        all_images = np.concatenate(all_images, axis=0)
+        mrc.MRCFile.write(f"{folder_experiment}particles_predicted.mrcs", all_images, Apix=dataset.apix, is_vol=False)
+
+
+
 
 
 if __name__ == '__main__':
@@ -221,6 +251,7 @@ if __name__ == '__main__':
     parser_arg.add_argument("--num_points", type=int, required=False)
     parser_arg.add_argument('--dimensions','--list', nargs='+', type=int, help='<Required> PC dimensions along which we compute the trajectories. If not set, use pc 1, 2, 3', required=False)
     parser_arg.add_argument('--generate_structures', action=argparse.BooleanOptionalAction)
+    parser_arg.add_argument('--generate_images', action=argparse.BooleanOptionalAction)
     args = parser_arg.parse_args()
     structures_path = args.structures_path
     thinning = args.thinning
@@ -228,12 +259,14 @@ if __name__ == '__main__':
     num_points = args.num_points
     path = args.experiment_yaml
     dimensions = args.dimensions
+    generate_images = args.generate_images
     z = None
     if args.z is not None:
         z = np.load(args.z)
         
     generate_structures = args.generate_structures
-    analyze(path, model_path, structures_path, z, dimensions=dimensions, generate_structures=generate_structures, thinning=thinning, numpoints=num_points)
+    analyze(path, model_path, structures_path, z, dimensions=dimensions, generate_structures=generate_structures, thinning=thinning, 
+            numpoints=num_points, generate_images=generate_images)
 
 
 
