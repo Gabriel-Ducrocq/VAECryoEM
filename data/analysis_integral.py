@@ -101,7 +101,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
     vae.eval()
     all_latent_variables = []
     data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=4))
-    if z is None:
+    if z is None and not generate_images:
         for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation, _) in enumerate(data_loader):
             print("Batch number:", batch_num)
             print("dimensions", dimensions)
