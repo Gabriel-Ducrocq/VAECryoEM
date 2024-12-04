@@ -123,6 +123,7 @@ if __name__ == '__main__':
     path = args.experiment_yaml
     debug_mode = args.debug
     from torch import autograd
-    with autograd.detect_anomaly():
-        train(path, debug_mode)
+    #with autograd.detect_anomaly():
+    #    train(path, debug_mode)
+    train(path, debug_mode)
 
