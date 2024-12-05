@@ -58,8 +58,8 @@ def train(yaml_setting_path, debug_mode):
 
     N_residues = base_structure.coord.shape[0]
 
-    box_image = {"x":{"max":torch.max(grid.plane_coords[:, 0]), "min":torch.min(grid.plane_coords[:, 0])},
-                 "y":{"max":torch.max(grid.plane_coords[:, 1]), "min":torch.min(grid.plane_coords[:, 1])}}
+    box_image = {"x":{"max":torch.max(grid.plane_coords[:, 0][0]), "min":torch.min(grid.plane_coords[:, 0][0])},
+                 "y":{"max":torch.max(grid.plane_coords[:, 1][0]), "min":torch.min(grid.plane_coords[:, 1][0])}}
 
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
@@ -89,10 +89,10 @@ def train(yaml_setting_path, debug_mode):
             posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
             predicted_images  = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
 
-            max_x_posed = torch.max(posed_predicted_structures[:, :, 0], dim=-1)
-            min_x_posed = torch.min(posed_predicted_structures[:, :, 0], dim=-1)
-            max_y_posed = torch.max(posed_predicted_structures[:, :, 1], dim=-1)
-            min_y_posed = torch.min(posed_predicted_structures[:, :, 1], dim=-1)
+            max_x_posed = torch.max(posed_predicted_structures[:, :, 0], dim=-1)[0]
+            min_x_posed = torch.min(posed_predicted_structures[:, :, 0], dim=-1)[0]
+            max_y_posed = torch.max(posed_predicted_structures[:, :, 1], dim=-1)[0]
+            min_y_posed = torch.min(posed_predicted_structures[:, :, 1], dim=-1)[0]
             box_protein = {"x":{"max":max_x_posed, "min":min_x_posed}, "y":{"max":max_y_posed, "min":min_y_posed}}
 
             batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)/dataset.f_std
