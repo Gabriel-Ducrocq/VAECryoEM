@@ -328,7 +328,8 @@ def compute_clashing_distances(new_structures, device):
 
 
 def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, vae, loss_weights,
-                 experiment_settings, tracking_dict, pairs_continuous_loss = None, pairs_clashing_loss = None, dists_pairs = None, predicted_structures = None, true_structure=None, device=None):
+                 experiment_settings, tracking_dict, pairs_continuous_loss = None, pairs_clashing_loss = None, dists_pairs = None, 
+                 predicted_structures = None, true_structure=None, box_protein=None, box_image=None, device=None):
     """
     Compute the entire loss
     :param predicted_images: torch.tensor(batch_size, N_pix), predicted images
@@ -368,6 +369,17 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
     KL_prior_mask_proportions = compute_KL_prior_mask(vae.mask_parameters, experiment_settings["mask_prior"],
                                                "proportions", epsilon_kl=experiment_settings["epsilon_kl"])
     l2_pen = compute_l2_pen(vae)
+    box_loss = 0
+    if box_protein is not None and box_image is not None:
+        print("Take box protein into account for loss")
+        max_losses = torch.maximum(torch.abs(box_protein["x"]["max"]) - torch.abs(box_image["x"]["max"]), torch.zeros_like(box_image["x"]["max"], dtype=torch.float32, device=device)) \
+                    + torch.maximum(torch.abs(box_protein["y"]["max"]) - torch.abs(box_image["y"]["max"]), torch.zeros_like(box_image["y"]["max"], dtype=torch.float32, device=device))
+
+        min_losses = torch.maximum(torch.abs(box_protein["x"]["min"]) - torch.abs(box_image["x"]["min"]), torch.zeros_like(box_image["x"]["min"], dtype=torch.float32, device=device)) \
+                    + torch.maximum(torch.abs(box_protein["y"]["min"]) - torch.abs(box_image["y"]["min"]), torch.zeros_like(box_image["y"]["min"], dtype=torch.float32, device=device))
+
+
+        box_loss = torch.mean(max_losses + min_losses)
 
 
 
@@ -380,6 +392,7 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
     tracking_dict["continuity_loss"].append(continuity_loss.detach().cpu().numpy())
     tracking_dict["clashing_loss"].append(clashing_loss.detach().cpu().numpy())
     tracking_dict["clashing_loss"].append(clashing_loss.detach().cpu().numpy())
+    tracking_dict["box_loss"].append(box_loss.detach().cpu().numpy())
 
     loss = rmsd + loss_weights["KL_prior_latent"]*KL_prior_latent \
            + loss_weights["KL_prior_mask_mean"]*KL_prior_mask_means \
@@ -387,6 +400,7 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
            + loss_weights["KL_prior_mask_proportions"] * KL_prior_mask_proportions \
            + loss_weights["l2_pen"] * l2_pen \
            + loss_weights["continuity_loss"]*continuity_loss \
-           + loss_weights["clashing_loss"]*clashing_loss
+           + loss_weights["clashing_loss"]*clashing_loss \
+           + loss_weight["box_loss"]*box_loss
 
     return loss
