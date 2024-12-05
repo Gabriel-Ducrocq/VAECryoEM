@@ -401,6 +401,6 @@ def compute_loss(predicted_images, images, mask_image, latent_mean, latent_std, 
            + loss_weights["l2_pen"] * l2_pen \
            + loss_weights["continuity_loss"]*continuity_loss \
            + loss_weights["clashing_loss"]*clashing_loss \
-           + loss_weight["box_loss"]*box_loss
+           + loss_weights["box_loss"]*box_loss
 
     return loss
