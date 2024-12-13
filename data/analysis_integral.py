@@ -230,7 +230,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
             predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue, rotation_per_residue)
             posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
-            predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
+            predicted_images = -1*renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             all_images.append(predicted_images.detach().cpu().numpy())
 
 
