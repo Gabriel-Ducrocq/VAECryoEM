@@ -174,8 +174,8 @@ def parse_yaml(path):
     base_structure = Polymer.from_pdb(experiment_settings["base_structure_path"], filter_aa)
     centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"], filter_aa)
     ##############                  I AM CENTERING THE PROTEIN !!!!!!!!!!! ############
-    center_of_mass = compute_center_of_mass(centering_structure)
-    base_structure.translate_structure(-center_of_mass)
+    #center_of_mass = compute_center_of_mass(centering_structure)
+    #base_structure.translate_structure(-center_of_mass)
     #base_structure.translate_structure(-center_of_mass -0.5)
 
 
