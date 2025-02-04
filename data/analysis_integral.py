@@ -235,7 +235,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
 
 
         all_images = np.concatenate(all_images, axis=0)
-        mrc.MRCFile.write(f"{structures_path}particles_predicted_bis.mrcs", all_images, Apix=dataset.apix, is_vol=False)
+        mrc.MRCFile.write(f"{structures_path}particles_predicted.mrcs", all_images, Apix=dataset.apix, is_vol=False)
 
 
 
