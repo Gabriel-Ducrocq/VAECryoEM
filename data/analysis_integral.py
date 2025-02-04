@@ -229,6 +229,8 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
             translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
             predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue, rotation_per_residue)
+            ### Inputing the bae structure
+            predicted_structures = gmm_repr.mus.repeat((batch_size, 1, 1))
             posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
             predicted_images = -1*renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             all_images.append(predicted_images.detach().cpu().numpy())
