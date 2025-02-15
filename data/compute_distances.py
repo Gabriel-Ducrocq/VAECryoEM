@@ -80,5 +80,5 @@ def compute_distribution_distances(path, idxA, idxB, predicted=False, chain_id =
 
 
 
-distances = compute_distribution_distances(path, [i for i in range(321, 503)], [i for i in range(321, 503)], predicted=True, chain_information=chain_information)
+distances = compute_distribution_distances(path, [i for i in range(321, 503)], [i for i in range(824, 969)], predicted=True, chain_information=chain_information)
 np.save(f"{path}/all_predicted_distances.npy", distances)
