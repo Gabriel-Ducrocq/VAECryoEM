@@ -229,13 +229,15 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             rotation_per_residue = utils.compute_rotations_per_residue_einops(quaternions_per_domain, mask, device)
             translation_per_residue = utils.compute_translations_per_residue(translations_per_domain, mask)
             predicted_structures = utils.deform_structure(gmm_repr.mus, translation_per_residue, rotation_per_residue)
+            ###Introducing a translation of some parts of the protein, be careful !!!
+            predicted_structures[:, -150:, ] += torch.tensor([20, 0, 0])[None, None, :]
             posed_predicted_structures = renderer.rotate_structure(predicted_structures, batch_poses)
             predicted_images = -1*renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             all_images.append(predicted_images.detach().cpu().numpy())
 
 
         all_images = np.concatenate(all_images, axis=0)
-        mrc.MRCFile.write(f"{structures_path}particles_predicted.mrcs", all_images, Apix=dataset.apix, is_vol=False)
+        mrc.MRCFile.write(f"{structures_path}particles_predicted_misplaced.mrcs", all_images, Apix=dataset.apix, is_vol=False)
 
 
 
