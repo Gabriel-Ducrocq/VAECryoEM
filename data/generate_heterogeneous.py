@@ -199,7 +199,7 @@ print("Images shape", all_images.shape)
 #print("Adding Gaussian noise with variance", noise_var)
 #torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
 
-#all_images += torch.randn((N_images, Npix, Npix))*torch.sqrt(noise_var)
+all_images += torch.randn((N_images, Npix, Npix))*torch.sqrt(noise_var)
 print("Saving images in MRC format")
 print(size_prot)
 if len(size_prot) > 1:
