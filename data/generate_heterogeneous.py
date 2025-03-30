@@ -105,6 +105,8 @@ if not poses_translation:
     #poses_translation = torch.zeros((N_images, 3), device=device)
     shiftX_angstrom = (torch.rand((N_images, 1), device=device)*2 - 1)*10
     shiftY_angstrom = (torch.rand((N_images, 1), device=device)*2 - 1)*10
+    shiftX_angstrom = torch.zeros_like(shiftX_angstrom)
+    shiftY_angstrom = torch.zeros_like(shiftY_angstrom)
     shiftX = shiftX_angstrom /apix
     shiftY = shiftY_angstrom /apix
 else:
@@ -120,7 +122,7 @@ poses_translations = torch.concatenate([shiftY, shiftX], dim=1)
 #Finding the center of mass to center the protein
 center_vector = np.mean(centering_structure.coord, axis=0)
 ## !!!!!!!!!!!!!!!!!!    BE CAREFUL I AM NOT TRANSLATING A LITTLE BIT !!!!!!!!!!!!!!!!!!
-#center_vector += 0.5*apix
+center_vector += 0.5*apix
 
 all_images = []
 from time import time
