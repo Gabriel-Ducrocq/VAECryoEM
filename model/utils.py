@@ -174,8 +174,8 @@ def parse_yaml(path):
     centering_structure = Polymer.from_pdb(experiment_settings["centering_structure_path"], filter_aa)
     ##############                  I AM NOT CENTERING THE DATA ANYMORE !!!!!!!!!!! ############
     center_of_mass = compute_center_of_mass(centering_structure)
-    base_structure.translate_structure(-center_of_mass)
-    #base_structure.translate_structure(-center_of_mass -0.5)
+    #base_structure.translate_structure(-center_of_mass)
+    base_structure.translate_structure(-center_of_mass -0.5)
 
 
 
