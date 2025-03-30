@@ -1,3 +1,4 @@
+import roma
 import torch
 import numpy as np
 from model.renderer import primal_to_fourier2d, fourier2d_to_primal 
@@ -157,7 +158,9 @@ def compute_loss(predicted_images, images, predicted_rotation_matrix_pose, batch
     print("Angles:", angles)
 
     predicted_rotation_error = torch.mean(torch.sum((predicted_rotation_matrix_pose - batch_poses)**2, dim=(-2, -1)))
-    tracking_dict["viewpoint_angle_diff_degrees"].append(angles)
+    rotmat_metric = roma.rigid_vectors_registration(viewpoint_predicted, viewpoint_true)
+    diff_to_unit = torch.sqrt(torch.sum((rotmat_metric - torch.eye(3))**2))
+    tracking_dict["viewpoint_angle_diff_degrees"].append(diff_to_unit)
 
     loss = rmsd + loss_weights["KL_prior_latent"]*KL_prior_latent \
            + loss_weights["KL_prior_mask_mean"]*KL_prior_mask_means \
