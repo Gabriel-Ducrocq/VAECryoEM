@@ -161,7 +161,7 @@ def compute_loss(predicted_images, images, predicted_rotation_matrix_pose, batch
     rotmat_metric = roma.rigid_vectors_registration(viewpoint_predicted, viewpoint_true)
     rotate_viewpoint_predicted = torch.einsum("ik, bk -> bi", rotmat_metric, viewpoint_predicted)
     diff_viewpoints = torch.sqrt(torch.sum((rotate_viewpoint_predicted - viewpoint_true)**2, axis=-1))
-    tracking_dict["viewpoint_angle_diff_degrees"].append(diff_viewpoints)
+    tracking_dict["viewpoint_angle_diff_degrees"].append(diff_viewpoints.detach().cpu().numpy())
 
     loss = rmsd + loss_weights["KL_prior_latent"]*KL_prior_latent \
            + loss_weights["KL_prior_mask_mean"]*KL_prior_mask_means \
