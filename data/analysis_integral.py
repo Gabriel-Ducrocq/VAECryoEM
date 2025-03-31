@@ -111,16 +111,16 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             start_net = time()
             batch_images = batch_images.flatten(start_dim=-2)
             latent_variables, predicted_rotation_pose, latent_mean, latent_std = vae.sample_latent(batch_images)
-            print("Predicted rotation pose shape", predicted_rotation_pose.shape)
+            #print("Predicted rotation pose shape", predicted_rotation_pose.shape)
             predicted_rotation_matrix_pose = rotation_6d_to_matrix(predicted_rotation_pose)
-            print("Predicted rotation pose matrix shape", predicted_rotation_matrix_pose.shape)
+            #print("Predicted rotation pose matrix shape", predicted_rotation_matrix_pose.shape)
             all_pose_rotation.append(predicted_rotation_matrix_pose)
             all_latent_variables.append(latent_variables)
             if batch_num == 500:
                 all_latent_variables = torch.concat(all_latent_variables, dim=0).detach().cpu().numpy()
                 all_pose_rotation = torch.concat(all_pose_rotation, dim=0).detach().cpu().numpy()
                 np.save(f"{structures_path}z_cryosphere_1.npy", all_latent_variables)
-                np.save(f"{structures_path}pose_rotation_matrix_1.npy", all_latent_variables)
+                np.save(f"{structures_path}pose_rotation_matrix_1.npy", all_pose_rotation)
                 all_latent_variables = []
                 all_pose_rotation = []
 
@@ -129,7 +129,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
         all_latent_variables = torch.concat(all_latent_variables, dim=0).detach().cpu().numpy()
         all_pose_rotation = torch.concat(all_pose_rotation, dim=0).detach().cpu().numpy()
         np.save(f"{structures_path}z_cryosphere_2.npy", all_latent_variables)
-        np.save(f"{structures_path}pose_rotation_matrix_2.npy", all_latent_variables)
+        np.save(f"{structures_path}pose_rotation_matrix_2.npy", all_pose_rotation)
         all_latent_variables = 0
         z1 = np.load(f"{structures_path}z_cryosphere_1.npy", all_latent_variables)
         z2 = np.load(f"{structures_path}z_cryosphere_2.npy", all_latent_variables)
