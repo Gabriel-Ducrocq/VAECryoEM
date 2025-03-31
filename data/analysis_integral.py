@@ -91,7 +91,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
     :param yaml_setting_path: str, path the yaml containing all the details of the experiment
     :return:
     """
-    _, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, base_structure, lp_mask2d, mask_images, amortized  = utils.parse_yaml(yaml_setting_path)
+    vae, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, _, lp_mask2d, mask_images = utils.parse_yaml(yaml_setting_path)
     vae = torch.load(model_path)
     if amortized:
         vae.amortized = True
