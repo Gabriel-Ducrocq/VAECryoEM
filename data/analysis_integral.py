@@ -92,12 +92,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
     :return:
     """
     vae, image_translator, ctf, grid, gmm_repr, optimizer, dataset, N_epochs, batch_size, experiment_settings, latent_type, device, scheduler, _, lp_mask2d, mask_images = utils.parse_yaml(yaml_setting_path)
-    vae = torch.load(model_path)
-    if amortized:
-        vae.amortized = True
-    else:
-        vae.amortized = False
-        
+    vae = torch.load(model_path)        
     vae.eval()
     all_latent_variables = []
     all_pose_rotation = []
