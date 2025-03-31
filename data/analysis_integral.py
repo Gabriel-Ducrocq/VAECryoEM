@@ -24,6 +24,7 @@ from gmm import Gaussian, EMAN2Grid
 from sklearn.decomposition import PCA
 from torch.utils.data import DataLoader
 from scipy.spatial.distance import cdist
+from pytorch3d.transforms import rotation_6d_to_matrix
 from pytorch3d.transforms import quaternion_to_axis_angle, quaternion_to_matrix
 
 class ResSelect(bpdb.Select):
