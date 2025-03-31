@@ -109,7 +109,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
 
             start_net = time()
             batch_images = batch_images.flatten(start_dim=-2)
-            latent_variables, predicted_rotation_pose, latent_mean, latent_std = vae.sample_latent(batch_images, indexes)
+            latent_variables, predicted_rotation_pose, latent_mean, latent_std = vae.sample_latent(batch_images)
             predicted_rotation_matrix_pose = rotation_6d_to_matrix(predicted_rotation_pose)
             all_pose_rotation.append(predicted_rotation_matrix_pose)
             all_latent_variables.append(latent_variables)
