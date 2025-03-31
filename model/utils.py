@@ -319,7 +319,7 @@ def compute_mask_prior(N_residues, N_domains, device):
 
     return mask_prior
 
-def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, optimizer):
+def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, optimizer, true_image, predicted_image):
     """
     Monitors the training process through wandb and saving masks and models
     :param mask:
@@ -329,6 +329,13 @@ def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, op
     :param vae:
     :return:
     """
+    predicted_image_wandb = wandb.Image(predicted_image,
+                                         caption="Predicted image")
+    true_image_wandb = wandb.Image(true_image, caption="True image")
+    wandb.log({"Images/true_image": true_image_wandb})
+    wandb.log({"Images/predicted_image": predicted_image_wandb})
+
+
     wandb.log({key: np.mean(val) for key, val in tracking_metrics.items()})
     wandb.log({"epoch": epoch})
     wandb.log({"lr":optimizer.param_groups[0]['lr']})
