@@ -44,7 +44,7 @@ def train(yaml_setting_path, debug_mode):
                 "dataset": experiment_settings["star_file"],
                 "epochs": experiment_settings["N_epochs"],
             })
-    """
+        
     for epoch in range(5):
         data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4, drop_last=True)))
         all_losses = []
@@ -68,7 +68,6 @@ def train(yaml_setting_path, debug_mode):
             all_losses.append(loss.detach().cpu().numpy())
 
         wandb.log({"warm_up_loss": np.mean(all_losses)})
-    """
 
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
@@ -90,7 +89,8 @@ def train(yaml_setting_path, debug_mode):
             #start_net = time()
             flattened_batch_images = batch_images.flatten(start_dim=-2)
             ###### !!!!!!!!!!!!!!!!!!!!          BE CAREFUL FOR NOW I AM ONLY PREDICTING ROTATIONS POSE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ######################
-            batch_translated_images = image_translator.transform(batch_images, batch_poses_translation[:, None, :])
+            #batch_translated_images = image_translator.transform(batch_images, batch_poses_translation[:, None, :])
+            batch_translated_images = batch_images
             lp_batch_translated_images = low_pass_images(batch_translated_images, lp_mask2d)
             latent_variables, predicted_rotation_pose, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
             predicted_rotation_matrix_pose = rotation_6d_to_matrix(predicted_rotation_pose)
