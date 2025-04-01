@@ -103,9 +103,9 @@ class VAE(torch.nn.Module):
         latent_variables = latent_mean + torch.randn_like(latent_mean, dtype=torch.float32, device=self.device)\
                             *latent_std
 
-        #input_to_pose_network = torch.concat([latent_variables, representation], dim=1)
-        #rotation_pose = self.encoder_rotation(input_to_pose_network)
-        rotation_pose = self.encoder_rotation(representation)
+        input_to_pose_network = torch.concat([latent_variables, representation], dim=1)
+        rotation_pose = self.encoder_rotation(input_to_pose_network)
+        #rotation_pose = self.encoder_rotation(representation)
 
         return latent_variables, rotation_pose, latent_mean, latent_std
 
