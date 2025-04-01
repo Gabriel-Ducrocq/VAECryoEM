@@ -9,6 +9,7 @@ import utils
 import mrcfile
 import argparse
 import starfile
+import renderer
 import numpy as np
 from ctf import CTF
 import seaborn as sns
