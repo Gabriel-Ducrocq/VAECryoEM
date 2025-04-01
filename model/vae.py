@@ -98,16 +98,18 @@ class VAE(torch.nn.Module):
                 torch.tensor(N_batch, latent_dim) latent std
         """
         ####### !!!!!!! I AM NOW JUST PREDICTING THE ROTATION !!!!!!!!! ############
-        representation = self.encoder_representation(images)
-        latent_mean, latent_std = self.encoder_latent(representation)
-        latent_variables = latent_mean + torch.randn_like(latent_mean, dtype=torch.float32, device=self.device)\
-                            *latent_std
+        representation_mean, representation_std = self.encoder_representation(images)
+        representation = latent_mean + torch.randn_like(representation_mean, dtype=torch.float32, device=self.device)\
+                            *representation_std
+        #latent_mean, latent_std = self.encoder_latent(representation)
+        #latent_variables = latent_mean + torch.randn_like(latent_mean, dtype=torch.float32, device=self.device)\
+        #                    *latent_std
 
-        input_to_pose_network = torch.concat([latent_variables, representation], dim=1)
-        rotation_pose = self.encoder_rotation(input_to_pose_network)
-        #rotation_pose = self.encoder_rotation(representation)
-
-        return latent_variables, rotation_pose, latent_mean, latent_std
+        #input_to_pose_network = torch.concat([latent_variables, representation], dim=1)
+        #rotation_pose = self.encoder_rotation(input_to_pose_network)
+        rotation_pose = self.encoder_rotation(representation)
+        return representation, rotation_pose, representation_mean, representation_std
+        #return latent_variables, rotation_pose, latent_mean, latent_std
 
     def decode(self, latent_variables):
         """

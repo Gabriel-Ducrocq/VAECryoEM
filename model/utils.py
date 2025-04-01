@@ -141,8 +141,8 @@ def parse_yaml(path):
     image_translator = SpatialGridTranslate(D=Npix_downsize, device=device)
 
     encoder_representation = MLP(Npix_downsize**2,
-                  experiment_settings["representation_dimension"],
-                  experiment_settings["encoder_representation"]["hidden_dimensions"], network_type="decoder", device=device,
+                  experiment_settings["representation_dimension"]*2,
+                  experiment_settings["encoder_representation"]["hidden_dimensions"], network_type="encoder", device=device,
                   latent_type="continuous")
 
     encoder_rotation = MLP(experiment_settings["latent_dimension"] + experiment_settings["representation_dimension"],
