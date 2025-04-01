@@ -97,6 +97,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
     vae.eval()
     all_latent_variables = []
     all_pose_rotation = []
+    all_predicted_images = []
     data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=4))
     if z is None:
         for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
@@ -125,7 +126,15 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
                 all_pose_rotation = []
 
 
+            predicted_structures = gmm_repr.mus[None, :, :].repeat(all_pose_rotation.shape[0], 1, 1)
+            posed_predicted_structures = renderer.rotate_structure(predicted_structures, all_pose_rotation)
+            predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
+            all_predicted_images.append(predicted_images.detach().cpu().numpy())
 
+
+
+        all_predicted_images = np.concatenate(all_predicted_images, axis=0)
+        mrc.MRCFile.write(f"{structures_path}particles_predicted.mrcs", all_predicted_images, Apix=1.0, is_vol=False)
         all_latent_variables = torch.concat(all_latent_variables, dim=0).detach().cpu().numpy()
         all_pose_rotation = torch.concat(all_pose_rotation, dim=0).detach().cpu().numpy()
         np.save(f"{structures_path}z_cryosphere_2.npy", all_latent_variables)
@@ -134,8 +143,14 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
         z1 = np.load(f"{structures_path}z_cryosphere_1.npy", all_latent_variables)
         z2 = np.load(f"{structures_path}z_cryosphere_2.npy", all_latent_variables)
         all_latent_variables = np.concatenate([z1, z2], axis=0)
+        rotation_matrices_1 = np.load(f"{structures_path}pose_rotation_matrix_1.npy")
+        rotation_matrices_2 = np.load(f"{structures_path}pose_rotation_matrix_2.npy")
+        all_rotation_matrices = np.concatenate([rotation_matrices_1, rotation_matrices_2], axis=0)
     else:
         all_latent_variables = z
+
+
+
 
     if not generate_structures:
         if all_latent_variables.shape[-1] > 1:
