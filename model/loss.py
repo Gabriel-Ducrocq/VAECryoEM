@@ -32,7 +32,7 @@ def calc_cor_loss(pred_images, gt_images, mask=None):
     # b 
     ####### !!!!!!!!!!!!!! CHANGING THE CORRELATION LOSS INTO A REAL CORRELATION !!!!!!!!
     #dots = (pred_images * gt_images).sum(-1)
-    dots = ((pred_images - pred_images.mean(-1)) * (gt_images - gt_images.mean(-1))).sum(-1)
+    dots = ((pred_images - pred_images.mean(-1)[:, None]) * (gt_images - gt_images.mean(-1)[:, None])).sum(-1)
     print("DOTS SHAPE", dots.shape)
     print("DENOM:", 1/(gt_images.std(-1) + 1e-5) / (pred_images.std(-1) + 1e-5))
     print("DOTS", -dots)
