@@ -11,6 +11,9 @@ def calc_cor_loss(pred_images, gt_images, mask=None):
     pred_images: torch.tensor(batch_size, side_shape**2) predicted images
     gt_images: torch.tensor(batch_size, side_shape**2) of true images, translated according to the poses.
     """
+    print("MASK", mask)
+    print("PRED IMAGES", pred_images.shape)
+    print("GT IMAGES", gt_images.shape)
     if mask is not None:
         pred_images = mask(pred_images)
         gt_images = mask(gt_images)
@@ -146,7 +149,7 @@ def compute_loss(predicted_images, images, predicted_rotation_matrix_pose, batch
     tracking_dict["l2_pen"].append(l2_pen.detach().cpu().numpy())
 
     tranpose_predicted = torch.transpose(predicted_rotation_matrix_pose, dim0=-1, dim1=-2)
-    tranpose_true= torch.transpose(batch_poses, dim0=-1, dim1=-2)
+    tranpose_true = torch.transpose(batch_poses, dim0=-1, dim1=-2)
     viewpoint = torch.zeros(3, dtype=torch.float32, device=device)
     viewpoint[-1] = 1
     viewpoint_predicted = torch.einsum("bkl, l-> bk", tranpose_predicted, viewpoint)
@@ -157,7 +160,6 @@ def compute_loss(predicted_images, images, predicted_rotation_matrix_pose, batch
     angles = torch.mean(angles).detach().cpu().numpy()
     print("Angles:", angles)
 
-    predicted_rotation_error = torch.mean(torch.sum((predicted_rotation_matrix_pose - batch_poses)**2, dim=(-2, -1)))
     rotmat_metric = roma.rigid_vectors_registration(viewpoint_predicted, viewpoint_true)
     rotate_viewpoint_predicted = torch.einsum("ik, bk -> bi", rotmat_metric, viewpoint_predicted)
     diff_viewpoints = torch.mean(torch.sqrt(torch.sum((rotate_viewpoint_predicted - viewpoint_true)**2, axis=-1)))
