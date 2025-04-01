@@ -128,7 +128,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
 
 
             predicted_structures = gmm_repr.mus[None, :, :].repeat(predicted_rotation_matrix_pose.shape[0], 1, 1)
-            posed_predicted_structures = renderer.rotate_structure(predicted_structures, all_pose_rotation)
+            posed_predicted_structures = renderer.rotate_structure(predicted_structures, predicted_rotation_matrix_pose)
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             all_predicted_images.append(predicted_images.detach().cpu().numpy())
 
