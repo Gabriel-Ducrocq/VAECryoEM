@@ -107,7 +107,9 @@ class VAE(torch.nn.Module):
 
         #input_to_pose_network = torch.concat([latent_variables, representation], dim=1)
         #rotation_pose = self.encoder_rotation(input_to_pose_network)
-        rotation_pose = self.encoder_rotation(representation)
+
+        ### !!!!!!!   TRYING THE OLD VERSION !!!!!!
+        rotation_pose = self.encoder_rotation(representation_mean)
         return representation, rotation_pose, representation_mean, representation_std
         #return latent_variables, rotation_pose, latent_mean, latent_std
 
