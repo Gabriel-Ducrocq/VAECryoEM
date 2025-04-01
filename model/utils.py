@@ -145,7 +145,7 @@ def parse_yaml(path):
                   experiment_settings["encoder_representation"]["hidden_dimensions"], network_type="encoder", device=device,
                   latent_type="continuous")
 
-    encoder_rotation = MLP(experiment_settings["latent_dimension"] + experiment_settings["representation_dimension"],
+    encoder_rotation = MLP(experiment_settings["representation_dimension"],
                   6,
                   experiment_settings["encoder_rotation"]["hidden_dimensions"], network_type="decoder", device=device,
                   latent_type="continuous")
