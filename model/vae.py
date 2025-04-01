@@ -99,6 +99,7 @@ class VAE(torch.nn.Module):
         """
         ####### !!!!!!! I AM NOW JUST PREDICTING THE ROTATION !!!!!!!!! ############
         representation_mean, representation_std = self.encoder_representation(images)
+        print("representation mean, std", representation_mean.shape, representation_std.shape)
         representation = representation_mean + torch.randn_like(representation_mean, dtype=torch.float32, device=self.device)\
                             *representation_std
         #latent_mean, latent_std = self.encoder_latent(representation)
