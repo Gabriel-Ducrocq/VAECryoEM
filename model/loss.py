@@ -21,14 +21,19 @@ def calc_cor_loss(pred_images, gt_images, mask=None):
     else:
         pixel_num = pred_images.shape[-2] * pred_images.shape[-1]
 
+    print("PIXEL NUM:", pixel_num)
     pred_images = torch.flatten(pred_images, start_dim=-2, end_dim=-1)
     gt_images = torch.flatten(gt_images, start_dim=-2, end_dim=-1)
+    print("PRED GT IMAGES FLATTEN", pred_images.shape, gt_images.shape)
     # b, h, w -> b, num_pix
     #pred_images = pred_images.flatten(start_dim=2)
     #gt_images = gt_images.flatten(start_dim=2)
 
     # b 
     dots = (pred_images * gt_images).sum(-1)
+    print("DOTS SHAPE", dots.shape)
+    print("DENOM:", 1/(gt_images.std(-1) + 1e-5) / (pred_images.std(-1) + 1e-5))
+    print("DOTS", -dots)
     # b -> b 
     err = -dots / (gt_images.std(-1) + 1e-5) / (pred_images.std(-1) + 1e-5)
     # b -> 1 value
