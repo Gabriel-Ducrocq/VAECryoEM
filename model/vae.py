@@ -102,6 +102,7 @@ class VAE(torch.nn.Module):
         print("representation mean, std", representation_mean.shape, representation_std.shape)
         representation = representation_mean + torch.randn_like(representation_mean, dtype=torch.float32, device=self.device)\
                             *representation_std
+        print("representation:", representation.shape)
         #latent_mean, latent_std = self.encoder_latent(representation)
         #latent_variables = latent_mean + torch.randn_like(latent_mean, dtype=torch.float32, device=self.device)\
         #                    *latent_std
