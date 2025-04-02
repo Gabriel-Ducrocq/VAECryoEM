@@ -34,6 +34,8 @@ def calc_cor_loss(pred_images, gt_images, mask=None):
     pred_images: torch.tensor(batch_size, side_shape**2) predicted images
     gt_images: torch.tensor(batch_size, side_shape**2) of true images, translated according to the poses.
     """
+    print("PRED IMAGES", pred_images.shape)
+    print("gt_images", gt_images.shape)
     if mask is not None:
         pred_images = mask(pred_images)
         gt_images = mask(gt_images)
