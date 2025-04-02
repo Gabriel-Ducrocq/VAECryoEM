@@ -180,10 +180,10 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             all_predicted_images.append(predicted_images.detach().cpu().numpy())
             all_predicted_images_symmetrized.append(predicted_images_symmetrized.detach().cpu().numpy())
             losses = calc_cor_loss(predicted_images, batch_images_loss, mask=None)
-            all_losses.append(losses.detach())
+            all_losses.append(losses.detach().cpu().numpy())
             losses_symmetrized = calc_cor_loss(predicted_images_symmetrized, batch_images_loss, mask=None)
             print("LOSSES SHAPE", losses.shape)
-            all_losses_symmetrized.append(losses_symmetrized.detach())
+            all_losses_symmetrized.append(losses_symmetrized.detach().cpu().numpy())
 
 
 
