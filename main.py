@@ -44,7 +44,7 @@ def train(yaml_setting_path, debug_mode):
                 "dataset": experiment_settings["star_file"],
                 "epochs": experiment_settings["N_epochs"],
             })
-    """   
+ 
     for epoch in range(5):
         data_loader = tqdm(iter(DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = 4, drop_last=True)))
         all_losses = []
@@ -68,8 +68,7 @@ def train(yaml_setting_path, debug_mode):
             all_losses.append(loss.detach().cpu().numpy())
 
         wandb.log({"warm_up_loss": np.mean(all_losses)})
-    """
-    
+
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
         tracking_metrics = {"rmsd":[], "kl_prior_latent":[], "kl_prior_mask_mean":[], "kl_prior_mask_std":[],
