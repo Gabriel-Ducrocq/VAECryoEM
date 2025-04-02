@@ -11,9 +11,6 @@ def calc_cor_loss(pred_images, gt_images, mask=None):
     pred_images: torch.tensor(batch_size, side_shape**2) predicted images
     gt_images: torch.tensor(batch_size, side_shape**2) of true images, translated according to the poses.
     """
-    print("MASK", mask)
-    print("PRED IMAGES", pred_images.shape)
-    print("GT IMAGES", gt_images.shape)
     if mask is not None:
         pred_images = mask(pred_images)
         gt_images = mask(gt_images)
@@ -21,10 +18,8 @@ def calc_cor_loss(pred_images, gt_images, mask=None):
     else:
         pixel_num = pred_images.shape[-2] * pred_images.shape[-1]
 
-    print("PIXEL NUM:", pixel_num)
     pred_images = torch.flatten(pred_images, start_dim=-2, end_dim=-1)
     gt_images = torch.flatten(gt_images, start_dim=-2, end_dim=-1)
-    print("PRED GT IMAGES FLATTEN", pred_images.shape, gt_images.shape)
     # b, h, w -> b, num_pix
     #pred_images = pred_images.flatten(start_dim=2)
     #gt_images = gt_images.flatten(start_dim=2)
@@ -33,14 +28,10 @@ def calc_cor_loss(pred_images, gt_images, mask=None):
     ####### !!!!!!!!!!!!!! CHANGING THE CORRELATION LOSS INTO A REAL CORRELATION !!!!!!!!
     #dots = (pred_images * gt_images).sum(-1)
     dots = ((pred_images - pred_images.mean(-1)[:, None]) * (gt_images - gt_images.mean(-1)[:, None])).sum(-1)
-    print("DOTS SHAPE", dots.shape)
-    print("DENOM:", 1/(gt_images.std(-1) + 1e-5) / (pred_images.std(-1) + 1e-5))
-    print("DOTS", -dots)
     # b -> b 
     err = -dots / (gt_images.std(-1) + 1e-5) / (pred_images.std(-1) + 1e-5)
     # b -> 1 value
     err = err.mean() / pixel_num
-    print("ERR", err)
     return err
 
 

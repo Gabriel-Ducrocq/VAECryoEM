@@ -3,6 +3,7 @@ import os
 path = os.path.abspath("model")
 sys.path.append(path)
 import mrc
+import loss
 import yaml
 import torch
 import utils
@@ -27,6 +28,35 @@ from torch.utils.data import DataLoader
 from scipy.spatial.distance import cdist
 from pytorch3d.transforms import rotation_6d_to_matrix
 from pytorch3d.transforms import quaternion_to_axis_angle, quaternion_to_matrix
+
+def calc_cor_loss(pred_images, gt_images, mask=None):
+    """
+    Compute the cross-correlation for each pair (predicted_image, true) image in a batch. And average them
+    pred_images: torch.tensor(batch_size, side_shape**2) predicted images
+    gt_images: torch.tensor(batch_size, side_shape**2) of true images, translated according to the poses.
+    """
+    if mask is not None:
+        pred_images = mask(pred_images)
+        gt_images = mask(gt_images)
+        pixel_num = mask.num_masked
+    else:
+        pixel_num = pred_images.shape[-2] * pred_images.shape[-1]
+
+    pred_images = torch.flatten(pred_images, start_dim=-2, end_dim=-1)
+    gt_images = torch.flatten(gt_images, start_dim=-2, end_dim=-1)
+    # b, h, w -> b, num_pix
+    #pred_images = pred_images.flatten(start_dim=2)
+    #gt_images = gt_images.flatten(start_dim=2)
+
+    # b 
+    ####### !!!!!!!!!!!!!! CHANGING THE CORRELATION LOSS INTO A REAL CORRELATION !!!!!!!!
+    #dots = (pred_images * gt_images).sum(-1)
+    dots = ((pred_images - pred_images.mean(-1)[:, None]) * (gt_images - gt_images.mean(-1)[:, None])).sum(-1)
+    # b -> b 
+    err = -dots / (gt_images.std(-1) + 1e-5) / (pred_images.std(-1) + 1e-5)
+    # b -> 1 value
+    err = err / pixel_num
+    return err
 
 class ResSelect(bpdb.Select):
     def accept_residue(self, res):
@@ -98,7 +128,14 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
     vae.eval()
     all_latent_variables = []
     all_pose_rotation = []
+    all_pose_rotation_symmetrized = []
     all_predicted_images = []
+    all_predicted_images_symmetrized = []
+    all_losses = []
+    all_losses_symmetrized = []
+    symmetric_rot = torch.tensor(np.array([[ 0.96450679,  0.11832506, -0.2360632 ],
+       [ 0.12629749, -0.9918126 ,  0.01888687],
+       [-0.23189567, -0.0480307 , -0.97155414]]), dtype=torch.float32, device=device)
     data_loader = iter(DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=4))
     if z is None:
         for batch_num, (indexes, batch_images, batch_poses, batch_poses_translation) in enumerate(data_loader):
@@ -116,27 +153,46 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             predicted_rotation_pose = vae.encoder_rotation(latent_mean)
             #print("Predicted rotation pose shape", predicted_rotation_pose.shape)
             predicted_rotation_matrix_pose = rotation_6d_to_matrix(predicted_rotation_pose)
+            predicted_rotation_matrix_pose_symmetrized = torch.einsum("bij, jk -> bik", predicted_rotation_matrix_pose, symmetric_rot)
             #print("Predicted rotation pose matrix shape", predicted_rotation_matrix_pose.shape)
             all_pose_rotation.append(predicted_rotation_matrix_pose)
+            all_pose_rotation_symmetrized.append(predicted_rotation_matrix_pose_symmetrized)
             all_latent_variables.append(latent_variables)
             if batch_num == 500:
                 all_latent_variables = torch.concat(all_latent_variables, dim=0).detach().cpu().numpy()
                 all_pose_rotation = torch.concat(all_pose_rotation, dim=0).detach().cpu().numpy()
+                all_pose_rotation_symmetrized = torch.concat(all_pose_rotation_symmetrized, dim=0).detach().cpu().numpy()
                 np.save(f"{structures_path}z_cryosphere_1.npy", all_latent_variables)
                 np.save(f"{structures_path}pose_rotation_matrix_1.npy", all_pose_rotation)
+                np.save(f"{structures_path}pose_rotation_matrix_symmetrized_1.npy", all_pose_rotation_symmetrized)
                 all_latent_variables = []
                 all_pose_rotation = []
+                all_pose_rotation_symmetrized = []
 
 
             predicted_structures = gmm_repr.mus[None, :, :].repeat(predicted_rotation_matrix_pose.shape[0], 1, 1)
             posed_predicted_structures = renderer.rotate_structure(predicted_structures, predicted_rotation_matrix_pose)
+            posed_predicted_structures_symmetrized = renderer.rotate_structure(predicted_structures, predicted_rotation_matrix_pose_symmetrized)
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
+            predicted_images_symmetrized = renderer.project(posed_predicted_structures_symmetrized, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             all_predicted_images.append(predicted_images.detach().cpu().numpy())
+            all_predicted_images_symmetrized.append(predicted_images_symmetrized.detach().cpu().numpy())
+            losses = calc_cor_loss(predicted_images, batch_translated_images, mask=None)
+            all_losses.append(losses.detach())
+            losses_symmetrized = calc_cor_loss(predicted_images_symmetrized, batch_translated_images, mask=None)
+            print("LOSSES SHAPE", losses.shape)
+            all_losses_symmetrized.append(losses_symmetrized.detach())
 
 
 
         all_predicted_images = np.concatenate(all_predicted_images, axis=0)
+        all_predicted_images_symmetrized = np.concatenate(all_predicted_images_symmetrized, axis=0)
+        all_losses = np.concatenate(all_losses, axis=0)
+        all_losses_symmetrized = np.concatenate(all_losses_symmetrized, axis=0)
+        np.save(f"{structures_path}all_losses.npy", all_losses)
+        np.save(f"{structures_path}all_losses_symmetrized.npy", all_losses_symmetrized)
         mrc.MRCFile.write(f"{structures_path}particles_predicted.mrcs", all_predicted_images, Apix=1.0, is_vol=False)
+        mrc.MRCFile.write(f"{structures_path}particles_predicted_symmetrized.mrcs", all_predicted_images_symmetrized, Apix=1.0, is_vol=False)
         all_latent_variables = torch.concat(all_latent_variables, dim=0).detach().cpu().numpy()
         all_pose_rotation = torch.concat(all_pose_rotation, dim=0).detach().cpu().numpy()
         np.save(f"{structures_path}z_cryosphere_2.npy", all_latent_variables)
