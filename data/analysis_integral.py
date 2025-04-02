@@ -3,7 +3,6 @@ import os
 path = os.path.abspath("model")
 sys.path.append(path)
 import mrc
-import loss
 import yaml
 import torch
 import utils
