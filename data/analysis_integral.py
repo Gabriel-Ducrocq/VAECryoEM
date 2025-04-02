@@ -149,6 +149,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             indexes = indexes.to(device)
 
             start_net = time()
+            batch_images_loss = batch_images
             batch_images = batch_images.flatten(start_dim=-2)
             latent_variables, predicted_rotation_pose, latent_mean, latent_std = vae.sample_latent(batch_images)
             predicted_rotation_pose = vae.encoder_rotation(latent_mean)
@@ -178,9 +179,9 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             predicted_images_symmetrized = renderer.project(posed_predicted_structures_symmetrized, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             all_predicted_images.append(predicted_images.detach().cpu().numpy())
             all_predicted_images_symmetrized.append(predicted_images_symmetrized.detach().cpu().numpy())
-            losses = calc_cor_loss(predicted_images, batch_images, mask=None)
+            losses = calc_cor_loss(predicted_images, batch_images_loss, mask=None)
             all_losses.append(losses.detach())
-            losses_symmetrized = calc_cor_loss(predicted_images_symmetrized, batch_images, mask=None)
+            losses_symmetrized = calc_cor_loss(predicted_images_symmetrized, batch_images_loss, mask=None)
             print("LOSSES SHAPE", losses.shape)
             all_losses_symmetrized.append(losses_symmetrized.detach())
 
