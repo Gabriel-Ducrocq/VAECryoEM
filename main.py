@@ -61,7 +61,7 @@ def train(yaml_setting_path, debug_mode):
             target = torch.zeros_like(predicted_rotation_pose, dtype=torch.float32, device=device)
             target[:, 0] = 1
             target[:, 4] = 1
-            loss = torch.mean(torch.sum((predicted_rotation_pose - target)**2, dim=-1))
+            loss = torch.mean(torch.sum((latent_mean - target)**2, dim=-1))
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
