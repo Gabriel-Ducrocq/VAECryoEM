@@ -187,8 +187,8 @@ print("Mean variance accross images", mean_variance)
 #print("Adding Gaussian noise with variance", noise_var)
 #torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
 
-##### REMOVING NOISE CORRUPTION !!!!
-#all_images += torch.randn((N_images, Npix, Npix))*torch.sqrt(noise_var)
+
+all_images += torch.randn((N_images, Npix, Npix))*torch.sqrt(noise_var)
 print("Saving images in MRC format")
 print(size_prot)
 if len(size_prot) > 1:
