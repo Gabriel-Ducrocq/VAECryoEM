@@ -68,6 +68,7 @@ def train(yaml_setting_path, debug_mode):
             all_losses.append(loss.detach().cpu().numpy())
 
         wandb.log({"warm_up_loss": np.mean(all_losses)})
+        torch.save(vae, experiment_settings["folder_path"] + "models/full_model_after_warmup")
 
     for epoch in range(N_epochs):
         print("Epoch number:", epoch)
