@@ -95,6 +95,7 @@ def train(yaml_setting_path, debug_mode):
             batch_translated_images = batch_images
             lp_batch_translated_images = low_pass_images(batch_translated_images, lp_mask2d)
             latent_variables, predicted_rotation_pose, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
+            print("In run latent_mean", latent_mean)
             predicted_rotation_matrix_pose = rotation_6d_to_matrix(predicted_rotation_pose)
             mask = vae.sample_mask(batch_images.shape[0])
             #if epoch < 30:
