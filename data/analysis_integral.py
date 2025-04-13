@@ -152,7 +152,8 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             batch_images_loss = batch_images
             batch_images = batch_images.flatten(start_dim=-2)
             latent_variables, predicted_rotation_pose, latent_mean, latent_std = vae.sample_latent(batch_images)
-            predicted_rotation_pose = vae.encoder_rotation(latent_mean)
+            #predicted_rotation_pose = vae.encoder_rotation(latent_mean)
+            predicted_rotation_pose = latent_mean
             #print("Predicted rotation pose shape", predicted_rotation_pose.shape)
             predicted_rotation_matrix_pose = rotation_6d_to_matrix(predicted_rotation_pose)
             predicted_rotation_matrix_pose_symmetrized = torch.einsum("bij, jk -> bik", predicted_rotation_matrix_pose, symmetric_rot)
