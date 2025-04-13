@@ -154,6 +154,8 @@ def compute_loss(predicted_images, images, predicted_rotation_matrix_pose, batch
     viewpoint_true = torch.einsum("bkl, l-> bk", tranpose_true, viewpoint)
 
     dot_prods = torch.sum(viewpoint_predicted*viewpoint_true, dim=-1)
+    dot_prods[dot_prods < -1] = -1
+    dot_prods[dot_prods > 1] = 1
     angles = torch.acos(dot_prods)*180/torch.pi
     #angles = torch.mean(angles).detach().cpu().numpy()
     print("Angles:", angles)
