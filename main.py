@@ -62,6 +62,7 @@ def train(yaml_setting_path, debug_mode):
             target[:, 0] = 1
             target[:, 4] = 1
             loss = torch.mean(torch.sum((latent_mean - target)**2, dim=-1))
+            print("LATENT MEAN", latent_mean)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
