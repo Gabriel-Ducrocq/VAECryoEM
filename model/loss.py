@@ -148,15 +148,19 @@ def compute_loss(predicted_images, images, predicted_rotation_matrix_pose, batch
 
     tranpose_predicted = torch.transpose(predicted_rotation_matrix_pose, dim0=-1, dim1=-2)
     tranpose_true = torch.transpose(batch_poses, dim0=-1, dim1=-2)
-    viewpoint = torch.zeros(3, dtype=torch.float32, device=device)
-    viewpoint[-1] = 1
-    viewpoint_predicted = torch.einsum("bkl, l-> bk", tranpose_predicted, viewpoint)
-    viewpoint_true = torch.einsum("bkl, l-> bk", tranpose_true, viewpoint)
+    prod_pred_true = (torch.einsum("bik, bkj -> bij", predicted_rotation_matrix_pose, tranpose_true).diagonal(offset=0, dim1=-1, dim2=-2).sum(-1) - 1)/2
+    prod_pred_true[prod_pred_true < -1 ] = -1
+    prod_pred_true[prod_pred_true > 1 ] = 1
+    angles = torch.acos(prod_pred_true)*180/torch.pi
+    #viewpoint = torch.zeros(3, dtype=torch.float32, device=device)
+    #viewpoint[-1] = 1
+    #viewpoint_predicted = torch.einsum("bkl, l-> bk", tranpose_predicted, viewpoint)
+    #viewpoint_true = torch.einsum("bkl, l-> bk", tranpose_true, viewpoint)
 
-    dot_prods = torch.sum(viewpoint_predicted*viewpoint_true, dim=-1)
-    dot_prods[dot_prods < -1] = -1
-    dot_prods[dot_prods > 1] = 1
-    angles = torch.acos(dot_prods)*180/torch.pi
+    #dot_prods = torch.sum(viewpoint_predicted*viewpoint_true, dim=-1)
+    #dot_prods[dot_prods < -1] = -1
+    #dot_prods[dot_prods > 1] = 1
+    #angles = torch.acos(dot_prods)*180/torch.pi
     #angles = torch.mean(angles).detach().cpu().numpy()
     print("Angles:", angles)
 
