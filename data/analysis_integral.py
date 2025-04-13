@@ -170,6 +170,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             prod_pred_true[prod_pred_true > 1 ] = 1
             angles = torch.acos(prod_pred_true)*180/torch.pi
             all_distances.append(angles.detach().cpu().numpy())
+            print("ALL DIST", len(all_distances))
 
             prod_id_true = (tranpose_true.diagonal(offset=0, dim1=-1, dim2=-2).sum(-1) - 1)/2
             prod_id_true[prod_id_true < -1 ] = -1
