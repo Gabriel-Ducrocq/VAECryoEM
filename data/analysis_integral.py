@@ -134,6 +134,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
     all_predicted_images_symmetrized = []
     all_losses = []
     all_losses_symmetrized = []
+    all_distances = []
     symmetric_rot = torch.tensor(np.array([[ 0.96450679,  0.11832506, -0.2360632 ],
        [ 0.12629749, -0.9918126 ,  0.01888687],
        [-0.23189567, -0.0480307 , -0.97155414]]), dtype=torch.float32, device=device)
@@ -161,16 +162,26 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             all_pose_rotation.append(predicted_rotation_matrix_pose)
             all_pose_rotation_symmetrized.append(predicted_rotation_matrix_pose_symmetrized)
             all_latent_variables.append(latent_variables)
+
+            tranpose_true = torch.transpose(batch_poses, dim0=-1, dim1=-2)
+            prod_pred_true = (torch.einsum("bik, bkj -> bij", predicted_rotation_matrix_pose, tranpose_true).diagonal(offset=0, dim1=-1, dim2=-2).sum(-1) - 1)/2
+            prod_pred_true[prod_pred_true < -1 ] = -1
+            prod_pred_true[prod_pred_true > 1 ] = 1
+            angles = torch.acos(prod_pred_true)*180/torch.pi
+            all_distances.append(angles.detach().cpu().numpy())
             if batch_num == 500:
                 all_latent_variables = torch.concat(all_latent_variables, dim=0).detach().cpu().numpy()
                 all_pose_rotation = torch.concat(all_pose_rotation, dim=0).detach().cpu().numpy()
                 all_pose_rotation_symmetrized = torch.concat(all_pose_rotation_symmetrized, dim=0).detach().cpu().numpy()
+                all_distances = np.concatenate(all_distances, axis=0)
                 np.save(f"{structures_path}z_cryosphere_1.npy", all_latent_variables)
                 np.save(f"{structures_path}pose_rotation_matrix_1.npy", all_pose_rotation)
                 np.save(f"{structures_path}pose_rotation_matrix_symmetrized_1.npy", all_pose_rotation_symmetrized)
+                np.save(f"{structures_path}all_distances_1.npy", all_distances)
                 all_latent_variables = []
                 all_pose_rotation = []
                 all_pose_rotation_symmetrized = []
+                all_distances = []
 
 
             predicted_structures = gmm_repr.mus[None, :, :].repeat(predicted_rotation_matrix_pose.shape[0], 1, 1)
@@ -187,7 +198,8 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
             all_losses_symmetrized.append(losses_symmetrized.detach().cpu().numpy())
 
 
-
+        all_distances = np.concatenate(all_distances, axis=0)
+        np.save(f"{structures_path}all_distances_2.npy", all_distances)
         all_predicted_images = np.concatenate(all_predicted_images, axis=0)
         all_predicted_images_symmetrized = np.concatenate(all_predicted_images_symmetrized, axis=0)
         all_losses = np.concatenate(all_losses, axis=0)
