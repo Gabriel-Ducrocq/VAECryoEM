@@ -211,7 +211,7 @@ def analyze(yaml_setting_path, model_path, structures_path, z, thinning=1, dimen
         all_distances = np.concatenate(all_distances_id, axis=0)
         np.save(f"{structures_path}all_distances_id_2.npy", all_distances_id)
         print("ALL DIST FINAL", len(all_distances))
-        all_distances = np.concatenate(all_distances, axis=0)
+        #all_distances = np.concatenate(all_distances, axis=0)
         np.save(f"{structures_path}all_distances_2.npy", all_distances)
         all_predicted_images = np.concatenate(all_predicted_images, axis=0)
         all_predicted_images_symmetrized = np.concatenate(all_predicted_images_symmetrized, axis=0)
