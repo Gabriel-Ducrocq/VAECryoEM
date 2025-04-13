@@ -155,13 +155,13 @@ def compute_loss(predicted_images, images, predicted_rotation_matrix_pose, batch
 
     dot_prods = torch.sum(viewpoint_predicted*viewpoint_true, dim=-1)
     angles = torch.acos(dot_prods)*180/torch.pi
-    angles = torch.mean(angles).detach().cpu().numpy()
+    #angles = torch.mean(angles).detach().cpu().numpy()
     print("Angles:", angles)
 
     rotmat_metric = roma.rigid_vectors_registration(viewpoint_predicted, viewpoint_true)
     rotate_viewpoint_predicted = torch.einsum("ik, bk -> bi", rotmat_metric, viewpoint_predicted)
     diff_viewpoints = torch.mean(torch.sqrt(torch.sum((rotate_viewpoint_predicted - viewpoint_true)**2, axis=-1)))
-    tracking_dict["viewpoint_angle_diff_degrees"].append(diff_viewpoints.detach().cpu().numpy())
+    tracking_dict["viewpoint_angle_diff_degrees"].append(angles.detach().cpu().numpy())
 
     loss = rmsd + loss_weights["KL_prior_latent"]*KL_prior_latent \
            + loss_weights["KL_prior_mask_mean"]*KL_prior_mask_means \
