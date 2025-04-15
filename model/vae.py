@@ -101,7 +101,7 @@ class VAE(torch.nn.Module):
         ####### !!!!!!! I AM NOW JUST PREDICTING THE ROTATION !!!!!!!!! ############
         representation_mean, representation_std = self.encoder_representation(images)
         #We now sample several poses per image, so the resulting tensor is [B, P, R] instead of [B, R]
-        representation = representation_mean[:, None, :] + torch.randn_like((representation_mean.shape[0], self.N_rotations, representation_mean.shape[1]) , dtype=torch.float32, device=self.device)\
+        representation = representation_mean[:, None, :] + torch.randn(representation_mean.shape[0], self.N_rotations, representation_mean.shape[1] , dtype=torch.float32, device=self.device)\
                             *representation_std[:, None, :]
 
         #latent_mean, latent_std = self.encoder_latent(representation)
