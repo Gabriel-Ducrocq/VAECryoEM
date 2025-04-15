@@ -32,7 +32,7 @@ def calc_cor_loss(pred_images, gt_images, mask=None):
     dots = ((pred_images - pred_images.mean(-1)[:, :, None]) * (gt_images[:, None, :] - gt_images.mean(-1)[:, None, None])).sum(-1)
     # b -> b 
     d = dots / (gt_images.std(-1)[:, None] + 1e-5) / (pred_images.std(-1) + 1e-5) / pixel_num
-    err = d
+    err = d.mean()
     print("LOSS EXP", torch.min(d), torch.max(d))
     #err = torch.exp(d)
     # b -> 1 value
