@@ -58,7 +58,7 @@ def train(yaml_setting_path, debug_mode):
             batch_translated_images = image_translator.transform(batch_images, batch_poses_translation[:, None, :])
             lp_batch_translated_images = low_pass_images(batch_translated_images, lp_mask2d)
             latent_variables, predicted_rotation_pose, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
-            target = torch.zeros_like(predicted_rotation_pose, dtype=torch.float32, device=device)
+            target = torch.zeros_like(latent_mean, dtype=torch.float32, device=device)
             target[:, 0] = 1
             target[:, 4] = 1
             loss = torch.mean(torch.sum((latent_mean - target)**2, dim=-1))
