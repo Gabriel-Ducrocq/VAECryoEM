@@ -31,12 +31,12 @@ def calc_cor_loss(pred_images, gt_images, mask=None):
     print("GT IMAGES SHAPE", gt_images.shape)
     dots = ((pred_images - pred_images.mean(-1)[:, :, None]) * (gt_images[:, None, :] - gt_images.mean(-1)[:, None, None])).sum(-1)
     # b -> b 
-    d = dots / (gt_images.std(-1)[:, None] + 1e-5) / (pred_images.std(-1) + 1e-5)
+    d = dots / (gt_images.std(-1)[:, None] + 1e-5) / (pred_images.std(-1) + 1e-5) / pixel_num
     print("LOSS EXP", torch.min(d), torch.max(d))
     err = torch.exp(d)
     # b -> 1 value
-    print("LOSS LOG", torch.min(err.mean() / pixel_num), torch.max(err.mean() / pixel_num))
-    err = -torch.log(err.mean() / pixel_num)
+    print("LOSS LOG", torch.min(err.mean() / pixel_num), torch.max(err.mean()))
+    err = -torch.log(err.mean())
     return err
 
 
