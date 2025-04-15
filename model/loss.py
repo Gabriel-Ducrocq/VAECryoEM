@@ -150,7 +150,8 @@ def compute_loss(predicted_images, images, predicted_rotation_matrix_pose, batch
 
     tranpose_predicted = torch.transpose(predicted_rotation_matrix_pose, dim0=-1, dim1=-2)
     tranpose_true = torch.transpose(batch_poses, dim0=-1, dim1=-2)
-    prod_pred_true = (torch.einsum("bik, bkj -> bij", predicted_rotation_matrix_pose, tranpose_true).diagonal(offset=0, dim1=-1, dim2=-2).sum(-1) - 1)/2
+    print("predicted_rotation_matrix_pose", predicted_rotation_matrix_pose.shape)
+    prod_pred_true = (torch.einsum("bpik, bkj -> bpij", predicted_rotation_matrix_pose, tranpose_true).diagonal(offset=0, dim1=-1, dim2=-2).sum(-1) - 1)/2
     prod_pred_true[prod_pred_true < -1 ] = -1
     prod_pred_true[prod_pred_true > 1 ] = 1
     angles = torch.acos(prod_pred_true)*180/torch.pi
