@@ -321,6 +321,7 @@ def compute_mask_prior(N_residues, N_domains, device):
 
 def monitor_training(mask, tracking_metrics, epoch, experiment_settings, vae, optimizer, true_image, predicted_image):
     """
+    
     Monitors the training process through wandb and saving masks and models
     :param mask:
     :param tracking_metrics:
