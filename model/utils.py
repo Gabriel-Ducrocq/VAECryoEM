@@ -161,7 +161,7 @@ def parse_yaml(path):
     if experiment_settings["resume_training"]["model"] == "None":
         vae = VAE(encoder_latent, encoder_representation, encoder_rotation, decoder, device, N_domains = experiment_settings["N_domains"], N_residues= experiment_settings["N_residues"],
                   tau_mask=experiment_settings["tau_mask"], mask_start_values=experiment_settings["mask_start"],
-                  latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"])
+                  latent_type=experiment_settings["latent_type"], latent_dim=experiment_settings["latent_dimension"], N_rotations=experiment_settings["N_rotations"])
         vae.to(device)
     else:
         vae = torch.load(experiment_settings["resume_training"]["model"])

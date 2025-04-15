@@ -97,6 +97,7 @@ def train(yaml_setting_path, debug_mode):
             lp_batch_translated_images = low_pass_images(batch_translated_images, lp_mask2d)
             latent_variables, predicted_rotation_pose, latent_mean, latent_std = vae.sample_latent(flattened_batch_images)
             print("In run latent_mean", latent_mean)
+            #predicted rotation pose is now a tensor of shape [B, N_poses, 3, 3]
             predicted_rotation_matrix_pose = rotation_6d_to_matrix(predicted_rotation_pose)
             mask = vae.sample_mask(batch_images.shape[0])
             #if epoch < 30:
@@ -106,6 +107,7 @@ def train(yaml_setting_path, debug_mode):
             #translation_per_residue = model.utils.compute_translations_per_residue(translations_per_domain, mask)
             #predicted_structures = model.utils.deform_structure_bis(gmm_repr.mus, translation_per_residue, quaternions_per_domain, mask, device)
             predicted_structures = gmm_repr.mus[None, :, :].repeat(batch_size, 1, 1)
+            #posed_predicted_structures is of shape [B, N_poses, 3]
             posed_predicted_structures = renderer.rotate_structure(predicted_structures, predicted_rotation_matrix_pose)
             predicted_images = renderer.project(posed_predicted_structures, gmm_repr.sigmas, gmm_repr.amplitudes, grid)
             batch_predicted_images = renderer.apply_ctf(predicted_images, ctf, indexes)

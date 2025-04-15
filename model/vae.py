@@ -3,7 +3,7 @@ import numpy as np
 
 
 class VAE(torch.nn.Module):
-    def __init__(self, encoder_latent, encoder_representation, encoder_rotation, decoder, device, mask_start_values, N_domains=6, N_residues=1006, tau_mask=0.05,
+    def __init__(self, encoder_latent, encoder_representation, encoder_rotation, decoder, device, mask_start_values, N_rotations = 16, N_domains=6, N_residues=1006, tau_mask=0.05,
                  latent_dim = None, latent_type="continuous"):
         super(VAE, self).__init__()
         assert latent_type in ["continuous", "categorical"]
@@ -17,6 +17,7 @@ class VAE(torch.nn.Module):
         self.tau_mask = tau_mask
         self.latent_type = latent_type
         self.latent_dim = latent_dim
+        self.N_rotations = N_rotations
 
         self.residues = torch.arange(0, self.N_residues, 1, dtype=torch.float32, device=device)[:, None]
 
@@ -99,8 +100,9 @@ class VAE(torch.nn.Module):
         """
         ####### !!!!!!! I AM NOW JUST PREDICTING THE ROTATION !!!!!!!!! ############
         representation_mean, representation_std = self.encoder_representation(images)
-        representation = representation_mean + torch.randn_like(representation_mean, dtype=torch.float32, device=self.device)\
-                            *representation_std
+        #We now sample several poses per image, so the resulting tensor is [B, P, R] instead of [B, R]
+        representation = representation_mean[:, None, :] + torch.randn_like((representation_mean.shape[0], self.N_rotations, representation_mean.shape[1]) , dtype=torch.float32, device=self.device)\
+                            *representation_std[:, None, :]
 
         #latent_mean, latent_std = self.encoder_latent(representation)
         #latent_variables = latent_mean + torch.randn_like(latent_mean, dtype=torch.float32, device=self.device)\

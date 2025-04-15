@@ -36,10 +36,10 @@ def project(Gauss_mean, Gauss_sigmas, Gauss_amplitudes, grid):
     """
     sigmas = 2*Gauss_sigmas**2
     sqrt_amp = torch.sqrt(Gauss_amplitudes)
-    #Both proj_x and proj_y are (batch_size, N_atoms, N_pix)
-    proj_x = torch.exp(-(Gauss_mean[:, :, None, 0] - grid.line_coords[None, None, :])**2/sigmas[None, :, None,  0])*sqrt_amp[None, :, :]
-    proj_y = torch.exp(-(Gauss_mean[:, :, None, 1] - grid.line_coords[None, None, :])**2/sigmas[None, :, None, 0])*sqrt_amp[None, :, :]
-    images = torch.einsum("b a p, b a q -> b q p", proj_x, proj_y)
+    #Both proj_x and proj_y are (batch_size, N_poses, N_atoms, N_pix)
+    proj_x = torch.exp(-(Gauss_mean[:, :, :, None, 0] - grid.line_coords[None, None, None, :])**2/sigmas[None, None,  :, None,  0])*sqrt_amp[None, None, :, :]
+    proj_y = torch.exp(-(Gauss_mean[:, :, :, None, 1] - grid.line_coords[None, None, None, :])**2/sigmas[None, None,  :, None, 0])*sqrt_amp[None, None,  :, :]
+    images = torch.einsum("b l a p, b l a q -> b l q p", proj_x, proj_y)
     return images
 
 def ctf_corrupt(images, ctf, device):
@@ -86,7 +86,7 @@ def rotate_structure(Gauss_mean, rotation_matrices):
     rotation_matrices: torch.tensor(batch_size, 3, 3) of rotation_matrices
     return rotated_Gauss_mean: torch.tensor(batch_size, N_atoms, 3)
     """
-    rotated_Gauss_mean = torch.einsum("b l k, b a k -> b a l", rotation_matrices, Gauss_mean)
+    rotated_Gauss_mean = torch.einsum("b p l k, b a k -> b p a l", rotation_matrices, Gauss_mean)
     return rotated_Gauss_mean
 
 
@@ -125,7 +125,7 @@ def apply_ctf(images, ctf, indexes):
 
     ##### !!!!!!!!!!!!!!!! I AM MULTIPLYING BY -1 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     fourier_images = primal_to_fourier2d(images)
-    fourier_images *= -ctf.compute_ctf(indexes)
+    fourier_images *= -ctf.compute_ctf(indexes)[:, None, :, :]
     ctf_corrupted = fourier2d_to_primal(fourier_images)
     return ctf_corrupted
 
