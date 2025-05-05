@@ -157,8 +157,6 @@ for i in tqdm(range(n_iter)):
 
     amplitudes = torch.tensor(poly.num_electron, dtype=torch.float32, device=device)[:, None]
     poses_ = poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure]
-    if poses_.shape[0] == 1:
-        poses_ = poses_[None, ...]
 
     print("poses", poses_.shape)
 
