@@ -162,12 +162,14 @@ for i in tqdm(range(n_iter)):
 
     posed_backbones = rotate_structure(backbone, poses_)
     batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
+    print("batch images", batch_images.shape)
     batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
     ###  !!!!!!!!!!!!! We multiply by -1 so that when we correct for the translation in the cryoSPHERE run, we dont get 2x translation but 0 tranlations !
     batch_poses_translation = - poses_translations[i*N_pose_per_structure:(i+1)*N_pose_per_structure]
     if batch_poses_translation.shape[0] == 1:
         batch_poses_translation = batch_poses_translation[None, ...]
-        
+
+    print(batch_ctf_corrupted_images.shape)
     batch_translated_images = image_translator.transform(batch_ctf_corrupted_images, batch_poses_translation[:, None, :])
     #batch_ctf_corrupted_images = batch_images
     #plt.imshow(batch_ctf_corrupted_images[0].detach().numpy())
