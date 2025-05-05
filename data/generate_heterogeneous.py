@@ -160,6 +160,8 @@ for i in tqdm(range(n_iter)):
     if poses_.shape[0] == 1:
         poses_ = poses_[None, ...]
 
+    print("poses", poses_.shape)
+
     posed_backbones = rotate_structure(backbone, poses_)
     batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
     print("batch images", batch_images.shape)
