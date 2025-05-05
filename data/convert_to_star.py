@@ -46,7 +46,7 @@ def convert_ctf_to_relion(particle_mrcs, N_images, N_pixels, apix, ctf_yaml):
 	optics_df = pd.DataFrame(ctf_dict, index=[0])
 
 	particle_dict = {"rlnImageName":[f"{i}@{particle_mrcs}" for i in range(1, N_images+1)], "rlnMicrographName":["NoName"]*N_images, "rlnOpticsGroup":[1]*N_images, 
-				"rlnDefocusU":[ctf_yaml["dfU"]]*N_images, "rlnDefocusV":[ctf_yaml["dfV"]]*N_images, "rlnDefocusAngle":[ctf_yaml["dfang"]]*N_images}	
+				"rlnDefocusU":[ctf_yaml["dfU"]]*N_images, "rlnDefocusV":[ctf_yaml["dfV"]]*N_images, "rlnDefocusAngle":[ctf_yaml["dfang"]]*N_images, "rlnPhaseShift": [0]*N_images}	
 
 	return particle_dict, optics_df
 

@@ -141,9 +141,10 @@ else:
 poly = centering_structure
 size_prot = []
 faulty_indexes = []
-print(N_pose_per_structure)
-print(N_images)
-print(folder_experiment)
+print("N pose per structure:", N_pose_per_structure)
+print("N_images", N_images)
+print("n_iter", n_iter)
+print("Folder experiment", folder_experiment)
 for i in tqdm(range(n_iter)):
     if not is_homogeneous:
         poly = Polymer.from_pdb(sorted_structures[i], filter_aa) 
