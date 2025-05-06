@@ -160,6 +160,8 @@ for i in tqdm(range(n_iter)):
     batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
     ###  !!!!!!!!!!!!! We multiply by -1 so that when we correct for the translation in the cryoSPHERE run, we dont get 2x translation but 0 tranlations !
     batch_poses_translation = - poses_translations[i*N_pose_per_structure:(i+1)*N_pose_per_structure]
+    print("BATCH CTF CORRUPTED", batch_ctf_corrupted_images.shape)
+    print("BATCH POSES TRANSLATIONS", batch_poses_translation[:, None, :].shape)
     batch_translated_images = image_translator.transform(batch_ctf_corrupted_images, batch_poses_translation[:, None, :])
     #batch_ctf_corrupted_images = batch_images
     #plt.imshow(batch_ctf_corrupted_images[0].detach().numpy())
