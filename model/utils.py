@@ -277,7 +277,7 @@ class SpatialGridTranslate(torch.nn.Module):
         assert self.D == NY == NX
         assert images.shape[0] == trans.shape[0]
 
-        print("SELF COORD", self.coord.shape)
+        print("SELF COORD", self.coords.shape)
         print("TRANS", trans)
         print("SELF D", self.D)
         grid = einops.rearrange(self.coords, "N C2 -> 1 1 N C2") - \
