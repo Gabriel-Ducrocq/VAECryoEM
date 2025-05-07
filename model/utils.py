@@ -277,9 +277,16 @@ class SpatialGridTranslate(torch.nn.Module):
         assert self.D == NY == NX
         assert images.shape[0] == trans.shape[0]
 
+        print("SELF COORD", self.coord.shape)
+        print("TRANS", trans)
+        print("SELF D", self.D)
         grid = einops.rearrange(self.coords, "N C2 -> 1 1 N C2") - \
             einops.rearrange(trans, "B T C2 -> B T 1 C2") * 2 / self.D
+
+        print("GRID", grid.shape)
         grid = grid.flip(-1)  # convert the first axis from slow-axis to fast-axis
+        print("GRID FLIPPED", grid.shape)
+        print("GIR VALUES", grid)
         grid[grid >= 1] -= 2
         grid[grid <= -1] += 2
         grid.clamp_(-1.0, 1.0)
