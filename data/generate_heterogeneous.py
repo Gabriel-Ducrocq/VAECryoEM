@@ -105,8 +105,8 @@ if not poses_translation:
     #poses_translation = torch.zeros((N_images, 3), device=device)
     shiftX_angstrom = (torch.rand((N_images, 1), device=device)*2 - 1)*10
     shiftY_angstrom = (torch.rand((N_images, 1), device=device)*2 - 1)*10
-    shiftX_angstrom = torch.zeros_like(shiftX_angstrom)
-    shiftY_angstrom = torch.zeros_like(shiftY_angstrom)
+    #shiftX_angstrom = torch.zeros_like(shiftX_angstrom)
+    #shiftY_angstrom = torch.zeros_like(shiftY_angstrom)
     shiftX = shiftX_angstrom /apix
     shiftY = shiftY_angstrom /apix
 else:
