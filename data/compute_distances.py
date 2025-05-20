@@ -12,7 +12,6 @@ from ctf import CTF
 import numpy as np
 from tqdm import tqdm
 from polymer import Polymer
-from numba import njit, prange
 
 parser_arg = argparse.ArgumentParser()
 parser_arg.add_argument('--path', type=str, required=True)
@@ -38,7 +37,6 @@ def compute_distance_no_chain(polymer, idxA, idxB, idx):
     center_b = np.mean(domainB, axis=0)
     return np.sqrt(np.sum((center_a - center_b)**2)), idx
 
-@njit(parallel=True)
 def compute_distribution_distances(path, idxA, idxB, predicted=False, chain_id = ["A", "B"], chain_information=True):
     """ Computes the distances for all the structures present in the folder path """
     all_distances = []
@@ -50,7 +48,7 @@ def compute_distribution_distances(path, idxA, idxB, predicted=False, chain_id =
         end = 10000
         
     res_ids = [i for i in range(1, 504)]
-    for i in prange(start, end):
+    for i in range(start, end):
         if not predicted:
             try:
                 path_struct = path + "test_"+str(i)+ ".pdb"
