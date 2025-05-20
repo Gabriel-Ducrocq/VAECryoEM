@@ -41,10 +41,10 @@ def compute_distribution_distances(path, idxA, idxB, predicted=False, chain_id =
     """ Computes the distances for all the structures present in the folder path """
     all_distances = []
     start = 1
-    end = 10001
+    end = 20001
     if predicted:
         start = 0
-        end = 10000
+        end = 20000
         
     res_ids = [i for i in range(1, 504)]
     for i in range(start, end):
