@@ -15,14 +15,14 @@ true_distances = np.load(true_distances)
 predicted_distances = np.load(predicted_distances)[:, 0]
 
 
-plt.hist(true_distances, bins=50, density=True, label="True distances")
-plt.hist(predicted_distances, bins=50, density=True, label="Predicted distances")
+plt.hist(true_distances, bins=30, density=True, label="True distances")
+plt.hist(predicted_distances, bins=30, density=True, label="Predicted distances")
 plt.xlabel("Distances in Å")
 plt.legend(loc="upper right")
 plt.savefig(output_path + "histogram.png")
 plt.close()
 
-plt.scatter(true_distances, predicted_distances)
+plt.scatter(true_distances, predicted_distances, s=0.001)
 plt.xlabel("True distance")
 plt.ylabel("Predicted distance")
 plt.title("Predicted vs True distances")
