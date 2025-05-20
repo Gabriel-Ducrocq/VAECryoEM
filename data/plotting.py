@@ -12,10 +12,8 @@ predicted_distances = args.predicted_distances
 output_path = args.output_path
 
 true_distances = np.load(true_distances)
-predicted_distances = np.load(predicted_distances)
+predicted_distances = np.load(predicted_distances)[:, 0]
 
-print(true_distances.shape)
-print(predicted_distances.shape)
 
 plt.hist(true_distances, bins=50, density=True, label="True distances")
 plt.hist(predicted_distances, bins=50, density=True, label="Predicted distances")
