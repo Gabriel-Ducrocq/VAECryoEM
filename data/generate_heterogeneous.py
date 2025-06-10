@@ -192,12 +192,12 @@ for i in tqdm(range(n_iter)):
 all_images = torch.concat(all_images, dim=0)
 print("Images shape", all_images.shape)
 #########    !!!!!!!!!!!!!! DISABLING NOISE !!!!!!!!!!!!!!!! ##############
-#mean_variance = torch.mean(torch.var(all_images, dim=(-2, -1)))
-#print("Mean variance accross images", mean_variance)
-#noise_var = mean_variance/image_settings["SNR"]
-#print("Mean variance accross images", mean_variance)
-#print("Adding Gaussian noise with variance", noise_var)
-#torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
+mean_variance = torch.mean(torch.var(all_images, dim=(-2, -1)))
+print("Mean variance accross images", mean_variance)
+noise_var = mean_variance/image_settings["SNR"]
+print("Mean variance accross images", mean_variance)
+print("Adding Gaussian noise with variance", noise_var)
+torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
 
 all_images += torch.randn((N_images, Npix, Npix))*torch.sqrt(noise_var)
 print("Saving images in MRC format")
