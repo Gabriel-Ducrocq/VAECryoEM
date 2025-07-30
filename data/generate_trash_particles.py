@@ -158,14 +158,15 @@ print(N_images)
 print(folder_experiment)
 if not noise_only:
     for i in tqdm(range(n_iter)):
+        initial_index = np.random.randint(0, len(poly.coord)-2)
+        ending_index = np.random.randint(initial_index + 1, len(poly.coord))
         if not is_homogeneous:
             poly = Polymer.from_pdb(sorted_structures[i], filter_aa)
-            initial_index = np.random.randint(0, len(poly.coord)-2)
-            ending_index = np.random.randint(initial_index + 1, len(poly.coord))
             backbone = poly.coord[initial_index:ending_index] - center_vector
             backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
             backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
-
+        else:
+            backbone = backbone[:, initial_index:ending_index,:]
 
         amplitudes = torch.tensor(poly.num_electron, dtype=torch.float32, device=device)[:, None]
         posed_backbones = rotate_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
