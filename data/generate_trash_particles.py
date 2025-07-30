@@ -27,12 +27,18 @@ parser_arg.add_argument('--pose_rotation', type=str, required=False)
 parser_arg.add_argument('--pose_translation', type=str, required=False)
 parser_arg.add_argument('--homogeneous', default=True, action=argparse.BooleanOptionalAction)
 parser_arg.add_argument('--structure_path', type=str, required=False)
+parser_arg.add_argument('--noise_only', action=argparse.BooleanOptionalAction, default= False, help="""If True, generates particles only made from noise""")
+parser_arg.add_argument('--noise_std', type=str, default= False, help="""Set the noise level for the particles""")
+parser_arg.add_argument('--mrcs_name', type=str, default= False, help="""Name of the mrcs file""")
 args = parser_arg.parse_args()
 folder_experiment = args.folder_experiment
 folder_structures = args.folder_structures
 pose_rotation = args.pose_rotation
 poses_translation = args.pose_translation
 is_homogeneous = args.homogeneous
+noise_std = args.noise_std
+noise_only = args.noise_only
+mrcs_name = args.mrcs_name
 
 filter_aa = True
 if is_homogeneous:
@@ -150,69 +156,71 @@ faulty_indexes = []
 print(N_pose_per_structure)
 print(N_images)
 print(folder_experiment)
-for i in tqdm(range(n_iter)):
-    if not is_homogeneous:
-        poly = Polymer.from_pdb(sorted_structures[i], filter_aa) 
-        backbone = poly.coord - center_vector
-        backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
-        backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
-        if len(poly) not in size_prot:
-            size_prot.append(len(poly))
-            faulty_indexes.append(i)
-
-    amplitudes = torch.tensor(poly.num_electron, dtype=torch.float32, device=device)[:, None]
-    posed_backbones = rotate_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
-    batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
-
-    batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
-    ###  !!!!!!!!!!!!! We multiply by -1 so that when we correct for the translation in the cryoSPHERE run, we dont get 2x translation but 0 tranlations !
-    batch_poses_translation = - poses_translations[i*N_pose_per_structure:(i+1)*N_pose_per_structure]
-    batch_translated_images = image_translator.transform(batch_ctf_corrupted_images, batch_poses_translation[:, None, :])
-    #batch_ctf_corrupted_images = batch_images
-    #plt.imshow(batch_ctf_corrupted_images[0].detach().numpy())
-    #plt.show()
-    #batch_ctf_corrupted_images_bis = apply_ctf_bis(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)]))
-    #all_images.append(batch_images.detach().cpu())
-    all_images.append(batch_translated_images.detach().cpu())
-    #plt.imshow(batch_ctf_corrupted_images.detach().numpy()[0])
-    #plt.show()
-    #plt.imshow(batch_ctf_corrupted_images_bis.detach().numpy()[0])
-    #plt.show()
-    #rel_err = torch.abs((batch_ctf_corrupted_images - batch_ctf_corrupted_images_bis)/batch_ctf_corrupted_images)[0]
-    #caped = torch.minimum(rel_err, torch.ones_like(rel_err))
-    #plt.imshow(caped.detach().numpy())
-    #plt.show()
-    #for k, pred_struct in enumerate(backbone):
-    #    print("Saving structure", i*N_pose_per_structure + k)
-    #    poly.coord -= center_vector
-    #    poly.to_pdb(os.path.join(f"{folder_experiment}/ground_truth/", f"structure_z_{i*N_pose_per_structure + k}.pdb"))
+if not noise_only:
+    for i in tqdm(range(n_iter)):
+        if not is_homogeneous:
+            poly = Polymer.from_pdb(sorted_structures[i], filter_aa)
+            initial_index = np.random.randint(0, len(poly.coord)-2)
+            ending_index = np.random.randint(initial_index + 1, len(poly.coord))
+            backbone = poly.coord[initial_index:ending_index] - center_vector
+            backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
+            backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
 
 
+        amplitudes = torch.tensor(poly.num_electron, dtype=torch.float32, device=device)[:, None]
+        posed_backbones = rotate_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
+        batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes, grid)
 
-all_images = torch.concat(all_images, dim=0)
+        batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
+        ###  !!!!!!!!!!!!! We multiply by -1 so that when we correct for the translation in the cryoSPHERE run, we dont get 2x translation but 0 tranlations !
+        batch_poses_translation = - poses_translations[i*N_pose_per_structure:(i+1)*N_pose_per_structure]
+        batch_translated_images = image_translator.transform(batch_ctf_corrupted_images, batch_poses_translation[:, None, :])
+        #batch_ctf_corrupted_images = batch_images
+        #plt.imshow(batch_ctf_corrupted_images[0].detach().numpy())
+        #plt.show()
+        #batch_ctf_corrupted_images_bis = apply_ctf_bis(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)]))
+        #all_images.append(batch_images.detach().cpu())
+        all_images.append(batch_translated_images.detach().cpu())
+        #plt.imshow(batch_ctf_corrupted_images.detach().numpy()[0])
+        #plt.show()
+        #plt.imshow(batch_ctf_corrupted_images_bis.detach().numpy()[0])
+        #plt.show()
+        #rel_err = torch.abs((batch_ctf_corrupted_images - batch_ctf_corrupted_images_bis)/batch_ctf_corrupted_images)[0]
+        #caped = torch.minimum(rel_err, torch.ones_like(rel_err))
+        #plt.imshow(caped.detach().numpy())
+        #plt.show()
+        #for k, pred_struct in enumerate(backbone):
+        #    print("Saving structure", i*N_pose_per_structure + k)
+        #    poly.coord -= center_vector
+        #    poly.to_pdb(os.path.join(f"{folder_experiment}/ground_truth/", f"structure_z_{i*N_pose_per_structure + k}.pdb"))
+else:
+    all_images = torch.zeros((N_images, Npix, Npix))
+
+
+if not noise_only:
+    all_images = torch.concat(all_images, dim=0)
+
 print("Images shape", all_images.shape)
-#########    !!!!!!!!!!!!!! DISABLING NOISE !!!!!!!!!!!!!!!! ##############
-mean_variance = torch.mean(torch.var(all_images, dim=(-2, -1)))
-print("Mean variance accross images", mean_variance)
-noise_var = mean_variance/image_settings["SNR"]
-print("Mean variance accross images", mean_variance)
-print("Adding Gaussian noise with variance", noise_var)
+if noise_std:
+    noise_std = torch.tensor(np.load("noise_std.npy"), device=device, dtype=torch.float32)
+else:
+    #########    !!!!!!!!!!!!!! DISABLING NOISE !!!!!!!!!!!!!!!! ##############
+    mean_variance = torch.mean(torch.var(all_images, dim=(-2, -1)))
+    print("Mean variance accross images", mean_variance)
+    noise_var = mean_variance/image_settings["SNR"]
+    noise_std = torch.sqrt(noise_var)
+    print("Mean variance accross images", mean_variance)
+    print("Adding Gaussian noise with variance", noise_var)
+
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
 
-all_images += torch.randn((N_images, Npix, Npix))*torch.sqrt(noise_var)
+all_images += torch.randn((N_images, Npix, Npix))*noise_std
 print("Saving images in MRC format")
-print(size_prot)
-if len(size_prot) > 1:
-    print("Some proteins have different residue numbers :", faulty_indexes)
-
 mrc.MRCFile.write(f"{folder_experiment}particles.mrcs", all_images.detach().cpu().numpy(), Apix=apix, is_vol=False)
 print("Saving poses and ctf in star format.")
 output_path = f"{folder_experiment}particles.star"
-create_star_file(poses.detach().cpu().numpy(), shiftX.detach().cpu().numpy(), shiftY.detach().cpu().numpy(), "particles.mrcs",
+create_star_file(poses.detach().cpu().numpy(), shiftX.detach().cpu().numpy(), shiftY.detach().cpu().numpy(), mrcs_name,
  N_images, Npix, apix, image_settings["ctf"], output_path)
-
-sqrt_var = torch.sqrt(noise_var).detach().cpu().numpy()
-np.save(f"{folder_experiment}noise_std.npy", sqrt_var)
 
 
 
