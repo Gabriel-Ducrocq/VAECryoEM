@@ -40,6 +40,11 @@ def project(Gauss_mean, Gauss_sigmas, Gauss_amplitudes, grid):
     #Both proj_x and proj_y are (batch_size, N_atoms, N_pix)
     #print("PROJECT REAL")
     #start_x = time()
+    print("Test")
+    print(Gauss_mean[:, :, None, 0].shape)
+    print(grid.line_coords[None, None, :].shape)
+    print(sigmas[None, :, None,  0].shape)
+    print(sqrt_amp[None, :, :].shape)
     proj_x = torch.exp(-(Gauss_mean[:, :, None, 0] - grid.line_coords[None, None, :])**2/sigmas[None, :, None,  0])*sqrt_amp[None, :, :]
     #end_x = time()
     #print("Time x", end_x - start_x)
