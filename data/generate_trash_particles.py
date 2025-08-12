@@ -172,6 +172,7 @@ if not noise_only:
         posed_backbones = rotate_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
         print("AMPLITUDES", amplitudes.shape)
         print("BACKBONE SHAPE", backbone.shape)
+        print("Poly COORD SHAPE", poly.coord.shape)
         print("INIT", initial_index, "END", ending_index)
         batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes[initial_index:ending_index], grid)
 
