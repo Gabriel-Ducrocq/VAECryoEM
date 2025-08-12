@@ -167,6 +167,7 @@ if not noise_only:
             backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
             backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
         else:
+            print("BACKBONE FIRST", backbone.shape)
             backbone = backbone[:, initial_index:ending_index,:]
 
         amplitudes = torch.tensor(poly.num_electron, dtype=torch.float32, device=device)[:, None]
