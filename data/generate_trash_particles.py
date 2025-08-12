@@ -171,7 +171,7 @@ if not noise_only:
         amplitudes = torch.tensor(poly.num_electron, dtype=torch.float32, device=device)[:, None]
         posed_backbones = rotate_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
         print("AMPLITUDES", amplitudes.shape)
-        print("INIT" initial_index, "END", ending_index)
+        print("INIT", initial_index, "END", ending_index)
         batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes[initial_index:ending_index], grid)
 
         batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
