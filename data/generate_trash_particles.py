@@ -166,17 +166,15 @@ if not noise_only:
             print("BACKBONE FIRST", backbone.shape)
             backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
             backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
-        else:
-            print("BACKBONE FIRST", backbone.shape)
-            backbone = backbone[:, initial_index:ending_index,:]
+
 
         amplitudes = torch.tensor(poly.num_electron, dtype=torch.float32, device=device)[:, None]
-        posed_backbones = rotate_structure(backbone, poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
+        posed_backbones = rotate_structure(backbone[:, initial_index:ending_index,:], poses[i*N_pose_per_structure:(i+1)*N_pose_per_structure])
         print("AMPLITUDES", amplitudes.shape)
         print("BACKBONE SHAPE", backbone.shape)
         print("Poly COORD SHAPE", poly.coord.shape)
         print("INIT", initial_index, "END", ending_index)
-        batch_images = project(posed_backbones, torch.ones((backbone.shape[1], 1), device=device)*sigma_gmm, amplitudes[initial_index:ending_index], grid)
+        batch_images = project(posed_backbones, torch.ones((backbone[:, initial_index:ending_index,:].shape[1], 1), device=device)*sigma_gmm, amplitudes[initial_index:ending_index], grid)
 
         batch_ctf_corrupted_images = apply_ctf(batch_images, ctf, torch.tensor([j for j in range(i*N_pose_per_structure, (i+1)*N_pose_per_structure)], device=device))
         ###  !!!!!!!!!!!!! We multiply by -1 so that when we correct for the translation in the cryoSPHERE run, we dont get 2x translation but 0 tranlations !
