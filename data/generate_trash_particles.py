@@ -163,6 +163,7 @@ if not noise_only:
         if not is_homogeneous:
             poly = Polymer.from_pdb(sorted_structures[i], filter_aa)
             backbone = poly.coord[initial_index:ending_index] - center_vector
+            print("BACKBONE FIRST", backbone.shape)
             backbone = torch.tensor(backbone, dtype=torch.float32, device=device)
             backbone = torch.concatenate([backbone[None, :, :] for _ in range(N_pose_per_structure)], dim=0)
         else:
