@@ -28,7 +28,7 @@ parser_arg.add_argument('--pose_translation', type=str, required=False)
 parser_arg.add_argument('--homogeneous', default=True, action=argparse.BooleanOptionalAction)
 parser_arg.add_argument('--structure_path', type=str, required=False)
 parser_arg.add_argument('--noise_only', action=argparse.BooleanOptionalAction, default= False, help="""If True, generates particles only made from noise""")
-parser_arg.add_argument('--noise_std', type=str, default= False, help="""Set the noise level for the particles""")
+parser_arg.add_argument('--noise_std', type=str, default= False, help="""Path to the set the noise level for the particles""")
 parser_arg.add_argument('--mrcs_name', type=str, default= False, help="""Name of the mrcs file""")
 args = parser_arg.parse_args()
 folder_experiment = args.folder_experiment
@@ -207,7 +207,7 @@ if not noise_only:
 
 print("Images shape", all_images.shape)
 if noise_std:
-    noise_std = torch.tensor(np.load("noise_std.npy"), device=device, dtype=torch.float32)
+    noise_std = torch.tensor(np.load(noise_std), device=device, dtype=torch.float32)
 else:
     #########    !!!!!!!!!!!!!! DISABLING NOISE !!!!!!!!!!!!!!!! ##############
     mean_variance = torch.mean(torch.var(all_images, dim=(-2, -1)))
@@ -217,7 +217,7 @@ else:
     print("Mean variance accross images", mean_variance)
     print("Adding Gaussian noise with variance", noise_var)
 
-torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoise")
+torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoiseTrash")
 
 all_images += torch.randn((N_images, Npix, Npix))*noise_std
 print("Saving images in MRC format")
