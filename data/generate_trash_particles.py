@@ -219,7 +219,7 @@ else:
 
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoiseTrash")
 
-all_images += torch.randn((N_images, Npix, Npix))*noise_std
+all_images += torch.randn((N_images, Npix, Npix), device=device)*noise_std
 print("Saving images in MRC format")
 mrc.MRCFile.write(f"{folder_experiment}{mrcs_name}", all_images.detach().cpu().numpy(), Apix=apix, is_vol=False)
 print("Saving poses and ctf in star format.")
