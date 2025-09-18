@@ -200,15 +200,16 @@ if not noise_only:
         #    poly.to_pdb(os.path.join(f"{folder_experiment}/ground_truth/", f"structure_z_{i*N_pose_per_structure + k}.pdb"))
 
 else:
-    all_images = torch.zeros((N_images, Npix, Npix))
+    all_images = np.zeros((N_images, Npix, Npix))
 
 
 if not noise_only:
-    all_images = torch.concat(all_images, dim=0)
+    all_images = np.concatenate(all_images, axis=0)
 
 print("Images shape", all_images.shape)
 if noise_std:
-    noise_std = torch.tensor(np.load(noise_std), dtype=torch.float32)
+    noise_std = np.load(noise_std)
+    print("SHAPE NOISE", noise_std.shape)
 else:
     #########    !!!!!!!!!!!!!! DISABLING NOISE !!!!!!!!!!!!!!!! ##############
     mean_variance = torch.mean(torch.var(all_images, dim=(-2, -1)))
@@ -220,7 +221,7 @@ else:
 
 torch.save(all_images, f"{folder_experiment}ImageDataSetNoNoiseTrash")
 
-all_images += torch.randn((N_images, Npix, Npix))*noise_std
+all_images += np.random.normal(size=(N_images, Npix, Npix))*noise_std
 print("Saving images in MRC format")
 mrc.MRCFile.write(f"{folder_experiment}{mrcs_name}", all_images.detach().cpu().numpy(), Apix=apix, is_vol=False)
 print("Saving poses and ctf in star format.")
