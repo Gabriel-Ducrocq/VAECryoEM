@@ -223,7 +223,7 @@ else:
 
 all_images += np.random.normal(size=(N_images, Npix, Npix))*noise_std
 print("Saving images in MRC format")
-mrc.MRCFile.write(f"{folder_experiment}{mrcs_name}", all_images.detach().cpu().numpy(), Apix=apix, is_vol=False)
+mrc.MRCFile.write(f"{folder_experiment}{mrcs_name}", all_images, Apix=apix, is_vol=False)
 print("Saving poses and ctf in star format.")
 output_path = f"{folder_experiment}particles_trash.star"
 create_star_file(poses.detach().cpu().numpy(), shiftX.detach().cpu().numpy(), shiftY.detach().cpu().numpy(), mrcs_name,
